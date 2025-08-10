@@ -35,3 +35,15 @@
     outline-offset: 2px;
   }
 }
+
+/* Layout Shift Monster (CLS) Optimierungen */
+.sphere-light {
+  position: fixed !important;
+  contain: layout style paint;
+}
+
+img[loading="eager"] {
+  aspect-ratio: 1;
+  width: 100%;
+  height: auto;
+}
