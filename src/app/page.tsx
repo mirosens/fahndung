@@ -1,20 +1,17 @@
 "use client";
 
-import Header from "~/components/layout/Header";
-import Footer from "~/components/layout/Footer";
 import HomeContent from "~/components/home/HomeContent";
 import { GlobalBackground } from "~/components/ui/GlobalBackground";
 import { useAuth } from "~/hooks/useAuth";
+import PageLayout from "~/components/layout/PageLayout";
 
 export default function Home() {
   const { session } = useAuth();
 
   return (
-    <main className="min-h-screen bg-background">
+    <PageLayout variant="home" session={session}>
       <GlobalBackground />
-      <Header variant="home" session={session} />
       <HomeContent />
-      <Footer variant="home" />
-    </main>
+    </PageLayout>
   );
 }

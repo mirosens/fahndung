@@ -8,10 +8,11 @@ import React, {
   useRef,
 } from "react";
 import Link from "next/link";
-import { Eye, EyeOff, Menu, Plus, X } from "lucide-react";
+import { Eye, EyeOff, Menu, Plus, X, Layout, Zap } from "lucide-react";
 import { Logo } from "../ui/Logo";
 import { FontSizeToggle } from "../ui/FontSizeToggle";
 import { SystemThemeToggle } from "../ui/SystemThemeToggle";
+import { CompactMetaMenu } from "../ui/CompactMetaMenu";
 import { DesktopMegaMenu } from "../ui/megamenu/DesktopMegaMenu";
 import { MobileDrawerMenu } from "../ui/megamenu/MobileDrawerMenu";
 import { DesktopOffcanvasMenu } from "../ui/megamenu/DesktopOffcanvasMenu";
@@ -21,6 +22,18 @@ import { useRouter, usePathname } from "next/navigation";
 import { type Session } from "~/lib/auth";
 
 import { useStableSession } from "~/hooks/useStableSession";
+
+// Hilfsfunktion für Header-Variant-Wechsel
+const switchToModernHeader = () => {
+  if (typeof window !== "undefined") {
+    localStorage.setItem("header-variant", "modern");
+    window.dispatchEvent(
+      new CustomEvent<"modern" | "classic">("header-variant-change", {
+        detail: "modern",
+      }),
+    );
+  }
+};
 
 interface AdaptiveHeaderProps {
   variant?: "home" | "dashboard" | "login" | "register" | "admin";
@@ -184,8 +197,22 @@ const MetaAccessibilityBar = ({ isVisible }: { isVisible: boolean }) => {
           <FontSizeToggle />
         </div>
 
-        {/* Rechts: System Theme Toggle */}
-        <div className="flex items-center gap-4 text-xs">
+        {/* Rechts: System Theme Toggle, Compact Menu & Modern Button */}
+        <div className="flex items-center gap-3 text-xs">
+          {/* Modern Header Button - kompakt */}
+          <button
+            onClick={switchToModernHeader}
+            className="flex items-center gap-1 rounded px-2 py-1 text-blue-600 transition-colors hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-400 focus:ring-offset-1 focus:ring-offset-gray-100 dark:text-blue-400 dark:hover:bg-blue-900/20 dark:focus:ring-blue-500 dark:focus:ring-offset-gray-900"
+            title="Zum modernen Header wechseln"
+            aria-label="Zum modernen Header wechseln"
+          >
+            <Zap className="h-3 w-3" />
+            <span className="hidden sm:inline">Modern</span>
+          </button>
+
+          {/* Compact Meta Menu - rechts neben Theme Switcher */}
+          <CompactMetaMenu />
+
           <SystemThemeToggle />
         </div>
       </div>
@@ -231,6 +258,16 @@ const AdaptiveDesktopHeader = ({
     if (isAuthenticated && currentSession) {
       return (
         <div className="flex h-9 items-center gap-3">
+          {/* TEST BUTTON - für angemeldete Benutzer */}
+          <button
+            onClick={() => alert("Test Button für angemeldete Benutzer!")}
+            className="inline-flex items-center gap-x-2 rounded-lg border-2 border-red-500 bg-red-50 px-3 py-2 text-sm font-semibold text-red-700 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+            title="Test Button"
+            aria-label="Test Button"
+          >
+            <span>🚀 TEST</span>
+          </button>
+
           {/* Fahndung Button - für Editor, Admin und Super Admin */}
           {(currentSession?.profile?.role === "editor" ||
             currentSession?.profile?.role === "admin" ||
@@ -251,6 +288,17 @@ const AdaptiveDesktopHeader = ({
               </button>
             )}
 
+          {/* Modern Header Button */}
+          <button
+            onClick={switchToModernHeader}
+            className="inline-flex items-center gap-x-2 rounded-lg border-2 border-blue-500 bg-blue-50 px-3 py-2 text-sm font-semibold text-blue-700 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:border-blue-400 dark:bg-blue-900/30 dark:text-blue-300 dark:hover:bg-blue-900/50"
+            title="Zum modernen Menü wechseln"
+            aria-label="Zum modernen Menü wechseln"
+          >
+            <Zap className="h-4 w-4" />
+            <span>Modernes Menü</span>
+          </button>
+
           {/* Hamburger Menu Button - auch für angemeldete Benutzer */}
           <button
             onClick={() => dispatch({ type: "TOGGLE_MENU" })}
@@ -267,6 +315,24 @@ const AdaptiveDesktopHeader = ({
     } else {
       return (
         <div className="flex h-9 items-center gap-3">
+          {/* EINFACHER TEST - für nicht-angemeldete Benutzer */}
+          <div className="rounded bg-red-500 px-3 py-2 text-white">
+            <span>NICHT ANGEMELDET</span>
+          </div>
+
+          {/* Modern Header Button - für nicht-angemeldete Benutzer */}
+          <button
+            onClick={() => {
+              alert("Modern Button geklickt!");
+              switchToModernHeader();
+            }}
+            className="inline-flex items-center gap-x-2 rounded-lg border-2 border-green-500 bg-green-50 px-4 py-2 text-sm font-bold text-green-700 hover:bg-green-100 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+            title="Zum modernen Menü wechseln"
+            aria-label="Zum modernen Menü wechseln"
+          >
+            <span>⚡ MODERN</span>
+          </button>
+
           <button
             onClick={() => dispatch({ type: "TOGGLE_MENU" })}
             className="inline-flex items-center gap-x-2 rounded-lg border border-border bg-white px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:border-border dark:bg-muted dark:text-muted-foreground dark:hover:bg-muted"
@@ -298,16 +364,10 @@ const AdaptiveDesktopHeader = ({
     `}
       style={{ zIndex: 100 }}
     >
-      {/* Meta Accessibility Bar - im normalen Zustand immer sichtbar, im Sticky-Zustand nur wenn eingeblendet */}
-      {(!isScrolled || showMetaBar) && (
-        <div
-          className={`
-            ${isScrolled ? "w-full" : "w-full"}
-          `}
-        >
-          <MetaAccessibilityBar isVisible={!isScrolled || showMetaBar} />
-        </div>
-      )}
+      {/* Meta Accessibility Bar - immer sichtbar für bessere Zugänglichkeit */}
+      <div className="w-full">
+        <MetaAccessibilityBar isVisible={true} />
+      </div>
 
       {/* Abstand zwischen Meta-Navigation und Header - nur im nicht-sticky Zustand */}
       {!isScrolled && (
@@ -355,39 +415,65 @@ const AdaptiveDesktopHeader = ({
 
               {/* Right Actions */}
               <div className="ml-6 flex items-center gap-3">
+                {/* TEST BUTTON - immer sichtbar */}
+                <button
+                  onClick={() => alert("Test Button funktioniert!")}
+                  className="inline-flex items-center gap-x-2 rounded-lg border-2 border-red-500 bg-red-50 px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
+                  title="Test Button"
+                  aria-label="Test Button"
+                >
+                  <span>🚀 TEST</span>
+                </button>
+
+                {/* Compact Meta Menu - für alle Benutzer sichtbar */}
+                <CompactMetaMenu />
+
+                {/* Modern Header Button - immer sichtbar */}
+                <button
+                  onClick={switchToModernHeader}
+                  className="inline-flex items-center gap-x-2 rounded-lg border-2 border-blue-500 bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-700 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:border-blue-400 dark:bg-blue-900/30 dark:text-blue-300 dark:hover:bg-blue-900/50"
+                  title="Zum modernen Header wechseln"
+                  aria-label="Zum modernen Header wechseln"
+                >
+                  <Zap className="h-4 w-4" />
+                  <span>Modernes Menü</span>
+                </button>
+
                 {renderUserActions}
 
-                {/* A11y Button - nur im Sticky-Zustand sichtbar */}
-                <div
-                  className={`transition-all duration-500 ease-out ${
-                    isScrolled ? "h-8 w-8 opacity-100" : "h-8 w-0 opacity-0"
-                  }`}
+                {/* Modern Header Button - immer sichtbar */}
+                <button
+                  onClick={switchToModernHeader}
+                  className="relative h-8 w-8 touch-manipulation select-none rounded-lg border border-border bg-white/90 p-1.5 shadow-sm backdrop-blur-sm transition-all duration-200 hover:border-border hover:bg-white hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-500/50 focus:ring-offset-2 dark:border-slate-600 dark:bg-slate-800/90 dark:hover:border-slate-500 dark:hover:bg-slate-800"
+                  title="Zum modernen Header wechseln"
+                  aria-label="Zum modernen Header wechseln"
                 >
-                  {isScrolled && (
-                    <button
-                      onClick={() => dispatch({ type: "TOGGLE_META_BAR" })}
-                      className="relative h-full w-full touch-manipulation select-none rounded-lg border border-border bg-white/90 p-1.5 shadow-sm backdrop-blur-sm transition-all duration-200 hover:border-border hover:bg-white hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-500/50 focus:ring-offset-2 dark:border-slate-600 dark:bg-slate-800/90 dark:hover:border-slate-500 dark:hover:bg-slate-800"
-                      title={
-                        showMetaBar
-                          ? "Barrierefreiheit ausblenden"
-                          : "Barrierefreiheit anzeigen"
-                      }
-                      aria-label={
-                        showMetaBar
-                          ? "Barrierefreiheit ausblenden"
-                          : "Barrierefreiheit anzeigen"
-                      }
-                    >
-                      <div className="duration-400 transition-all ease-out">
-                        {showMetaBar ? (
-                          <Eye className="h-4 w-4" />
-                        ) : (
-                          <EyeOff className="h-4 w-4" />
-                        )}
-                      </div>
-                    </button>
-                  )}
-                </div>
+                  <Zap className="h-4 w-4" />
+                </button>
+
+                {/* A11y Button - immer sichtbar */}
+                <button
+                  onClick={() => dispatch({ type: "TOGGLE_META_BAR" })}
+                  className="relative h-8 w-8 touch-manipulation select-none rounded-lg border border-border bg-white/90 p-1.5 shadow-sm backdrop-blur-sm transition-all duration-200 hover:border-border hover:bg-white hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-500/50 focus:ring-offset-2 dark:border-slate-600 dark:bg-slate-800/90 dark:hover:border-slate-500 dark:hover:bg-slate-800"
+                  title={
+                    showMetaBar
+                      ? "Barrierefreiheit ausblenden"
+                      : "Barrierefreiheit anzeigen"
+                  }
+                  aria-label={
+                    showMetaBar
+                      ? "Barrierefreiheit ausblenden"
+                      : "Barrierefreiheit anzeigen"
+                  }
+                >
+                  <div className="duration-400 transition-all ease-out">
+                    {showMetaBar ? (
+                      <Eye className="h-4 w-4" />
+                    ) : (
+                      <EyeOff className="h-4 w-4" />
+                    )}
+                  </div>
+                </button>
               </div>
             </nav>
           </div>
@@ -452,8 +538,22 @@ const ResponsiveMobileHeader = ({
               <FontSizeToggle />
             </div>
 
-            {/* Rechts: System Theme Toggle & Close Button */}
-            <div className="flex items-center gap-3">
+            {/* Rechts: System Theme Toggle, Compact Menu, Modern Button & Close Button */}
+            <div className="flex items-center gap-2">
+              {/* Modern Header Button */}
+              <button
+                onClick={switchToModernHeader}
+                className="flex items-center gap-1 rounded px-2 py-1 text-muted-foreground transition-colors hover:bg-muted hover:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-gray-400 focus:ring-offset-1 focus:ring-offset-gray-100 dark:text-muted-foreground dark:hover:bg-muted dark:hover:text-white dark:focus:ring-gray-500 dark:focus:ring-offset-gray-900"
+                title="Zum modernen Header wechseln"
+                aria-label="Zum modernen Header wechseln"
+              >
+                <Zap className="h-3 w-3" />
+                <span className="hidden sm:inline">Modern</span>
+              </button>
+
+              {/* Compact Meta Menu - auch in mobile Meta-Navigation */}
+              <CompactMetaMenu />
+
               <SystemThemeToggle />
               <button
                 onClick={() =>
@@ -473,6 +573,19 @@ const ResponsiveMobileHeader = ({
         <Logo className="text-foreground" showLink={true} />
 
         <div className="flex items-center gap-2">
+          {/* Compact Meta Menu - für alle Benutzer sichtbar */}
+          <CompactMetaMenu />
+
+          {/* Modern Header Button */}
+          <button
+            onClick={switchToModernHeader}
+            className="relative touch-manipulation select-none rounded-lg border border-border bg-muted/90 p-1.5 shadow-sm backdrop-blur-sm transition-all duration-200 hover:border-border hover:bg-muted hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-400/50 dark:border-slate-600 dark:bg-slate-800/90 dark:hover:border-slate-500 dark:hover:bg-slate-800"
+            title="Zum modernen Header wechseln"
+            aria-label="Zum modernen Header wechseln"
+          >
+            <Zap className="h-4 w-4" />
+          </button>
+
           {/* Meta Controls Toggle */}
           <button
             onClick={() => dispatch({ type: "TOGGLE_META_CONTROLS" })}

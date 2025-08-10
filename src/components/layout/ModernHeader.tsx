@@ -1,5 +1,14 @@
 import React, { useState, useRef } from "react";
-import { ChevronDown, Search, Menu, X, User } from "lucide-react";
+import {
+  ChevronDown,
+  Search,
+  Menu,
+  X,
+  User,
+  Layout,
+  Settings,
+  Zap,
+} from "lucide-react";
 import dynamic from "next/dynamic";
 import { Logo } from "../ui/Logo";
 import { useScrollDetection } from "~/hooks/useScrollDetection";
@@ -32,6 +41,18 @@ export default function ModernHeader() {
 
   // CSS-only Scroll-Detection ohne Re-Renders
   const { headerRef, spacerRef, searchRef } = useScrollDetection();
+
+  // Hilfsfunktion für Header-Variant-Wechsel zum klassischen Menü
+  const switchToClassicHeader = () => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("header-variant", "classic");
+      window.dispatchEvent(
+        new CustomEvent<"modern" | "classic">("header-variant-change", {
+          detail: "classic",
+        }),
+      );
+    }
+  };
 
   // Navigation Sections
   const navSections: NavSection[] = ["SICHERHEIT", "SERVICE", "POLIZEI"];
@@ -312,6 +333,16 @@ export default function ModernHeader() {
                   </div>
                 </div>
 
+                {/* Classic Header Button - immer sichtbar */}
+                <button
+                  onClick={switchToClassicHeader}
+                  className="flex items-center justify-center rounded-lg p-3 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
+                  title="Zum klassischen Menü wechseln"
+                  aria-label="Zum klassischen Menü wechseln"
+                >
+                  <Settings className="h-6 w-6" />
+                </button>
+
                 {/* Enhanced A11y Dropdown - ALLE Meta-Nav Features */}
                 <A11navEnhanced isCompact={false} />
 
@@ -337,6 +368,19 @@ export default function ModernHeader() {
         {isMobileMenuOpen && (
           <div className="fixed inset-0 top-16 z-40 bg-background/95 backdrop-blur-xl lg:hidden">
             <nav className="space-y-4 p-4">
+              {/* Classic Header Button für Mobile */}
+              <div className="mb-4 border-b border-border/50 pb-4">
+                <button
+                  onClick={() => {
+                    switchToClassicHeader();
+                    setIsMobileMenuOpen(false);
+                  }}
+                  className="flex w-full items-center justify-center gap-3 rounded-lg px-3 py-2 text-left text-sm font-medium text-blue-600 transition-colors hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/20"
+                >
+                  <Settings className="h-5 w-5" />
+                  <span>Klassisch</span>
+                </button>
+              </div>
               {navSections.map((section) => {
                 const filteredItems = getFilteredNavigationItems(section);
 

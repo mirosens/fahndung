@@ -1,7 +1,6 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useState } from "react";
 import {
   FileText,
   Shield,
@@ -13,13 +12,9 @@ import {
   Facebook,
   MessageCircle,
   Twitter,
-  Sun,
-  Moon,
-  Monitor,
 } from "lucide-react";
 import { Logo } from "~/components/ui/Logo";
-import { useTheme } from "next-themes";
-import { Button } from "~/components/ui/button";
+import { SystemThemeToggle } from "~/components/ui/SystemThemeToggle";
 import type { Session } from "~/lib/auth";
 
 interface FooterProps {
@@ -76,41 +71,6 @@ export default function Footer({ variant = "home" }: FooterProps) {
   ];
 
   const menuItems = getMenuItems();
-
-  // Mode Toggle
-  const { theme, setTheme, resolvedTheme } = useTheme();
-  const [mounted, setMounted] = useState(false);
-
-  // Hydration-Problem vermeiden
-  useEffect(() => {
-    setMounted(true);
-  }, []);
-
-  const getThemeIcon = () => {
-    if (!mounted) return <Monitor className="h-5 w-5" />;
-    if (theme === "system") {
-      return <Monitor className="h-5 w-5" />;
-    }
-    return resolvedTheme === "dark" ? (
-      <Sun className="h-5 w-5" />
-    ) : (
-      <Moon className="h-5 w-5" />
-    );
-  };
-
-  const getThemeLabel = () => {
-    if (!mounted) return "System";
-    switch (theme) {
-      case "light":
-        return "Hell";
-      case "dark":
-        return "Dunkel";
-      case "system":
-        return "System";
-      default:
-        return "Theme";
-    }
-  };
 
   // Aktuelles Jahr für Copyright
   const currentYear = new Date().getFullYear();
@@ -191,22 +151,9 @@ export default function Footer({ variant = "home" }: FooterProps) {
 
           {/* Soziale Netzwerke */}
           <div className="mt-4 flex items-center space-x-5 sm:mt-0 sm:justify-center rtl:space-x-reverse">
-            {/* Mode Toggle */}
+            {/* Theme Toggle */}
             <div className="flex items-center space-x-2">
-              <Button
-                variant="outline"
-                size="sm"
-                aria-label="Theme umschalten"
-                onClick={() => {
-                  if (!mounted) return;
-                  if (theme === "light") setTheme("dark");
-                  else if (theme === "dark") setTheme("system");
-                  else setTheme("light");
-                }}
-              >
-                {getThemeIcon()}
-                <span className="ml-2">{getThemeLabel()}</span>
-              </Button>
+              <SystemThemeToggle />
             </div>
             {/* Soziale Netzwerke */}
             {socialItems.map((item) => {

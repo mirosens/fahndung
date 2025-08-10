@@ -15,6 +15,8 @@ import {
   HelpCircle,
   Shield,
   User,
+  Layout,
+  Zap,
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -282,6 +284,30 @@ export function MobileDrawerMenu({
       ),
   );
 
+  // Hilfsfunktion für Header-Variant-Wechsel
+  const switchToModernHeader = () => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("header-variant", "modern");
+      window.dispatchEvent(
+        new CustomEvent<"modern" | "classic">("header-variant-change", {
+          detail: "modern",
+        }),
+      );
+    }
+  };
+
+  // Hilfsfunktion für Header-Variant-Wechsel zurück zum klassischen Menü
+  const switchToClassicHeader = () => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("header-variant", "classic");
+      window.dispatchEvent(
+        new CustomEvent<"modern" | "classic">("header-variant-change", {
+          detail: "classic",
+        }),
+      );
+    }
+  };
+
   return (
     <>
       {/* Mobile Menu Drawer */}
@@ -349,6 +375,18 @@ export function MobileDrawerMenu({
               {/* Sticky Footer mit User Section */}
               <div className="sticky bottom-0 border-t border-border bg-background p-4">
                 <div className="space-y-2">
+                  {/* Modern Header Button */}
+                  <button
+                    onClick={() => {
+                      switchToModernHeader();
+                      onClose();
+                    }}
+                    className="flex w-full touch-manipulation select-none items-center gap-3 rounded-lg px-3 py-3 text-left text-sm font-medium text-blue-600 transition-colors hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/20"
+                  >
+                    <Zap className="h-5 w-5" />
+                    <span>Zum modernen Menü wechseln</span>
+                  </button>
+
                   {isAuthenticated ? (
                     <>
                       {/* User Info */}

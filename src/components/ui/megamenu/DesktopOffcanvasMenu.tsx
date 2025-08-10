@@ -15,6 +15,8 @@ import {
   Phone,
   HelpCircle,
   User,
+  Layout,
+  Zap,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "~/hooks/useAuth";
@@ -157,6 +159,30 @@ export function DesktopOffcanvasMenu({
     item.label.toLowerCase().includes(searchQuery.toLowerCase()),
   );
 
+  // Hilfsfunktion für Header-Variant-Wechsel
+  const switchToModernHeader = () => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("header-variant", "modern");
+      window.dispatchEvent(
+        new CustomEvent<"modern" | "classic">("header-variant-change", {
+          detail: "modern",
+        }),
+      );
+    }
+  };
+
+  // Hilfsfunktion für Header-Variant-Wechsel zurück zum klassischen Menü
+  const switchToClassicHeader = () => {
+    if (typeof window !== "undefined") {
+      localStorage.setItem("header-variant", "classic");
+      window.dispatchEvent(
+        new CustomEvent<"modern" | "classic">("header-variant-change", {
+          detail: "classic",
+        }),
+      );
+    }
+  };
+
   return (
     <>
       {isOpen && (
@@ -264,6 +290,18 @@ export function DesktopOffcanvasMenu({
 
                 {/* Auth Section */}
                 <div className="mt-6 border-t border-border pt-4 dark:border-border">
+                  {/* Modern Header Button */}
+                  <button
+                    onClick={() => {
+                      switchToModernHeader();
+                      onClose();
+                    }}
+                    className="flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm font-medium text-blue-600 transition-colors hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/20"
+                  >
+                    <Zap className="h-4 w-4" />
+                    <span>Zum modernen Menü wechseln</span>
+                  </button>
+
                   {isAuthenticated ? (
                     <div className="space-y-2">
                       {/* User Info */}

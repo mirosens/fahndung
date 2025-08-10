@@ -1,33 +1,21 @@
 "use client";
 import React, { useEffect, useRef, useState } from "react";
-import {
-  Accessibility,
-  Sun,
-  Moon,
-  Monitor,
-  Type,
-  Contrast,
-  Layout,
-} from "lucide-react";
-import { useTheme } from "next-themes";
+import { Accessibility, Type, Contrast, Layout } from "lucide-react";
+import { SystemThemeToggle } from "~/components/ui/SystemThemeToggle";
 
 interface A11navEnhancedProps {
   isCompact?: boolean;
 }
 
 type FontSize = "normal" | "large" | "xlarge";
-type AppTheme = "light" | "dark" | "system";
 type ContrastMode = "normal" | "high";
 type HeaderVariant = "modern" | "classic";
 
 export default function A11navEnhanced({
   isCompact = false,
 }: A11navEnhancedProps) {
-  const { setTheme } = useTheme();
-
   const [open, setOpen] = useState(false);
   const [fontSize, setFontSize] = useState<FontSize>("normal");
-  const [theme, setThemeState] = useState<AppTheme>("system");
   const [contrast, setContrast] = useState<ContrastMode>("normal");
   const [headerVariant, setHeaderVariant] = useState<HeaderVariant>("modern");
 
@@ -39,15 +27,12 @@ export default function A11navEnhanced({
     try {
       const savedFontSize =
         (localStorage.getItem("font-size") as FontSize) ?? "normal";
-      const savedTheme =
-        (localStorage.getItem("theme") as AppTheme) ?? "system";
       const savedContrast =
         (localStorage.getItem("contrast") as ContrastMode) ?? "normal";
       const savedHeaderVariant =
         (localStorage.getItem("header-variant") as HeaderVariant) ?? "modern";
 
       setFontSize(savedFontSize);
-      setThemeState(savedTheme);
       setContrast(savedContrast);
       setHeaderVariant(savedHeaderVariant);
     } catch {
@@ -65,12 +50,6 @@ export default function A11navEnhanced({
     root.setAttribute("data-font-size", fontSize);
     localStorage.setItem("font-size", fontSize);
   }, [fontSize]);
-
-  // Apply theme
-  useEffect(() => {
-    setTheme(theme);
-    localStorage.setItem("theme", theme);
-  }, [theme, setTheme]);
 
   // Apply contrast
   useEffect(() => {
@@ -114,11 +93,7 @@ export default function A11navEnhanced({
   const toggleOpen = () => setOpen((v) => !v);
 
   return (
-    <div
-      className="relative"
-
-
-    >
+    <div className="relative">
       <button
         ref={btnRef}
         type="button"
@@ -172,46 +147,10 @@ export default function A11navEnhanced({
           {/* Theme */}
           <div className="mb-3">
             <div className="mb-1.5 flex items-center gap-2 text-xs font-semibold text-muted-foreground">
-              <Sun className="h-4 w-4" />
               Theme
             </div>
-            <div className="grid grid-cols-3 gap-2">
-              <button
-                type="button"
-                onClick={() => setThemeState("light")}
-                className={`inline-flex items-center justify-center gap-1.5 rounded-md px-2 py-1.5 text-sm transition-colors ${
-                  theme === "light"
-                    ? "bg-primary/10 text-primary ring-1 ring-primary/30"
-                    : "hover:bg-accent"
-                }`}
-                aria-pressed={theme === "light"}
-              >
-                <Sun className="h-4 w-4" /> Hell
-              </button>
-              <button
-                type="button"
-                onClick={() => setThemeState("dark")}
-                className={`inline-flex items-center justify-center gap-1.5 rounded-md px-2 py-1.5 text-sm transition-colors ${
-                  theme === "dark"
-                    ? "bg-primary/10 text-primary ring-1 ring-primary/30"
-                    : "hover:bg-accent"
-                }`}
-                aria-pressed={theme === "dark"}
-              >
-                <Moon className="h-4 w-4" /> Dunkel
-              </button>
-              <button
-                type="button"
-                onClick={() => setThemeState("system")}
-                className={`inline-flex items-center justify-center gap-1.5 rounded-md px-2 py-1.5 text-sm transition-colors ${
-                  theme === "system"
-                    ? "bg-primary/10 text-primary ring-1 ring-primary/30"
-                    : "hover:bg-accent"
-                }`}
-                aria-pressed={theme === "system"}
-              >
-                <Monitor className="h-4 w-4" /> System
-              </button>
+            <div className="flex justify-center">
+              <SystemThemeToggle />
             </div>
           </div>
 
@@ -278,7 +217,7 @@ export default function A11navEnhanced({
                 }`}
                 aria-pressed={headerVariant === "classic"}
               >
-                Classic
+                Klassisch
               </button>
             </div>
           </div>
