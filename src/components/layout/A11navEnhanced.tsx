@@ -21,6 +21,7 @@ export default function A11navEnhanced({
 
   const btnRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
+  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
 
   // Init from localStorage
   useEffect(() => {
@@ -73,7 +74,7 @@ export default function A11navEnhanced({
     }
   }, [headerVariant]);
 
-  // Close on outside click
+  // Close on outside click and escape key
   useEffect(() => {
     const onDown = (ev: MouseEvent) => {
       const target = ev.target as Node;
@@ -86,24 +87,55 @@ export default function A11navEnhanced({
         setOpen(false);
       }
     };
+
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setOpen(false);
+      }
+    };
+
     document.addEventListener("mousedown", onDown);
-    return () => document.removeEventListener("mousedown", onDown);
+    document.addEventListener("keydown", handleEscape);
+
+    return () => {
+      document.removeEventListener("mousedown", onDown);
+      document.removeEventListener("keydown", handleEscape);
+    };
   }, []);
+
+  // Hover handlers wie bei den Menü-Reitern
+  const handleMouseEnter = () => {
+    if (timeoutRef.current) {
+      clearTimeout(timeoutRef.current);
+    }
+    setOpen(true);
+  };
+
+  const handleMouseLeave = () => {
+    timeoutRef.current = setTimeout(() => {
+      setOpen(false);
+    }, 150);
+  };
 
   const toggleOpen = () => setOpen((v) => !v);
 
   return (
-    <div className="relative">
+    <div
+      className="relative"
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
       <button
         ref={btnRef}
         type="button"
         onClick={toggleOpen}
         aria-haspopup="menu"
         aria-expanded={open}
-        className="inline-flex items-center gap-2 rounded-md border border-input/50 bg-background/60 px-3 py-2 text-sm font-medium text-foreground shadow-sm backdrop-blur-xl transition-colors hover:bg-accent focus:outline-none focus:ring-2 focus:ring-primary/50"
+        className="group relative h-10 w-10 rounded-full border border-input/50 bg-background/60 shadow-sm backdrop-blur-xl transition-all duration-200 hover:bg-accent/50 focus:outline-none focus:ring-2 focus:ring-primary/50 dark:border-slate-600 dark:bg-slate-800/90 dark:hover:bg-accent/50"
+        title="A11y & Meta Einstellungen"
+        aria-label="A11y & Meta Einstellungen"
       >
-        <Accessibility className="h-4 w-4" />
-        {isCompact ? "A11y" : "A11y & Meta"}
+        <Accessibility className="absolute inset-0 m-auto h-4 w-4 text-foreground transition-colors duration-200 group-hover:text-primary" />
       </button>
 
       {open && (
@@ -111,7 +143,7 @@ export default function A11navEnhanced({
           ref={menuRef}
           role="menu"
           aria-label="A11y & Meta Einstellungen"
-          className="absolute right-0 z-50 mt-2 w-80 rounded-xl border border-border/50 bg-popover/95 p-3 text-popover-foreground shadow-xl backdrop-blur-2xl dark:bg-popover/90"
+          className="absolute right-0 z-50 mt-2 w-80 rounded-xl border border-border/50 bg-popover/95 p-3 text-popover-foreground shadow-xl backdrop-blur-2xl transition-all duration-200 ease-out dark:bg-popover/90"
         >
           {/* Schriftgröße */}
           <div className="mb-3">

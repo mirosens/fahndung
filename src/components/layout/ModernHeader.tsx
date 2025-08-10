@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   ChevronDown,
   Search,
@@ -39,6 +39,18 @@ export default function ModernHeader() {
   const dropdownTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const { session, isAuthenticated } = useAuth();
 
+  // Escape key handler
+  useEffect(() => {
+    const handleEscape = (event: KeyboardEvent) => {
+      if (event.key === "Escape") {
+        setActiveDropdown(null);
+      }
+    };
+
+    document.addEventListener("keydown", handleEscape);
+    return () => document.removeEventListener("keydown", handleEscape);
+  }, []);
+
   // CSS-only Scroll-Detection ohne Re-Renders
   const { headerRef, spacerRef, searchRef } = useScrollDetection();
 
@@ -65,10 +77,10 @@ export default function ModernHeader() {
     setActiveDropdown(section);
   };
 
-  const handleMouseLeave = () => {
+  const handleMouseLeave = (section: string) => {
     dropdownTimeoutRef.current = setTimeout(() => {
-      setActiveDropdown(null);
-    }, 150);
+      setActiveDropdown((current) => (current === section ? null : current));
+    }, 200);
   };
 
   const handleDropdownClick = (section: string) => {
@@ -167,14 +179,14 @@ export default function ModernHeader() {
                       key={section}
                       className="relative"
                       onMouseEnter={() => handleMouseEnter(section)}
-                      onMouseLeave={handleMouseLeave}
+                      onMouseLeave={() => handleMouseLeave(section)}
                     >
                       <button
                         onClick={() => handleDropdownClick(section)}
                         className={`
                           flex items-center gap-1.5 rounded-lg px-4 
                           py-2 text-sm font-medium
-                          text-foreground/90 transition-all
+                          text-foreground/90 transition-colors
                           duration-200 hover:bg-accent/50 hover:text-primary
                           focus:outline-none focus:ring-2 focus:ring-primary/50
                           ${activeDropdown === section ? "bg-accent/50 text-primary" : ""}
@@ -194,11 +206,13 @@ export default function ModernHeader() {
                       {activeDropdown === section && (
                         <div
                           className={`
-                          animate-in fade-in-0 zoom-in-95 absolute left-0
-                          top-full mt-2 w-80
+                          absolute left-0 top-full mt-2 w-80
                           rounded-xl border border-border/50
-                          bg-popover/95 shadow-xl backdrop-blur-2xl duration-200 dark:bg-popover/90
+                          bg-popover/95 shadow-xl backdrop-blur-2xl 
+                          dark:bg-popover/90
                         `}
+                          onMouseEnter={() => handleMouseEnter(section)}
+                          onMouseLeave={() => handleMouseLeave(section)}
                         >
                           <div className="p-2">
                             {/* Hauptnavigation */}
