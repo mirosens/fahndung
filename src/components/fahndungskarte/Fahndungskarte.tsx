@@ -3,7 +3,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
-import { Eye, EyeOff, Edit, ArrowLeft } from "lucide-react";
+import { Eye, EyeOff, Edit, ArrowRight } from "lucide-react";
 import { TabContent } from "./TabContent";
 import { NetworkErrorDiagnostic } from "../NetworkErrorDiagnostic";
 import { useFahndungskarteOptimized } from "~/hooks/useFahndungskarteOptimized";
@@ -236,7 +236,7 @@ const Fahndungskarte: React.FC<ModernFahndungskarteProps> = ({
   // Zeige NetworkError-Diagnose wenn Fehler vorhanden
   if (networkError) {
     return (
-      <div className={`${styles['fahndungskarte']} ${className}`}>
+      <div className={`${styles["fahndungskarte"]} ${className}`}>
         <NetworkErrorDiagnostic
           error={networkError}
           onRetry={handleRetry}
@@ -249,7 +249,7 @@ const Fahndungskarte: React.FC<ModernFahndungskarteProps> = ({
   // Zeige Loading nur wenn wirklich Daten geladen werden (nicht im Preview-Modus)
   if (isDataLoading && investigationId && !disableNavigation) {
     return (
-      <div className={`${styles['fahndungskarte']} ${className}`}>
+      <div className={`${styles["fahndungskarte"]} ${className}`}>
         <div className="flex items-center justify-center p-8">
           <div className="flex flex-col items-center gap-4">
             <div className="h-8 w-8 animate-spin rounded-full border-2 border-blue-600 border-t-transparent"></div>
@@ -411,7 +411,7 @@ const Fahndungskarte: React.FC<ModernFahndungskarteProps> = ({
                     tabIndex={0}
                   >
                     <span>Mehr erfahren</span>
-                    <ArrowLeft className="h-4 w-4" />
+                    <ArrowRight className="h-4 w-4" />
                   </button>
                 )}
               </div>
