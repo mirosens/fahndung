@@ -33,19 +33,9 @@ let supabaseInstance: ReturnType<typeof createClient> | null = null;
 
 const getSupabaseInstance = () => {
   supabaseInstance ??= createClient(supabaseUrl ?? "", supabaseAnonKey ?? "", {
-    auth: {
-      autoRefreshToken: true,
-      persistSession: true,
-      detectSessionInUrl: true,
-    },
-    realtime: {
-      enabled: false, // DEAKTIVIERT - WebSocket-Fehler stoppen
-    },
-    global: {
-      headers: {
-        "x-application-name": "fahndung-app",
-      },
-    },
+    realtime: { enabled: false },
+    auth: { persistSession: false },
+    db: { schema: "public" },
   });
   return supabaseInstance;
 };
@@ -58,14 +48,9 @@ export const supabase = (() => {
     console.error("❌ Fehler beim Initialisieren von Supabase:", error);
     // Fallback: Erstelle einen minimalen Client für bessere Fehlerbehandlung
     return createClient(supabaseUrl ?? "", supabaseAnonKey ?? "", {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false,
-        detectSessionInUrl: false,
-      },
-      realtime: {
-        enabled: false, // DEAKTIVIERT - WebSocket-Fehler stoppen
-      },
+      realtime: { enabled: false },
+      auth: { persistSession: false },
+      db: { schema: "public" },
     });
   }
 })();
