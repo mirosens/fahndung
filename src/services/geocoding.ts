@@ -63,11 +63,11 @@ export class NominatimService {
       params.append("bounded", options?.bounded ? "1" : "0");
     }
 
-    // Reduzierter Timeout für schnellere Fehlerbehandlung
+    // Timeout erhöhen für bessere Stabilität
     const controller = new AbortController();
     const timeoutId = setTimeout(
       () => controller.abort(new DOMException("Timeout", "AbortError")),
-      3000,
+      5000, // 5s statt 3s
     );
 
     try {
@@ -153,11 +153,11 @@ export class NominatimService {
       namedetails: "1",
     });
 
-    // Reduzierter Timeout für schnellere Fehlerbehandlung
+    // Timeout erhöhen für bessere Stabilität
     const controller = new AbortController();
     const timeoutId = setTimeout(
       () => controller.abort(new DOMException("Timeout", "AbortError")),
-      3000,
+      5000, // 5s statt 3s
     );
 
     try {

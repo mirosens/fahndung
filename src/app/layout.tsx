@@ -23,9 +23,23 @@ export default function RootLayout({
   return (
     <html lang="de" suppressHydrationWarning>
       <head>
+        {/* Dark Mode Flackern beheben - Vor allem anderen! */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){
+            const t=localStorage.getItem('theme')||'system';
+            document.documentElement.classList.add(t==='system'?
+              (matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light'):t);
+          })()`,
+          }}
+        />
         {/* Preconnect & Prefetch Optimierungen */}
         <link rel="preconnect" href="https://fonts.googleapis.com" />
-        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link
+          rel="preconnect"
+          href="https://fonts.gstatic.com"
+          crossOrigin="anonymous"
+        />
         <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com" />
         <link rel="dns-prefetch" href="https://supabase.co" />
         <link rel="dns-prefetch" href="https://images.unsplash.com" />
@@ -36,7 +50,7 @@ export default function RootLayout({
          to the main content area. */}
         <a
           href="#mainContent"
-          className="sr-only focus:not-sr-only absolute top-0 left-0 z-50 m-2 rounded bg-primary px-4 py-2 text-sm font-medium text-background focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-background"
+          className="sr-only absolute left-0 top-0 z-50 m-2 rounded bg-primary px-4 py-2 text-sm font-medium text-background focus:not-sr-only focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-background"
         >
           Zum Hauptinhalt springen
         </a>

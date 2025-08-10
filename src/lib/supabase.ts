@@ -39,12 +39,7 @@ const getSupabaseInstance = () => {
       detectSessionInUrl: true,
     },
     realtime: {
-      params: {
-        eventsPerSecond: 100, // Erhöht für bessere Performance
-        heartbeatIntervalMs: 500, // Häufigere Heartbeats
-        reconnectAfterMs: 500, // Schnellere Reconnection
-        maxRetries: 5, // Mehr Reconnection-Versuche
-      },
+      enabled: false, // DEAKTIVIERT - WebSocket-Fehler stoppen
     },
     global: {
       headers: {
@@ -69,12 +64,7 @@ export const supabase = (() => {
         detectSessionInUrl: false,
       },
       realtime: {
-        params: {
-          eventsPerSecond: 10,
-          heartbeatIntervalMs: 1000,
-          reconnectAfterMs: 1000,
-          maxRetries: 3,
-        },
+        enabled: false, // DEAKTIVIERT - WebSocket-Fehler stoppen
       },
     });
   }

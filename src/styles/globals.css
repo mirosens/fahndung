@@ -137,12 +137,38 @@
       "liga" 1,
       "calt" 1;
   }
+
+  /* Layout Shifts eliminieren - Feste Höhen für kritische Elemente */
+  .logo-container {
+    min-height: 48px;
+  }
+  .header {
+    min-height: 64px;
+  }
+  .breadcrumb {
+    min-height: 40px;
+  }
+  img {
+    aspect-ratio: attr(width) / attr(height);
+  }
 }
 
 @layer components {
   .fahndungskarte {
-    @apply rounded-lg bg-white p-4 shadow-md transition-all 
-           duration-200 hover:scale-[1.02] hover:shadow-lg dark:bg-gray-800;
+    @apply rounded-lg bg-white p-4 shadow-md dark:bg-gray-800;
+    /* Nutze transform statt position/width für bessere Performance */
+    transform: translateZ(0);
+    will-change: transform;
+    transition:
+      transform 0.2s ease-out,
+      box-shadow 0.2s ease-out;
+  }
+
+  .fahndungskarte:hover {
+    transform: translateZ(0) scale(1.02);
+    box-shadow:
+      0 10px 25px -5px rgba(0, 0, 0, 0.1),
+      0 10px 10px -5px rgba(0, 0, 0, 0.04);
   }
 
   .view-transition {
@@ -155,6 +181,12 @@
     line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
+  }
+
+  /* Optimierte Animationen */
+  .animate-optimized {
+    transform: translateX(0);
+    will-change: transform;
   }
 }
 
