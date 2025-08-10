@@ -45,6 +45,18 @@ export default function ModernHeader() {
 
   return (
     <>
+      {/* Font-Loading Optimierung */}
+      <style
+        dangerouslySetInnerHTML={{
+          __html: `
+          @font-face {
+            font-display: swap; /* Kritisch! */
+            size-adjust: 105%; /* Verhindert Layout Shift */
+          }
+        `,
+        }}
+      />
+
       {/* Skip Link für Screenreader */}
       <a
         href="#main-content"
