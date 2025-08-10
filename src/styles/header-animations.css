@@ -20,8 +20,9 @@
   top: 0;
   height: var(--header-height);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  will-change: height;
-  transform: translateZ(0); /* Hardware Acceleration */
+  will-change: auto; /* Entfernen! */
+  transform: translateZ(0); /* GPU Layer */
+  contain: layout style; /* Rendering isolation */
 }
 
 /* Scroll-basierte Klassen */
@@ -50,12 +51,16 @@
 /* Smooth Transitions */
 .header-container {
   transition: margin-top 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  will-change: margin-top;
+  will-change: auto; /* Entfernen! */
+  transform: translateZ(0); /* GPU Layer */
+  contain: layout style; /* Rendering isolation */
 }
 
 .search-container {
   transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  will-change: width;
+  will-change: auto; /* Entfernen! */
+  transform: translateZ(0); /* GPU Layer */
+  contain: layout style; /* Rendering isolation */
   width: var(--search-width);
 }
 

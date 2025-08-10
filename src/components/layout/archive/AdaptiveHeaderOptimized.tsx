@@ -15,6 +15,7 @@ import { SystemThemeToggle } from "../../ui/SystemThemeToggle";
 import { DesktopMegaMenu } from "../../ui/megamenu/DesktopMegaMenu";
 import { MobileDrawerMenu } from "../../ui/megamenu/MobileDrawerMenu";
 import { DesktopOffcanvasMenu } from "../../ui/megamenu/DesktopOffcanvasMenu";
+import styles from "~/styles/header.module.css";
 
 import { useRouter, usePathname } from "next/navigation";
 import { type Session } from "~/lib/auth";
@@ -275,7 +276,7 @@ const AdaptiveDesktopHeader = ({
           }}
         >
           <div
-            className={`flex w-full items-center justify-between ${isScrolled ? "px-6 py-0" : "px-6 py-1"}`}
+            className={`${styles.headerContainer} ${isScrolled ? styles.headerContainerScrolled : styles.headerContainerNotScrolled}`}
           >
             {/* Logo - adaptiert Größe */}
             <div className="flex-shrink-0">

@@ -22,6 +22,14 @@ export default function RootLayout({
 }) {
   return (
     <html lang="de" suppressHydrationWarning>
+      <head>
+        {/* Preconnect & Prefetch Optimierungen */}
+        <link rel="preconnect" href="https://fonts.googleapis.com" />
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
+        <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com" />
+        <link rel="dns-prefetch" href="https://supabase.co" />
+        <link rel="dns-prefetch" href="https://images.unsplash.com" />
+      </head>
       <body className="antialiased" suppressHydrationWarning>
         {/* Skip-Link for better accessibility. When focused (via Tab key), this becomes visible
          and allows users using screen readers or keyboard navigation to jump directly

@@ -9,6 +9,7 @@ import { NetworkErrorDiagnostic } from "../NetworkErrorDiagnostic";
 import { useFahndungskarteOptimized } from "~/hooks/useFahndungskarteOptimized";
 import { CATEGORY_CONFIG, PRIORITY_CONFIG, TAB_CONFIG } from "./types";
 import type { FahndungsData } from "./types";
+import styles from "~/styles/fahndungskarte.module.css";
 
 interface ModernFahndungskarteProps {
   data?: FahndungsData;
@@ -236,7 +237,7 @@ const Fahndungskarte: React.FC<ModernFahndungskarteProps> = ({
   if (networkError) {
     return (
       <div
-        className={`relative overflow-hidden rounded-lg border border-border bg-white p-6 shadow-sm transition-all duration-300 hover:shadow-sm dark:border-border dark:bg-muted ${className}`}
+        className={`${styles.fahndungskarte} ${className}`}
       >
         <NetworkErrorDiagnostic
           error={networkError}
@@ -251,7 +252,7 @@ const Fahndungskarte: React.FC<ModernFahndungskarteProps> = ({
   if (isDataLoading && investigationId && !disableNavigation) {
     return (
       <div
-        className={`relative overflow-hidden rounded-lg border border-border bg-white p-6 shadow-sm transition-all duration-300 hover:shadow-sm dark:border-border dark:bg-muted ${className}`}
+        className={`${styles.fahndungskarte} ${className}`}
       >
         <div className="flex items-center justify-center p-8">
           <div className="flex flex-col items-center gap-4">

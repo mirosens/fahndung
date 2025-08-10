@@ -1,0 +1,77 @@
+/* Header CSS Module - Ersetzt CSS-in-JS für bessere Performance */
+
+.header {
+  /* Basis-Styles */
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  
+  /* GPU-beschleunigte Properties */
+  transform: translateZ(0);
+  contain: layout style;
+  
+  /* Smooth transitions */
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.headerScrolled {
+  /* Kompakter Header wenn gescrollt */
+  height: 4rem; /* 64px */
+}
+
+.headerNotScrolled {
+  /* Standard Header Höhe */
+  height: 5rem; /* 80px */
+}
+
+.headerContainer {
+  /* Container für Header-Inhalt */
+  display: flex;
+  width: 100%;
+  align-items: center;
+  justify-content: space-between;
+  
+  /* GPU-beschleunigte Properties */
+  transform: translateZ(0);
+  contain: layout style;
+  
+  /* Smooth transitions */
+  transition: padding 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.headerContainerScrolled {
+  padding: 0 1.5rem; /* px-6 py-0 */
+}
+
+.headerContainerNotScrolled {
+  padding: 0.25rem 1.5rem; /* px-6 py-1 */
+}
+
+.searchContainer {
+  /* Suchleiste Container */
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  
+  /* GPU-beschleunigte Properties */
+  transform: translateZ(0);
+  contain: layout style;
+  
+  width: 16rem; /* 256px - Standard */
+}
+
+.searchContainerScrolled {
+  width: 12rem; /* 192px - kompakter */
+}
+
+/* Performance Optimierungen */
+.header * {
+  backface-visibility: hidden;
+}
+
+/* Prefers Reduced Motion Support */
+@media (prefers-reduced-motion: reduce) {
+  .header,
+  .headerContainer,
+  .searchContainer {
+    transition: none !important;
+  }
+}
