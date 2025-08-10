@@ -223,15 +223,19 @@ export default function ModernHeader() {
                                   key={item.href}
                                   href={item.href}
                                   className={`
-                                    flex items-start gap-3 rounded-lg px-3 py-2.5
+                                    group flex items-start gap-3 rounded-lg px-3 py-2.5
                                     transition-colors duration-200
                                     hover:bg-accent focus:bg-accent focus:outline-none
                                     ${item.urgent ? "border border-destructive/20" : ""}
                                   `}
                                 >
                                   <IconComponent
-                                    className={`mt-0.5 h-5 w-5 flex-shrink-0
-                                      ${item.urgent ? "text-destructive" : "text-muted-foreground"}`}
+                                    className={`mt-0.5 h-5 w-5 flex-shrink-0 transition-all duration-200
+                                      ${
+                                        item.urgent
+                                          ? "text-destructive group-hover:fill-destructive"
+                                          : "text-muted-foreground group-hover:fill-primary group-hover:text-primary"
+                                      }`}
                                   />
                                   <div className="flex-1">
                                     <div className="flex items-center gap-2">
@@ -293,9 +297,9 @@ export default function ModernHeader() {
                                       <a
                                         key={item.href}
                                         href={item.href}
-                                        className="flex items-start gap-3 rounded-lg px-3 py-2.5 transition-colors duration-200 hover:bg-accent focus:bg-accent focus:outline-none"
+                                        className="group flex items-start gap-3 rounded-lg px-3 py-2.5 transition-colors duration-200 hover:bg-accent focus:bg-accent focus:outline-none"
                                       >
-                                        <IconComponent className="mt-0.5 h-5 w-5 flex-shrink-0 text-muted-foreground" />
+                                        <IconComponent className="mt-0.5 h-5 w-5 flex-shrink-0 text-muted-foreground transition-all duration-200 group-hover:fill-primary group-hover:text-primary" />
                                         <div className="flex-1">
                                           <div className="flex items-center gap-2">
                                             <span className="text-sm font-medium">
@@ -415,10 +419,10 @@ export default function ModernHeader() {
                           <a
                             key={item.href}
                             href={item.href}
-                            className="flex items-center gap-3 rounded-lg px-3 py-2 hover:bg-accent"
+                            className="group flex items-center gap-3 rounded-lg px-3 py-2 hover:bg-accent"
                             onClick={() => setIsMobileMenuOpen(false)}
                           >
-                            <IconComponent className="h-5 w-5 text-muted-foreground" />
+                            <IconComponent className="h-5 w-5 text-muted-foreground transition-all duration-200 group-hover:fill-primary group-hover:text-primary" />
                             <span className="text-sm">{item.label}</span>
                           </a>
                         );
@@ -462,10 +466,10 @@ export default function ModernHeader() {
                                 <a
                                   key={item.href}
                                   href={item.href}
-                                  className="flex items-center gap-3 rounded-lg px-3 py-2 hover:bg-accent"
+                                  className="group flex items-center gap-3 rounded-lg px-3 py-2 hover:bg-accent"
                                   onClick={() => setIsMobileMenuOpen(false)}
                                 >
-                                  <IconComponent className="h-5 w-5 text-muted-foreground" />
+                                  <IconComponent className="h-5 w-5 text-muted-foreground transition-all duration-200 group-hover:fill-primary group-hover:text-primary" />
                                   <span className="text-sm">{item.label}</span>
                                 </a>
                               );
