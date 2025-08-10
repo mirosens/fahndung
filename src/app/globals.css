@@ -5,6 +5,9 @@
 @import "tailwindcss/preflight";
 @tailwind utilities;
 
+/* Header Scroll-Animationen */
+@import "../styles/header-animations.css";
+
 /* Firefox-spezifische Verbesserungen für Touch-Interaktionen */
 @supports (-moz-appearance: none) {
   /* Verbesserte Touch-Interaktionen für Firefox */

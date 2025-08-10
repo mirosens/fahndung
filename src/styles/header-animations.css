@@ -1,0 +1,84 @@
+/* Header Scroll-Animationen - CSS-only Lösung */
+
+/* Scroll-Detection mit CSS Custom Properties */
+:root {
+  --scroll-y: 0;
+  --header-height: 5rem; /* 80px - Standard Header Höhe */
+  --header-height-scrolled: 4rem; /* 64px - kompakter Header */
+  --search-width: 16rem; /* 256px - Standard Suchleiste */
+  --search-width-scrolled: 12rem; /* 192px - kompaktere Suchleiste */
+}
+
+/* Header Container */
+.header-scroll-container {
+  position: relative;
+}
+
+/* Scroll-basierte Header-Animationen */
+.header {
+  position: sticky;
+  top: 0;
+  height: var(--header-height);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: height;
+  transform: translateZ(0); /* Hardware Acceleration */
+}
+
+/* Scroll-basierte Klassen */
+.header.scrolled {
+  height: var(--header-height-scrolled);
+}
+
+.header.scrolled .header-container {
+  margin-top: 0;
+}
+
+.header.scrolled .search-container {
+  width: var(--search-width-scrolled);
+}
+
+/* Spacer Anpassung */
+.header-spacer {
+  height: var(--header-height);
+  transition: height 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.header-spacer.scrolled {
+  height: var(--header-height-scrolled);
+}
+
+/* Smooth Transitions */
+.header-container {
+  transition: margin-top 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: margin-top;
+}
+
+.search-container {
+  transition: width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  will-change: width;
+  width: var(--search-width);
+}
+
+/* Performance Optimierungen */
+.header * {
+  backface-visibility: hidden;
+}
+
+/* Fallback für ältere Browser */
+@supports not (position: sticky) {
+  .header {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    z-index: 50;
+  }
+
+  .header-spacer {
+    margin-top: var(--header-height);
+  }
+
+  .header-spacer.scrolled {
+    margin-top: var(--header-height-scrolled);
+  }
+}

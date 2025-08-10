@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useRef } from "react";
 import { ChevronDown, Search, Menu, X } from "lucide-react";
 import { Logo } from "../ui/Logo";
 import A11navEnhanced from "@/components/layout/A11navEnhanced";
+import { useScrollDetection } from "~/hooks/useScrollDetection";
 import {
   navigationData,
   type NavItem,
@@ -11,23 +12,15 @@ import {
 /**
  * ModernHeader Component
  * Glassmorphismus-Design mit komplettem A11y-Dropdown
- * Alte Meta-Nav bleibt im A11y-Dropdown verfügbar
+ * CSS-only Scroll-Animationen für optimale Performance
  */
 export default function ModernHeader() {
-  const [isCompact, setIsCompact] = useState(false);
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const dropdownTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  // Scroll-Handler für Kompaktierung
-  useEffect(() => {
-    const handleScroll = () => {
-      setIsCompact(window.scrollY > 50);
-    };
-
-    window.addEventListener("scroll", handleScroll, { passive: true });
-    return () => window.removeEventListener("scroll", handleScroll);
-  }, []);
+  // CSS-only Scroll-Detection ohne Re-Renders
+  const { headerRef, spacerRef, searchRef } = useScrollDetection();
 
   // Navigation Sections
   const navSections: NavSection[] = ["SICHERHEIT", "SERVICE", "POLIZEI"];
@@ -61,24 +54,25 @@ export default function ModernHeader() {
       </a>
 
       <header
-        className={`
+        ref={headerRef}
+        className="
           fixed left-0 right-0 top-0 z-50 
-          transition-all duration-300 ease-out
-          ${isCompact ? "h-16" : "h-20"}
-        `}
+          h-20 transition-all duration-300 ease-out
+          [&.scrolled]:h-16
+        "
         role="banner"
         aria-label="Hauptnavigation"
       >
         {/* Glassmorphismus Container - freistehende Form */}
         <div
-          className={`
-          mx-auto h-full max-w-[1273px]
-          ${isCompact ? "mt-0" : "mt-4"}
+          className="
+          mx-auto mt-4 h-full max-w-[1273px]
           rounded-[10px] border border-white/50
           bg-white/40 shadow-lg backdrop-blur-[50px] 
           transition-all duration-300 hover:shadow-xl
           dark:border-white/20 dark:bg-black/40
-        `}
+          [.scrolled_&]:mt-0
+        "
         >
           <div className="h-full px-4 sm:px-6 lg:px-8">
             <div className="flex h-full items-center justify-between">
@@ -178,14 +172,15 @@ export default function ModernHeader() {
                 {/* Search Bar */}
                 <div className="hidden items-center md:flex">
                   <div
-                    className={`
-                    relative flex items-center
+                    ref={searchRef}
+                    className="
+                    relative flex w-64 items-center
                     rounded-lg border border-input/50
                     bg-background/50 backdrop-blur-xl transition-all
                     duration-200 focus-within:border-primary/50
                     focus-within:bg-background/70 dark:bg-background/30
-                    ${isCompact ? "w-48" : "w-64"}
-                  `}
+                    [.scrolled_&]:w-48
+                  "
                   >
                     <Search className="absolute left-3 h-4 w-4 text-muted-foreground" />
                     <input
@@ -198,7 +193,7 @@ export default function ModernHeader() {
                 </div>
 
                 {/* Enhanced A11y Dropdown - ALLE Meta-Nav Features */}
-                <A11navEnhanced isCompact={isCompact} />
+                <A11navEnhanced isCompact={false} />
 
                 {/* Mobile Menu Button */}
                 <button
@@ -252,7 +247,8 @@ export default function ModernHeader() {
 
       {/* Spacer für fixed Header */}
       <div
-        className={`transition-all duration-300 ${isCompact ? "h-16" : "h-20"}`}
+        ref={spacerRef}
+        className="h-20 transition-all duration-300 [.scrolled_&]:h-16"
       />
     </>
   );
