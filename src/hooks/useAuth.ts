@@ -3,12 +3,9 @@
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { getBrowserClient } from "~/lib/supabase/supabase-browser";
-import {
-  getCurrentSession,
-  clearAuthSession,
-  handle403Error,
-} from "~/lib/auth";
+import { clearAuthSession, handle403Error } from "~/lib/auth";
 import type { Session } from "~/lib/auth";
+import type { Session as SupabaseSession, User } from "@supabase/supabase-js";
 
 export const useAuth = () => {
   const [session, setSession] = useState<Session | null>(null);
@@ -44,29 +41,92 @@ export const useAuth = () => {
     setError(null);
     setTimeoutReached(false);
 
+    // RADIKALE OPTIMIERUNG: Noch kürzerer Timeout
+    const supabase = getBrowserClient();
+
     try {
-      // RADIKALE OPTIMIERUNG: Noch kürzerer Timeout
-      const sessionPromise = getCurrentSession();
-      const timeoutPromise = new Promise<null>(
-        (resolve) => setTimeout(() => resolve(null), 500), // Reduziert auf 500ms
+      const sessionPromise = supabase.auth.getSession();
+      const timeoutPromise = new Promise<{ data: { session: null } }>(
+        (resolve) =>
+          setTimeout(() => resolve({ data: { session: null } }), 500), // Reduziert auf 500ms
       );
 
-      const currentSession = await Promise.race([
-        sessionPromise,
-        timeoutPromise,
-      ]);
+      const result = await Promise.race([sessionPromise, timeoutPromise]);
+      const { data: sessionData } = result as {
+        data: { session: SupabaseSession | null };
+        error?: { message: string };
+      };
 
-      if (currentSession) {
-        setSession(currentSession);
-        retryCount.current = 0; // Reset retry count on success
-      } else {
+      // Prüfe ob es einen error gibt (nur wenn error Property existiert)
+      if ("error" in result && result.error) {
+        console.error("❌ Session-Fehler:", result.error);
         setSession(null);
+        return;
+      }
+
+      if (!sessionData.session) {
+        setSession(null);
+        return;
+      }
+
+      // Prüfe Token-Ablauf
+      const now = Math.floor(Date.now() / 1000);
+      const expiresAt = sessionData.session.expires_at;
+
+      if (expiresAt && now >= expiresAt) {
+        await clearAuthSession(supabase);
+        setSession(null);
+        return;
+      }
+
+      const user: User = sessionData.session.user;
+
+      // Benutzer-Profil abrufen mit einfacher Fehlerbehandlung
+      try {
+        const { data: profile, error: profileError } = await supabase
+          .from("user_profiles")
+          .select("*")
+          .eq("user_id", user.id)
+          .single();
+
+        if (profileError) {
+          console.error("❌ Profil-Fehler:", profileError);
+          // Bei Profil-Fehlern trotzdem Session zurückgeben, aber ohne Profil
+          setSession({
+            user: {
+              id: user.id,
+              email: user.email ?? "",
+            },
+            profile: null,
+          });
+          retryCount.current = 0; // Reset retry count on success
+          return;
+        }
+
+        setSession({
+          user: {
+            id: user.id,
+            email: user.email ?? "",
+          },
+          profile: profile as unknown as Session["profile"],
+        });
+        retryCount.current = 0; // Reset retry count on success
+      } catch (profileError) {
+        console.error("❌ Profil-Exception:", profileError);
+        setSession({
+          user: {
+            id: user.id,
+            email: user.email ?? "",
+          },
+          profile: null,
+        });
+        retryCount.current = 0; // Reset retry count on success
       }
     } catch (err) {
       console.error("❌ Fehler beim Prüfen der Session:", err);
 
       // 403-Fehler spezifisch behandeln
-      await handle403Error(err);
+      await handle403Error(supabase, err);
 
       setError(err instanceof Error ? err.message : "Unbekannter Fehler");
       setSession(null);
@@ -74,7 +134,7 @@ export const useAuth = () => {
       // Bei Timeout-Fehlern Session bereinigen
       if (err instanceof Error && err.message.includes("Timeout")) {
         setTimeoutReached(true);
-        await clearAuthSession();
+        await clearAuthSession(supabase);
       }
 
       // Increment retry count
@@ -89,8 +149,9 @@ export const useAuth = () => {
 
   const logout = useCallback(async () => {
     try {
+      const supabase = getBrowserClient();
       // Session bereinigen
-      await clearAuthSession();
+      await clearAuthSession(supabase);
 
       // Session-State zurücksetzen
       setSession(null);
@@ -167,7 +228,8 @@ export const useAuth = () => {
         const message = String((reason as { message: unknown }).message);
         if (message.includes("403") ?? message.includes("Forbidden")) {
           // Behandle 403-Fehler automatisch
-          void handle403Error(reason);
+          const supabase = getBrowserClient();
+          void handle403Error(supabase, reason);
           return true;
         }
       }

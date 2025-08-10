@@ -3,6 +3,7 @@
 import { useEffect, useRef } from "react";
 import { useAuth } from "~/hooks/useAuth";
 import { clearAuthSession } from "~/lib/auth";
+import { getBrowserClient } from "~/lib/supabase/supabase-browser";
 
 export function SessionManager() {
   const { session, loading, error, initialized } = useAuth();
@@ -30,7 +31,7 @@ export function SessionManager() {
         hasHandledError.current = true;
 
         // Session bereinigen
-        void clearAuthSession();
+        void clearAuthSession(getBrowserClient());
 
         // Zur Login-Seite weiterleiten
         if (

@@ -1,4 +1,4 @@
-import { supabase } from "./supabase-client";
+import { getBrowserClient } from "./supabase/supabase-browser";
 
 export interface MediaItem {
   id: string;
@@ -79,6 +79,7 @@ export class MediaService {
       const filePath = `${directory}/${fileName}`;
 
       // Upload to Supabase Storage
+      const supabase = getBrowserClient();
       const { error: uploadError } = await supabase.storage
         .from(this.bucketName)
         .upload(filePath, file, {
@@ -157,6 +158,7 @@ export class MediaService {
     } = {},
   ): Promise<MediaItem[]> {
     try {
+      const supabase = getBrowserClient();
       let query = supabase.from("media").select("*").eq("is_public", true);
 
       if (options.searchTerm) {
@@ -206,6 +208,7 @@ export class MediaService {
     try {
       // For now, return all media items
       // This will be updated when investigations table exists
+      const supabase = getBrowserClient();
       const { data, error } = await supabase
         .from("media")
         .select("*")
@@ -227,6 +230,7 @@ export class MediaService {
    */
   async deleteMedia(mediaId: string): Promise<void> {
     try {
+      const supabase = getBrowserClient();
       // Get media item to get file path
       const { data: mediaItem, error: fetchError } = await supabase
         .from("media")
@@ -274,6 +278,7 @@ export class MediaService {
     },
   ): Promise<MediaItem> {
     try {
+      const supabase = getBrowserClient();
       const { data, error } = await supabase
         .from("media")
         .update(updates)
@@ -301,6 +306,7 @@ export class MediaService {
    */
   async getDirectories(): Promise<string[]> {
     try {
+      const supabase = getBrowserClient();
       const { data, error } = await supabase
         .from("media")
         .select("directory")
@@ -325,6 +331,7 @@ export class MediaService {
    */
   async downloadFile(mediaId: string): Promise<Blob> {
     try {
+      const supabase = getBrowserClient();
       const { data: mediaItem, error: fetchError } = await supabase
         .from("media")
         .select("file_path")

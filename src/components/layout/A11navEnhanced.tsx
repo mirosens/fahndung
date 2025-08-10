@@ -5,7 +5,6 @@ import { SystemThemeToggle } from "~/components/ui/SystemThemeToggle";
 import { A11yButton } from "~/components/ui/A11yButton";
 
 interface A11navEnhancedProps {
-  isCompact?: boolean;
 }
 
 type FontSize = "normal" | "large" | "xlarge";
@@ -13,7 +12,6 @@ type ContrastMode = "normal" | "high";
 type HeaderVariant = "modern" | "classic";
 
 export default function A11navEnhanced({
-  isCompact = false,
 }: A11navEnhancedProps) {
   const [open, setOpen] = useState(false);
   const [fontSize, setFontSize] = useState<FontSize>("normal");

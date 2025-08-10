@@ -372,9 +372,46 @@ const timingMiddleware = t.middleware(async ({ path, next }) => {
 });
 
 /**
- * Middleware for authentication
+ * Middleware for authentication - VEREINFACHT FÜR PROTOYP
  */
 const authMiddleware = t.middleware(async ({ ctx, next }) => {
+  // 🚀 PROTOYP-MODUS: Automatische Admin-Session für Entwicklung
+  if (process.env.NODE_ENV === "development") {
+    console.log(
+      "🚀 Prototyp-Modus: Verwende automatische Admin-Session für tRPC",
+    );
+
+    // Erstelle automatische Admin-Session
+    const prototypeUser = {
+      id: "prototype-user-id",
+      email: "prototype@fahndung.local",
+      role: "admin" as const,
+    };
+
+    return next({
+      ctx: {
+        ...ctx,
+        user: prototypeUser,
+        session: {
+          user: prototypeUser,
+          profile: {
+            id: "prototype-profile-id",
+            user_id: "prototype-user-id",
+            email: "prototype@fahndung.local",
+            name: "Prototyp Benutzer",
+            role: "admin",
+            department: "Entwicklung",
+            status: "approved",
+            is_active: true,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          },
+        },
+      },
+    });
+  }
+
+  // Normale Authentifizierung für Produktion
   if (!ctx.user) {
     throw new TRPCError({
       code: "UNAUTHORIZED",
@@ -391,9 +428,43 @@ const authMiddleware = t.middleware(async ({ ctx, next }) => {
 });
 
 /**
- * Middleware for admin-only procedures
+ * Middleware for admin-only procedures - VEREINFACHT FÜR PROTOYP
  */
 const adminMiddleware = t.middleware(async ({ ctx, next }) => {
+  // 🚀 PROTOYP-MODUS: Alle sind Admins
+  if (process.env.NODE_ENV === "development") {
+    console.log("🚀 Prototyp-Modus: Admin-Middleware umgangen");
+
+    const prototypeUser = {
+      id: "prototype-user-id",
+      email: "prototype@fahndung.local",
+      role: "admin" as const,
+    };
+
+    return next({
+      ctx: {
+        ...ctx,
+        user: prototypeUser,
+        session: {
+          user: prototypeUser,
+          profile: {
+            id: "prototype-profile-id",
+            user_id: "prototype-user-id",
+            email: "prototype@fahndung.local",
+            name: "Prototyp Benutzer",
+            role: "admin",
+            department: "Entwicklung",
+            status: "approved",
+            is_active: true,
+            created_at: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
+          },
+        },
+      },
+    });
+  }
+
+  // Normale Admin-Prüfung für Produktion
   if (!ctx.user) {
     throw new TRPCError({
       code: "UNAUTHORIZED",

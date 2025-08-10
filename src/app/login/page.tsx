@@ -15,6 +15,9 @@ import { getBrowserClient } from "~/lib/supabase/supabase-browser";
 import AuthPageLayout from "~/components/layout/AuthPageLayout";
 import AutoSetup from "~/components/AutoSetup";
 
+// Verhindere Pre-rendering für diese Seite
+export const dynamic = "force-dynamic";
+
 export default function Login() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");

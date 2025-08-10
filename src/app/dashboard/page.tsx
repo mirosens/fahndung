@@ -10,7 +10,6 @@ import {
   Shield,
   User,
   CheckCircle,
-  AlertCircle,
   RefreshCw,
 } from "lucide-react";
 import { getBrowserClient } from "~/lib/supabase/supabase-browser";

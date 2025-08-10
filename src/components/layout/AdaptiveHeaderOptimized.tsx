@@ -8,7 +8,7 @@ import React, {
   useRef,
 } from "react";
 import Link from "next/link";
-import { Eye, EyeOff, Menu, Plus, X, Layout, Zap } from "lucide-react";
+import { Eye, EyeOff, Menu, Plus, X, Zap } from "lucide-react";
 import { Logo } from "../ui/Logo";
 import { FontSizeToggle } from "../ui/FontSizeToggle";
 import { SystemThemeToggle } from "../ui/SystemThemeToggle";
@@ -406,7 +406,7 @@ const AdaptiveDesktopHeader = ({
           }}
         >
           <div
-            className={`${styles.headerContainer} ${isScrolled ? styles.headerContainerScrolled : styles.headerContainerNotScrolled}`}
+            className={`${styles['headerContainer']} ${isScrolled ? styles['headerContainerScrolled'] : styles['headerContainerNotScrolled']}`}
           >
             {/* Logo - adaptiert Größe */}
             <div className="flex-shrink-0">

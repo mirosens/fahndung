@@ -42,10 +42,10 @@ export function PerformanceMonitor() {
 
       // 🚀 PERFORMANCE-OPTIMIERUNGEN BASIEREND AUF ZEIT
       if (navigationTime > 1000) {
-          warn("⚠️ Langsame Navigation erkannt:", {
-            pathname: safePathname,
-            time: navigationTime,
-          });
+        warn("⚠️ Langsame Navigation erkannt:", {
+          pathname: safePathname,
+          time: navigationTime,
+        });
 
         // Automatische Optimierungen für langsame Navigationen
         if (navigationTime > 2000) {
@@ -93,13 +93,21 @@ export function PerformanceMonitor() {
       // Hier könnten weitere Optimierungen basierend auf Scroll-Verhalten implementiert werden
     };
 
-    // Event Listeners hinzufügen
-    document.addEventListener("mouseenter", handleMouseEnter, true);
-    window.addEventListener("scroll", handleScroll, { passive: true });
+    // Event Listeners hinzufügen - nur wenn wir im Browser sind
+    if (typeof document !== "undefined") {
+      document.addEventListener("mouseenter", handleMouseEnter, true);
+    }
+    if (typeof window !== "undefined") {
+      window.addEventListener("scroll", handleScroll, { passive: true });
+    }
 
     return () => {
-      document.removeEventListener("mouseenter", handleMouseEnter, true);
-      window.removeEventListener("scroll", handleScroll);
+      if (typeof document !== "undefined") {
+        document.removeEventListener("mouseenter", handleMouseEnter, true);
+      }
+      if (typeof window !== "undefined") {
+        window.removeEventListener("scroll", handleScroll);
+      }
     };
   }, []);
 

@@ -18,7 +18,7 @@ import { useMediaStore } from "~/stores/media.store";
 import MediaUpload from "~/components/media/MediaUpload";
 import MediaGrid from "~/components/media/MediaGrid";
 import type { MediaItem } from "~/lib/services/media.service";
-import { supabase } from "~/lib/supabase-client";
+import { getBrowserClient } from "~/lib/supabase/supabase-browser";
 
 interface UploadResult {
   path: string;
@@ -144,6 +144,7 @@ export default function MediaTab() {
   const handleLogin = useCallback(async () => {
     try {
       // Verwende die bestehende Admin-Authentifizierung
+      const supabase = getBrowserClient();
       const {
         data: { session },
       } = await supabase.auth.getSession();
@@ -251,7 +252,7 @@ export default function MediaTab() {
 
       {/* Upload Section - Only show for admins */}
       {showUpload && isAdmin && (
-        <div className="shadow-xs rounded-lg border border-border bg-white p-6 dark:border-border dark:bg-muted">
+        <div className="rounded-lg border border-border bg-white p-6 shadow-xs dark:border-border dark:bg-muted">
           <div className="mb-4 flex items-center justify-between">
             <h3 className="text-lg font-semibold text-muted-foreground dark:text-white">
               Dateien hochladen

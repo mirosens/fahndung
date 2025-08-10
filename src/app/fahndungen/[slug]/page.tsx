@@ -1,256 +1,110 @@
-import { notFound } from "next/navigation";
+/* eslint-disable @typescript-eslint/no-unsafe-call */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-argument */
+// src/app/fahndungen/[slug]/page.tsx
+import { redirect, notFound } from "next/navigation";
+import { isUuid, isCaseNumber, getCanonicalFahndungPath } from "~/lib/seo";
 import { api } from "~/trpc/server";
-import {
-  generateSeoSlug,
-  validateSeoSlug,
-} from "~/lib/seo";
 import FahndungCategoriesContainer from "~/components/fahndungen/categories/FahndungCategoriesContainer";
 
-// TypeScript-Typen für die API-Responses
-interface Investigation {
-  id: string;
-  title: string;
-  case_number: string;
-  description: string;
-  short_description: string;
-  status: string;
-  priority: "normal" | "urgent" | "new";
-  category: string;
-  location: string;
-  station: string;
-  features: string;
-  date: string;
-  created_at: string;
-  updated_at: string;
-  created_by: string;
-  assigned_to?: string;
-  tags: string[];
-  metadata: Record<string, unknown>;
-  contact_info?: Record<string, unknown>;
-  created_by_user?: {
-    name: string;
-    email: string;
-  };
-  assigned_to_user?: {
-    name: string;
-    email: string;
-  };
-  images?: Array<{
-    id: string;
-    url: string;
-    alt_text?: string;
-    caption?: string;
-  }>;
-  published_as_article?: boolean;
-  article_slug?: string;
-  article_content?: {
-    blocks: Array<{
-      type: string;
-      content: Record<string, unknown>;
-      id?: string;
-    }>;
-  };
-  article_meta?: {
-    seo_title?: string;
-    seo_description?: string;
-    og_image?: string;
-    keywords?: string[];
-    author?: string;
-    reading_time?: number;
-  };
-  article_published_at?: string;
-  article_views?: number;
-}
+type Props = { params: Promise<{ slug: string }> };
 
-interface PageProps {
-  params: Promise<{ slug: string }>;
-}
-
-export default async function FahndungSlugPage({ params }: PageProps) {
+export default async function FahndungSlugPage({ params }: Props) {
   const { slug } = await params;
+  const decodedSlug = decodeURIComponent(slug);
 
-  // 1. Prüfe ob es eine Fallnummer ist (z.B. "2024-K-001" oder "POL-2025-K-649864-A")
-  const isCaseNumber = /^(?:POL-)?\d{4}-[A-Z]-\d{3,6}(?:-[A-Z])?$/.test(slug);
+  // 1) Ermitteln, wie wir laden
+  let investigation: Awaited<
+    ReturnType<typeof api.post.getInvestigation>
+  > | null = null;
 
-  if (isCaseNumber) {
-    // Direkte Fallnummer - verwende die ID-Route
-    return <FahndungCategoriesContainer investigationId={slug} />;
-  }
-
-  // 2. Prüfe ob es eine UUID ist
-  const isUUID =
-    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
-      slug,
-    );
-
-  if (isUUID) {
-    // Direkte UUID - verwende die ID-Route
-    return <FahndungCategoriesContainer investigationId={slug} />;
-  }
-
-  // 3. Fahndung basierend auf Titel-Slug finden
   try {
-    const investigation = await api.post.getInvestigationBySlug({ slug }) as Investigation | null;
-
-    if (!investigation) {
-      console.log("❌ Fahndung nicht gefunden für Slug:", slug);
-      return notFound();
+    if (isUuid(decodedSlug)) {
+      const result = await api.post.getInvestigation({ id: decodedSlug });
+      investigation = result;
+    } else if (isCaseNumber(decodedSlug)) {
+      const result = await api.post.getInvestigation({ id: decodedSlug });
+      investigation = result;
+    } else {
+      // SEO-Slug -> lookup by slug/title in deiner API (falls vorhanden),
+      // oder Fallback: suche via "getInvestigationBySlug"
+      const getInvestigationBySlug = api.post.getInvestigationBySlug;
+      if (getInvestigationBySlug) {
+        const result = await getInvestigationBySlug({ slug: decodedSlug });
+        investigation = result;
+      }
     }
-
-    // 4. Slug validieren
-    const expectedSlug = generateSeoSlug(investigation.title);
-    if (!validateSeoSlug(slug, investigation.title)) {
-      console.log("❌ Slug-Validierung fehlgeschlagen:", {
-        expected: expectedSlug,
-        actual: slug,
-        title: investigation.title,
-        caseNumber: investigation.case_number,
-      });
-      return notFound();
-    }
-
-    // 5. Normale Detailseite rendern
-    return (
-      <FahndungCategoriesContainer
-        investigationId={investigation.case_number}
-      />
-    );
   } catch (error) {
-    console.error("❌ Fehler beim Abrufen der Fahndung:", error);
+    // Fehler beim Laden der Untersuchung - setze auf null
+    console.error("Fehler beim Laden der Fahndung:", error);
+    investigation = null;
+  }
+
+  if (!investigation) {
     return notFound();
   }
+
+  // 2) Kanonische URL bestimmen & ggf. redirecten
+  const canonicalPath = getCanonicalFahndungPath(investigation.title);
+  if (`/fahndungen/${decodedSlug}` !== canonicalPath) {
+    // 308 = dauerhaft, behält Methode/Body
+    redirect(canonicalPath);
+  }
+
+  // 3) Render
+  return <FahndungCategoriesContainer investigationId={investigation.id} />;
 }
 
 // Metadata für SEO
-export async function generateMetadata({ params }: PageProps) {
+export async function generateMetadata({ params }: Props) {
   const { slug } = await params;
+  const decodedSlug = decodeURIComponent(slug);
 
-  // Prüfe ob es eine Fallnummer ist
-  const isCaseNumber = /^(?:POL-)?\d{4}-[A-Z]-\d{3,6}(?:-[A-Z])?$/.test(slug);
+  // 1) Ermitteln, wie wir laden
+  let investigation: Awaited<
+    ReturnType<typeof api.post.getInvestigation>
+  > | null = null;
 
-  if (isCaseNumber) {
-    // Direkte Fallnummer - verwende die ID-Route Metadata
-    try {
-      const investigation = await api.post.getInvestigation({ id: slug }) as Investigation | null;
-
-      if (!investigation) {
-        return {
-          title: "Fahndung nicht gefunden",
-          description:
-            "Die angeforderte Fahndung konnte nicht gefunden werden.",
-        };
-      }
-
-      const seoSlug = generateSeoSlug(investigation.title);
-
-      return {
-        title: `${investigation.title} - Fahndung ${investigation.case_number}`,
-        description:
-          investigation.short_description ?? investigation.description,
-        alternates: {
-          canonical: `/fahndungen/${seoSlug}`,
-          alternates: [
-            `/fahndungen/${investigation.case_number}`,
-            `/fahndungen/${investigation.id}`,
-          ],
-        },
-        openGraph: {
-          title: `${investigation.title} - Fahndung ${investigation.case_number}`,
-          description:
-            investigation.short_description ?? investigation.description,
-          url: `/fahndungen/${seoSlug}`,
-          type: "article",
-        },
-      };
-    } catch {
-      return {
-        title: "Fahndung nicht gefunden",
-        description: "Die angeforderte Fahndung konnte nicht gefunden werden.",
-      };
-    }
-  }
-
-  // Prüfe ob es eine UUID ist
-  const isUUID =
-    /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
-      slug,
-    );
-
-  if (isUUID) {
-    // Direkte UUID - verwende die ID-Route Metadata
-    try {
-      const investigation = await api.post.getInvestigation({ id: slug }) as Investigation | null;
-
-      if (!investigation) {
-        return {
-          title: "Fahndung nicht gefunden",
-          description:
-            "Die angeforderte Fahndung konnte nicht gefunden werden.",
-        };
-      }
-
-      const seoSlug = generateSeoSlug(investigation.title);
-
-      return {
-        title: `${investigation.title} - Fahndung ${investigation.case_number}`,
-        description:
-          investigation.short_description ?? investigation.description,
-        alternates: {
-          canonical: `/fahndungen/${seoSlug}`,
-          alternates: [
-            `/fahndungen/${investigation.case_number}`,
-            `/fahndungen/${investigation.id}`,
-          ],
-        },
-        openGraph: {
-          title: `${investigation.title} - Fahndung ${investigation.case_number}`,
-          description:
-            investigation.short_description ?? investigation.description,
-          url: `/fahndungen/${seoSlug}`,
-          type: "article",
-        },
-      };
-    } catch {
-      return {
-        title: "Fahndung nicht gefunden",
-        description: "Die angeforderte Fahndung konnte nicht gefunden werden.",
-      };
-    }
-  }
-
-  // SEO-Slug - Fahndung basierend auf Titel finden
   try {
-    const investigation = await api.post.getInvestigationBySlug({ slug }) as Investigation | null;
-
-    if (!investigation) {
-      return {
-        title: "Fahndung nicht gefunden",
-        description: "Die angeforderte Fahndung konnte nicht gefunden werden.",
-      };
+    if (isUuid(decodedSlug)) {
+      const result = await api.post.getInvestigation({ id: decodedSlug });
+      investigation = result;
+    } else if (isCaseNumber(decodedSlug)) {
+      const result = await api.post.getInvestigation({ id: decodedSlug });
+      investigation = result;
+    } else {
+      const getInvestigationBySlug = api.post.getInvestigationBySlug;
+      if (getInvestigationBySlug) {
+        const result = await getInvestigationBySlug({ slug: decodedSlug });
+        investigation = result;
+      }
     }
+  } catch (error) {
+    // Fehler beim Laden der Untersuchung - setze auf null
+    console.error("Fehler beim Laden der Fahndung für Metadata:", error);
+    investigation = null;
+  }
 
-    return {
-      title: `${investigation.title} - Fahndung ${investigation.case_number}`,
-      description: investigation.short_description ?? investigation.description,
-      alternates: {
-        canonical: `/fahndungen/${slug}`,
-        alternates: [
-          `/fahndungen/${investigation.case_number}`,
-          `/fahndungen/${investigation.id}`,
-        ],
-      },
-      openGraph: {
-        title: `${investigation.title} - Fahndung ${investigation.case_number}`,
-        description:
-          investigation.short_description ?? investigation.description,
-        url: `/fahndungen/${slug}`,
-        type: "article",
-      },
-    };
-  } catch {
+  if (!investigation) {
     return {
       title: "Fahndung nicht gefunden",
       description: "Die angeforderte Fahndung konnte nicht gefunden werden.",
     };
   }
+
+  const canonicalPath = getCanonicalFahndungPath(investigation.title);
+
+  return {
+    title: `${investigation.title} - Fahndung ${investigation.case_number}`,
+    description: investigation.short_description ?? investigation.description,
+    alternates: {
+      canonical: canonicalPath,
+    },
+    openGraph: {
+      title: `${investigation.title} - Fahndung ${investigation.case_number}`,
+      description: investigation.short_description ?? investigation.description,
+      url: canonicalPath,
+      type: "article",
+    },
+  };
 }

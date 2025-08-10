@@ -71,6 +71,8 @@ export const OptimizedImage = ({
       window.addEventListener("resize", updateImageSize);
       return () => window.removeEventListener("resize", updateImageSize);
     }
+    
+    return undefined;
   }, [width, height]);
 
   // Intersection Observer für Lazy Loading

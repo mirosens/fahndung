@@ -12,7 +12,8 @@ const nextConfig = {
 
   experimental: {
     optimizeCss: true,
-    optimizePackageImports: ["lucide-react", "@radix-ui/*", "framer-motion"],
+    // Deaktivieren:
+    optimizePackageImports: undefined, // oder entfernen
   },
   compiler: {
     removeConsole: true,
@@ -22,6 +23,7 @@ const nextConfig = {
     imageSizes: [64, 128],
     minimumCacheTTL: 31536000,
     remotePatterns: [
+      { protocol: "https", hostname: "rgbxdxrhwrszidbnsmuy.supabase.co" },
       { protocol: "https", hostname: "**.supabase.co" },
       { protocol: "https", hostname: "images.unsplash.com" },
       { protocol: "https", hostname: "**.githubusercontent.com" },

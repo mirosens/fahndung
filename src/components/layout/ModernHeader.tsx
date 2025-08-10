@@ -1,16 +1,9 @@
 import React, { useState, useRef, useEffect } from "react";
-import {
-  ChevronDown,
-  Search,
-  Menu,
-  X,
-  User,
-  Layout,
-  Settings,
-  Zap,
-} from "lucide-react";
+import { ChevronDown, Search, Menu, X, User, Settings } from "lucide-react";
 import dynamic from "next/dynamic";
+import Link from "next/link";
 import { Logo } from "../ui/Logo";
+import { ModernMobileMenu } from "./MobileMenu";
 import { useScrollDetection } from "~/hooks/useScrollDetection";
 import { useAuth } from "~/hooks/useAuth";
 import {
@@ -219,7 +212,7 @@ export default function ModernHeader() {
                             {filteredItems.map((item: NavItem) => {
                               const IconComponent = item.icon;
                               return (
-                                <a
+                                <Link
                                   key={item.href}
                                   href={item.href}
                                   className={`
@@ -254,7 +247,7 @@ export default function ModernHeader() {
                                       </div>
                                     )}
                                   </div>
-                                </a>
+                                </Link>
                               );
                             })}
 
@@ -294,7 +287,7 @@ export default function ModernHeader() {
                                   getAuthItems().map((item: NavItem) => {
                                     const IconComponent = item.icon;
                                     return (
-                                      <a
+                                      <Link
                                         key={item.href}
                                         href={item.href}
                                         className="group flex items-start gap-3 rounded-lg px-3 py-2.5 transition-colors duration-200 hover:bg-accent focus:bg-accent focus:outline-none"
@@ -312,7 +305,7 @@ export default function ModernHeader() {
                                             </div>
                                           )}
                                         </div>
-                                      </a>
+                                      </Link>
                                     );
                                   })
                                 )}
@@ -362,7 +355,7 @@ export default function ModernHeader() {
                 </button>
 
                 {/* Enhanced A11y Dropdown - ALLE Meta-Nav Features */}
-                <A11navEnhanced isCompact={false} />
+                <A11navEnhanced />
 
                 {/* Mobile Menu Button */}
                 <button
@@ -382,108 +375,11 @@ export default function ModernHeader() {
           </div>
         </div>
 
-        {/* Mobile Menu Overlay */}
-        {isMobileMenuOpen && (
-          <div className="fixed inset-0 top-16 z-40 bg-background/95 backdrop-blur-xl lg:hidden">
-            <nav className="space-y-4 p-4">
-              {/* Classic Header Button für Mobile */}
-              <div className="mb-4 border-b border-border/50 pb-4">
-                <button
-                  onClick={() => {
-                    switchToClassicHeader();
-                    setIsMobileMenuOpen(false);
-                  }}
-                  className="flex w-full items-center justify-center gap-3 rounded-lg px-3 py-2 text-left text-sm font-medium text-blue-600 transition-colors hover:bg-blue-50 dark:text-blue-400 dark:hover:bg-blue-900/20"
-                >
-                  <Settings className="h-5 w-5" />
-                  <span>Klassisch</span>
-                </button>
-              </div>
-              {navSections.map((section) => {
-                const filteredItems = getFilteredNavigationItems(section);
-
-                if (section === "POLIZEI" && filteredItems.length === 0) {
-                  return null;
-                }
-
-                return (
-                  <div key={section}>
-                    <h3 className="mb-2 text-sm font-semibold text-muted-foreground">
-                      {section}
-                    </h3>
-                    <div className="space-y-1">
-                      {/* Hauptnavigation */}
-                      {filteredItems.map((item: NavItem) => {
-                        const IconComponent = item.icon;
-                        return (
-                          <a
-                            key={item.href}
-                            href={item.href}
-                            className="group flex items-center gap-3 rounded-lg px-3 py-2 hover:bg-accent"
-                            onClick={() => setIsMobileMenuOpen(false)}
-                          >
-                            <IconComponent className="h-5 w-5 text-muted-foreground transition-all duration-200 group-hover:fill-primary group-hover:text-primary" />
-                            <span className="text-sm">{item.label}</span>
-                          </a>
-                        );
-                      })}
-
-                      {/* Authentifizierungs-Bereich - nur für POLIZEI */}
-                      {section === "POLIZEI" && (
-                        <>
-                          {/* Trennlinie */}
-                          <div className="my-2 border-t border-border/50" />
-
-                          {/* Auth-Header */}
-                          <div className="mb-2 px-3 py-1">
-                            <div className="text-xs font-medium uppercase tracking-wide text-muted-foreground">
-                              {isAuthenticated ? "Benutzer" : "Anmeldung"}
-                            </div>
-                          </div>
-
-                          {/* Auth-Items */}
-                          {isAuthenticated ? (
-                            // Angemeldeter Benutzer - zeige Benutzer-Info
-                            <div className="rounded-lg bg-accent/50 px-3 py-2">
-                              <div className="flex items-center gap-2">
-                                <User className="h-4 w-4 text-muted-foreground" />
-                                <div className="flex-1">
-                                  <div className="text-sm font-medium text-foreground">
-                                    {session?.user?.email?.split("@")[0] ??
-                                      "Benutzer"}
-                                  </div>
-                                  <div className="text-xs text-muted-foreground">
-                                    Angemeldet
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          ) : (
-                            // Nicht angemeldet - zeige Anmelden/Registrieren
-                            getAuthItems().map((item: NavItem) => {
-                              const IconComponent = item.icon;
-                              return (
-                                <a
-                                  key={item.href}
-                                  href={item.href}
-                                  className="group flex items-center gap-3 rounded-lg px-3 py-2 hover:bg-accent"
-                                  onClick={() => setIsMobileMenuOpen(false)}
-                                >
-                                  <IconComponent className="h-5 w-5 text-muted-foreground transition-all duration-200 group-hover:fill-primary group-hover:text-primary" />
-                                  <span className="text-sm">{item.label}</span>
-                                </a>
-                              );
-                            })
-                          )}
-                        </>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </nav>
-          </div>
-        )}
+        {/* Mobile Menu */}
+        <ModernMobileMenu
+          isOpen={isMobileMenuOpen}
+          onClose={() => setIsMobileMenuOpen(false)}
+        />
       </header>
 
       {/* Spacer für fixed Header */}

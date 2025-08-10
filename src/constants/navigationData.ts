@@ -9,13 +9,9 @@ import {
   LayoutDashboard,
   Phone,
   Accessibility,
-  ExternalLink,
   Building,
-  FileText,
   LogIn,
   UserPlus,
-  User,
-  LogOut,
 } from "lucide-react";
 
 export interface NavItem {

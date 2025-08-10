@@ -319,9 +319,9 @@ const Step1Component: React.FC<Step1ComponentProps> = ({
               type="button"
               aria-label="Demo füllen"
               className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-muted-foreground hover:bg-muted"
-              onClick={() => {
+              onClick={async () => {
                 const offense = localVariant || undefined;
-                const demo = generateDemoTitle(
+                const demo = await generateDemoTitle(
                   {
                     ...(wizard ?? {}),
                     step1: {

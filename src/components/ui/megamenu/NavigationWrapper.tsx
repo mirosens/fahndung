@@ -59,6 +59,8 @@ export default function NavigationWrapper({ logo }: NavigationWrapperProps) {
         clearTimeout(timeoutId);
       };
     }
+    
+    return undefined;
   }, [checkDevice]);
 
   // Verhindere Hydration-Mismatch

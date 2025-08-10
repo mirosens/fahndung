@@ -1,5 +1,3 @@
-"use client";
-
 import Link from "next/link";
 import {
   FileText,
@@ -12,15 +10,12 @@ import {
   Twitter,
 } from "lucide-react";
 import { Logo } from "~/components/ui/Logo";
-import { SystemThemeToggle } from "~/components/ui/SystemThemeToggle";
-import type { Session } from "~/lib/auth";
 
-interface FooterProps {
+interface FooterServerProps {
   variant?: "home" | "dashboard" | "login" | "register" | "admin";
-  session?: Session | null;
 }
 
-export default function Footer({ variant = "home" }: FooterProps) {
+export default function FooterServer({ variant = "home" }: FooterServerProps) {
   // Automatisch generierte Menüpunkte basierend auf Header-Varianten
   const getMenuItems = () => {
     switch (variant) {
@@ -140,7 +135,7 @@ export default function Footer({ variant = "home" }: FooterProps) {
         {/* Trennlinie */}
         <hr className="my-6 border-border dark:border-border sm:mx-auto lg:my-8" />
 
-        {/* Copyright, Theme Toggle und Social Media */}
+        {/* Copyright und Social Media */}
         <div className="sm:flex sm:items-center sm:justify-between">
           <span className="text-sm text-muted-foreground dark:text-muted-foreground sm:text-center">
             © {currentYear}{" "}
@@ -152,10 +147,6 @@ export default function Footer({ variant = "home" }: FooterProps) {
 
           {/* Soziale Netzwerke */}
           <div className="mt-4 flex items-center space-x-5 sm:mt-0 sm:justify-center rtl:space-x-reverse">
-            {/* Theme Toggle */}
-            <div className="flex items-center space-x-2">
-              <SystemThemeToggle />
-            </div>
             {/* Soziale Netzwerke */}
             {socialItems.map((item) => {
               const Icon = item.icon;

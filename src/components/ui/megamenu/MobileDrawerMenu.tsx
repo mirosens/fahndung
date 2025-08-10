@@ -15,7 +15,6 @@ import {
   HelpCircle,
   Shield,
   User,
-  Layout,
   Zap,
 } from "lucide-react";
 import Link from "next/link";
@@ -291,18 +290,6 @@ export function MobileDrawerMenu({
       window.dispatchEvent(
         new CustomEvent<"modern" | "classic">("header-variant-change", {
           detail: "modern",
-        }),
-      );
-    }
-  };
-
-  // Hilfsfunktion für Header-Variant-Wechsel zurück zum klassischen Menü
-  const switchToClassicHeader = () => {
-    if (typeof window !== "undefined") {
-      localStorage.setItem("header-variant", "classic");
-      window.dispatchEvent(
-        new CustomEvent<"modern" | "classic">("header-variant-change", {
-          detail: "classic",
         }),
       );
     }

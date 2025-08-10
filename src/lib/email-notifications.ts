@@ -148,6 +148,7 @@ Fahndung System - Automatische Benachrichtigung
 `;
 
     // Verwende Supabase Edge Function für E-Mail-Versand
+    const supabase = getServerClient();
     const result = await supabase.functions.invoke("send-email", {
       body: {
         to: userEmail,
@@ -166,22 +167,19 @@ Fahndung System - Automatische Benachrichtigung
     }
 
     // Optional: Speichere Bestätigung in der Datenbank
-    if (supabase) {
-      try {
-        const supabase = getServerClient();
-        await supabase.from("user_notifications").insert({
-          user_email: userEmail,
-          user_name: userName,
-          type: "registration_confirmation",
-          status: approved ? "approved" : "rejected",
-          message: approved
-            ? "Registrierung genehmigt"
-            : "Registrierung abgelehnt",
-          created_at: new Date().toISOString(),
-        });
-      } catch (dbError) {
-        console.warn("⚠️ Fehler beim Speichern in Datenbank:", dbError);
-      }
+    try {
+      await supabase.from("user_notifications").insert({
+        user_email: userEmail,
+        user_name: userName,
+        type: "registration_confirmation",
+        status: approved ? "approved" : "rejected",
+        message: approved
+          ? "Registrierung genehmigt"
+          : "Registrierung abgelehnt",
+        created_at: new Date().toISOString(),
+      });
+    } catch (dbError) {
+      console.warn("⚠️ Fehler beim Speichern in Datenbank:", dbError);
     }
 
     return true;
@@ -196,7 +194,7 @@ Fahndung System - Automatische Benachrichtigung
  */
 export async function sendDailySummary() {
   try {
-    if (!supabase) return false;
+    const supabase = getServerClient();
 
     // Hole alle ausstehenden Registrierungen
     const result = await supabase
@@ -241,7 +239,6 @@ Fahndung System - Automatische Zusammenfassung
 `;
 
     // Sende Zusammenfassung an Admin
-    const supabase = getServerClient();
     const emailResult = await supabase.functions.invoke("send-email", {
       body: {
         to: "ptlsweb@gmail.com",

@@ -3,6 +3,7 @@
 import React, { useEffect, useState } from "react";
 import { setupAllUsers } from "~/lib/auth";
 import { CheckCircle } from "lucide-react";
+import { getBrowserClient } from "~/lib/supabase/supabase-browser";
 
 export default function AutoSetup() {
   const [isSetup, setIsSetup] = useState(false);
@@ -30,7 +31,8 @@ export default function AutoSetup() {
       try {
         setIsLoading(true);
         console.log("🔧 Starte automatisches Benutzer-Setup...");
-        const result = await setupAllUsers();
+        const supabase = getBrowserClient();
+        const result = await setupAllUsers(supabase);
 
         if (result.success) {
           setIsSetup(true);

@@ -6,13 +6,15 @@ import {
 } from "~/server/api/trpc";
 import { getCurrentSession, createOrUpdateProfile } from "~/lib/auth";
 import type { UserProfile } from "~/lib/auth";
+import { getServerClient } from "~/lib/supabase/supabase-server";
 
 export const authRouter = createTRPCRouter({
   // Aktuelle Session abrufen
   getSession: publicProcedure.query(async () => {
     try {
       console.log("🔍 tRPC Auth: getSession aufgerufen...");
-      const session = await getCurrentSession();
+      const supabase = getServerClient();
+      const session = await getCurrentSession(supabase);
 
       if (session) {
         console.log("✅ tRPC Auth: Session gefunden", {
@@ -42,12 +44,14 @@ export const authRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx: _ctx, input }) => {
-      const session = await getCurrentSession();
+      const supabase = getServerClient();
+      const session = await getCurrentSession(supabase);
       if (!session) {
         throw new Error("Nicht authentifiziert");
       }
 
       const profile = await createOrUpdateProfile(
+        supabase,
         session.user.id,
         session.user.email,
         input,
@@ -58,7 +62,8 @@ export const authRouter = createTRPCRouter({
 
   // Alle Benutzer abrufen (nur für Admins)
   getAllUsers: protectedProcedure.query(async ({ ctx: _ctx }) => {
-    const session = await getCurrentSession();
+    const supabase = getServerClient();
+    const session = await getCurrentSession(supabase);
     if (
       !session?.profile ||
       (session.profile.role !== "admin" &&
@@ -70,9 +75,7 @@ export const authRouter = createTRPCRouter({
     // Wähle nur die benötigten Felder aus der Tabelle, um die Datenmenge zu minimieren.
     const usersResult = await _ctx.db
       .from("user_profiles")
-      .select(
-        "user_id, email, role, name, created_at, updated_at",
-      )
+      .select("user_id, email, role, name, created_at, updated_at")
       .order("created_at", { ascending: false });
 
     const { data: users, error } = usersResult as {
@@ -96,7 +99,8 @@ export const authRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const session = await getCurrentSession();
+      const supabase = getServerClient();
+      const session = await getCurrentSession(supabase);
       if (
         !session?.profile ||
         (session.profile.role !== "admin" &&
@@ -134,7 +138,8 @@ export const authRouter = createTRPCRouter({
       }),
     )
     .mutation(async ({ ctx, input }) => {
-      const session = await getCurrentSession();
+      const supabase = getServerClient();
+      const session = await getCurrentSession(supabase);
       if (
         !session?.profile ||
         (session.profile.role !== "admin" &&

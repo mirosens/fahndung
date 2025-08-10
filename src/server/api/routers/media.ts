@@ -227,6 +227,7 @@ export const mediaRouter = createTRPCRouter({
       }
 
       try {
+        const supabase = getServerClient();
         const media_type = input.mime_type.startsWith("image/")
           ? "image"
           : input.mime_type.startsWith("video/")

@@ -4,12 +4,11 @@ interface A11yButtonProps {
   onClick?: () => void;
   isExpanded?: boolean;
   className?: string;
-  variant?: "outline" | "filled";
 }
 
 export const A11yButton = forwardRef<HTMLButtonElement, A11yButtonProps>(
   (
-    { onClick, isExpanded = false, className = "", variant = "outline" },
+    { onClick, isExpanded = false, className = "" },
     ref,
   ) => {
     return (

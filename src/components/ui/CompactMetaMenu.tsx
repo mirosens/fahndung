@@ -13,7 +13,6 @@ import {
   Globe,
   Shield,
   Accessibility,
-  Languages,
   X,
 } from "lucide-react";
 import Link from "next/link";
@@ -56,6 +55,8 @@ export function CompactMetaMenu({ className = "" }: CompactMetaMenuProps) {
       document.addEventListener("keydown", handleEscape);
       return () => document.removeEventListener("keydown", handleEscape);
     }
+    
+    return undefined;
   }, [isOpen]);
 
   const menuItems = [

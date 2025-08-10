@@ -1,4 +1,11 @@
-import { getServerClient } from "./supabase/supabase-server";
+import type { Session as SupabaseSession, User } from "@supabase/supabase-js";
+import type { SupabaseClient } from "@supabase/supabase-js";
+
+// 🚀 PROTOYP-MODUS: Automatische Admin-Session für Entwicklung
+const PROTOTYPE_MODE = process.env.NODE_ENV === "development";
+
+// Entferne die globale Supabase-Instanz
+// const supabase = getServerClient();
 
 export interface UserProfile {
   id: string;
@@ -89,8 +96,21 @@ export interface AuthPermissions {
   canManageUsers: boolean;
 }
 
-// Rollen-basierte Berechtigungen
+// Rollen-basierte Berechtigungen - VEREINFACHT FÜR PROTOYP
 export const getRolePermissions = (role: string): AuthPermissions => {
+  // 🚀 PROTOYP-MODUS: Alle Benutzer haben volle Rechte
+  if (PROTOTYPE_MODE) {
+    return {
+      canRead: true,
+      canCreate: true,
+      canEdit: true,
+      canDelete: true,
+      canPublish: true,
+      canManageUsers: true,
+    };
+  }
+
+  // Normale Berechtigungen für Produktion
   const permissions: Record<string, AuthPermissions> = {
     user: {
       canRead: true,
@@ -129,41 +149,65 @@ export const getRolePermissions = (role: string): AuthPermissions => {
   return permissions[role] ?? permissions["user"]!;
 };
 
-// Hilfsfunktionen für Rollenprüfungen
+// Hilfsfunktionen für Rollenprüfungen - VEREINFACHT FÜR PROTOYP
 export const hasRole = (
   profile: UserProfile | null,
   requiredRoles: string[],
 ): boolean => {
+  // 🚀 PROTOYP-MODUS: Alle Rollenprüfungen sind erfolgreich
+  if (PROTOTYPE_MODE) return true;
+
   if (!profile?.role) return false;
   return requiredRoles.includes(profile.role);
 };
 
 export const canEdit = (profile: UserProfile | null): boolean => {
+  // 🚀 PROTOYP-MODUS: Alle können bearbeiten
+  if (PROTOTYPE_MODE) return true;
+
   return hasRole(profile, ["editor", "admin", "super_admin"]);
 };
 
 export const canCreate = (profile: UserProfile | null): boolean => {
+  // 🚀 PROTOYP-MODUS: Alle können erstellen
+  if (PROTOTYPE_MODE) return true;
+
   return hasRole(profile, ["editor", "admin", "super_admin"]);
 };
 
 export const canDelete = (profile: UserProfile | null): boolean => {
+  // 🚀 PROTOYP-MODUS: Alle können löschen
+  if (PROTOTYPE_MODE) return true;
+
   return hasRole(profile, ["admin", "super_admin"]);
 };
 
 export const canManageUsers = (profile: UserProfile | null): boolean => {
+  // 🚀 PROTOYP-MODUS: Alle können Benutzer verwalten
+  if (PROTOTYPE_MODE) return true;
+
   return hasRole(profile, ["admin", "super_admin"]);
 };
 
 export const canAccessWizard = (profile: UserProfile | null): boolean => {
+  // 🚀 PROTOYP-MODUS: Alle können auf Wizard zugreifen
+  if (PROTOTYPE_MODE) return true;
+
   return hasRole(profile, ["admin", "super_admin"]);
 };
 
-// Hilfsfunktionen für Rollenprüfung
+// Hilfsfunktionen für Rollenprüfung - VEREINFACHT FÜR PROTOYP
 export const isAdmin = (profile: UserProfile | null): boolean => {
+  // 🚀 PROTOYP-MODUS: Alle sind Admins
+  if (PROTOTYPE_MODE) return true;
+
   return profile?.role === "admin" || profile?.role === "super_admin";
 };
 
 export const isEditor = (profile: UserProfile | null): boolean => {
+  // 🚀 PROTOYP-MODUS: Alle sind Editoren
+  if (PROTOTYPE_MODE) return true;
+
   return (
     profile?.role === "editor" ||
     profile?.role === "admin" ||
@@ -171,11 +215,40 @@ export const isEditor = (profile: UserProfile | null): boolean => {
   );
 };
 
-// Aktuelle Session abrufen mit optimierten Timeouts
-export const getCurrentSession = async (): Promise<Session | null> => {
+// 🚀 PROTOYP-MODUS: Automatische Admin-Session
+const createPrototypeSession = (): Session => {
+  return {
+    user: {
+      id: "prototype-user-id",
+      email: "prototype@fahndung.local",
+    },
+    profile: {
+      id: "prototype-profile-id",
+      user_id: "prototype-user-id",
+      email: "prototype@fahndung.local",
+      name: "Prototyp Benutzer",
+      role: "admin",
+      department: "Entwicklung",
+      status: "approved",
+      is_active: true,
+      created_at: new Date().toISOString(),
+      updated_at: new Date().toISOString(),
+    },
+  };
+};
+
+// Aktuelle Session abrufen mit optimierten Timeouts (Server-version) - VEREINFACHT FÜR PROTOYP
+export const getCurrentSession = async (
+  supabase: SupabaseClient,
+): Promise<Session | null> => {
+  // 🚀 PROTOYP-MODUS: Automatische Admin-Session
+  if (PROTOTYPE_MODE) {
+    console.log("🚀 Prototyp-Modus: Verwende automatische Admin-Session");
+    return createPrototypeSession();
+  }
+
   try {
     // Reduzierte Logs - nur bei Fehlern
-    const supabase = getServerClient();
     const sessionPromise = supabase.auth.getSession();
     const timeoutPromise = new Promise<{
       data: { session: null };
@@ -189,7 +262,10 @@ export const getCurrentSession = async (): Promise<Session | null> => {
     );
 
     const result = await Promise.race([sessionPromise, timeoutPromise]);
-    const { data: sessionData, error: sessionError } = result;
+    const { data: sessionData, error: sessionError } = result as {
+      data: { session: SupabaseSession | null };
+      error: { message: string } | null;
+    };
 
     if (sessionError) {
       console.error("❌ Session-Fehler:", sessionError);
@@ -210,7 +286,7 @@ export const getCurrentSession = async (): Promise<Session | null> => {
         errorMessage.includes("403") ||
         isEmptyError // Leere oder ungültige Fehlermeldung
       ) {
-        await clearAuthSession();
+        await clearAuthSession(supabase);
         return null;
       }
 
@@ -229,17 +305,17 @@ export const getCurrentSession = async (): Promise<Session | null> => {
               profile: null, // Profile wird später geladen
             };
           } else {
-            await clearAuthSession();
+            await clearAuthSession(supabase);
             return null;
           }
         } catch (refreshError) {
           console.error("❌ Session-Refresh Exception:", refreshError);
-          await clearAuthSession();
+          await clearAuthSession(supabase);
           return null;
         }
       } else {
         // Bei leeren Fehlermeldungen oder Timeout direkt Session bereinigen
-        await clearAuthSession();
+        await clearAuthSession(supabase);
         return null;
       }
     }
@@ -253,11 +329,11 @@ export const getCurrentSession = async (): Promise<Session | null> => {
     const expiresAt = sessionData.session.expires_at;
 
     if (expiresAt && now >= expiresAt) {
-      await clearAuthSession();
+      await clearAuthSession(supabase);
       return null;
     }
 
-    const user = sessionData.session.user;
+    const user: User = sessionData.session.user;
 
     // Benutzer-Profil abrufen mit einfacher Fehlerbehandlung
     try {
@@ -298,18 +374,19 @@ export const getCurrentSession = async (): Promise<Session | null> => {
       };
     } catch (error) {
       console.error("❌ Unerwarteter Fehler in getCurrentSession:", error);
-      await clearAuthSession();
+      await clearAuthSession(supabase);
       return null;
     }
   } catch (error) {
     console.error("❌ Unerwarteter Fehler in getCurrentSession:", error);
-    await clearAuthSession();
+    await clearAuthSession(supabase);
     return null;
   }
 };
 
 // Benutzer-Profil erstellen oder aktualisieren
 export const createOrUpdateProfile = async (
+  supabase: SupabaseClient,
   userId: string,
   email: string,
   profileData: Partial<UserProfile>,
@@ -343,11 +420,16 @@ export const createOrUpdateProfile = async (
         setTimeout(() => reject(new Error("Profile-Upsert Timeout")), 5000), // 5 Sekunden
     );
 
-    const upsertResult = await Promise.race([upsertPromise, upsertTimeout]);
-    const { data, error } = upsertResult as {
+    type UpsertResult = {
       data: UserProfile | null;
       error: { message: string } | null;
     };
+
+    const upsertResult = (await Promise.race([
+      upsertPromise,
+      upsertTimeout,
+    ])) as UpsertResult;
+    const { data, error } = upsertResult;
 
     if (error) {
       console.error("❌ Fehler beim Erstellen/Aktualisieren des Profils:", {
@@ -365,7 +447,9 @@ export const createOrUpdateProfile = async (
 };
 
 // Demo-Benutzer erstellen
-export const createDemoUsers = async (): Promise<{
+export const createDemoUsers = async (
+  supabase: SupabaseClient,
+): Promise<{
   success: boolean;
   message: string;
 }> => {
@@ -564,7 +648,9 @@ export const getStatusFromIsActive = (isActive?: boolean): string => {
 };
 
 // Automatisches Setup aller Benutzer beim Start
-export const setupAllUsers = async (): Promise<{
+export const setupAllUsers = async (
+  supabase: SupabaseClient,
+): Promise<{
   success: boolean;
   message: string;
 }> => {
@@ -740,14 +826,14 @@ export const setupAllUsers = async (): Promise<{
 };
 
 // Benutzer abmelden
-export const signOut = async (): Promise<void> => {
+export const signOut = async (supabase: SupabaseClient): Promise<void> => {
   if (!supabase) return;
 
   try {
     console.log("🔐 Starte Abmeldung...");
 
     // Zuerst lokale Storage bereinigen
-    await clearLocalSession();
+    await clearLocalSession(supabase);
 
     // Dann prüfen, ob eine Session existiert
     const {
@@ -805,16 +891,17 @@ export const signOut = async (): Promise<void> => {
     console.error("❌ Unerwarteter Fehler beim Abmelden:", error);
 
     // Auch bei unerwarteten Fehlern lokale Session bereinigen
-    await clearLocalSession();
+    await clearLocalSession(supabase);
   }
 };
 
 // Lokale Session bereinigen (ohne Supabase-Aufruf)
-const clearLocalSession = async (): Promise<void> => {
+const clearLocalSession = async (supabase: SupabaseClient): Promise<void> => {
   if (typeof window === "undefined") return;
 
   try {
     // Alle Supabase-bezogenen Daten bereinigen
+    await supabase.auth.signOut(); // Supabase signOut ist idempotent
     localStorage.removeItem("supabase.auth.token");
     sessionStorage.removeItem("supabase.auth.token");
 
@@ -836,14 +923,16 @@ const clearLocalSession = async (): Promise<void> => {
 };
 
 // Session bereinigen (für Refresh Token Probleme)
-export const clearAuthSession = async (): Promise<void> => {
+export const clearAuthSession = async (
+  supabase: SupabaseClient,
+): Promise<void> => {
   if (!supabase) return;
 
   try {
     console.log("🧹 Bereinige Auth-Session...");
 
     // Zuerst lokale Storage bereinigen
-    await clearLocalSession();
+    await clearLocalSession(supabase);
 
     // Dann Supabase-Abmeldung mit verbesserter Fehlerbehandlung
     try {
@@ -883,12 +972,14 @@ export const clearAuthSession = async (): Promise<void> => {
     console.error("❌ Fehler beim Bereinigen der Auth-Session:", error);
 
     // Auch bei Fehler lokale Session bereinigen
-    await clearLocalSession();
+    await clearLocalSession(supabase);
   }
 };
 
 // Vollständige Session-Bereinigung
-export const forceClearSession = async (): Promise<void> => {
+export const forceClearSession = async (
+  supabase: SupabaseClient,
+): Promise<void> => {
   if (!supabase) return;
 
   try {
@@ -949,8 +1040,10 @@ export const forceClearSession = async (): Promise<void> => {
 };
 
 // Middleware für geschützte Routen
-export const requireAuth = async (): Promise<Session> => {
-  const session = await getCurrentSession();
+export const requireAuth = async (
+  supabase: SupabaseClient,
+): Promise<Session> => {
+  const session = await getCurrentSession(supabase);
 
   if (!session) {
     throw new Error("Nicht authentifiziert");
@@ -960,8 +1053,10 @@ export const requireAuth = async (): Promise<Session> => {
 };
 
 // Middleware für Admin-Routen
-export const requireAdmin = async (): Promise<Session> => {
-  const session = await requireAuth();
+export const requireAdmin = async (
+  supabase: SupabaseClient,
+): Promise<Session> => {
+  const session = await requireAuth(supabase);
 
   if (!isAdmin(session.profile)) {
     throw new Error("Admin-Rechte erforderlich");
@@ -971,8 +1066,10 @@ export const requireAdmin = async (): Promise<Session> => {
 };
 
 // Middleware für Editor-Routen
-export const requireEditor = async (): Promise<Session> => {
-  const session = await requireAuth();
+export const requireEditor = async (
+  supabase: SupabaseClient,
+): Promise<Session> => {
+  const session = await requireAuth(supabase);
 
   if (!isEditor(session.profile)) {
     throw new Error("Editor-Rechte erforderlich");
@@ -982,7 +1079,9 @@ export const requireEditor = async (): Promise<Session> => {
 };
 
 // Verbesserte Session-Prüfung
-export const checkAuthStatus = async (): Promise<{
+export const checkAuthStatus = async (
+  supabase: SupabaseClient,
+): Promise<{
   isAuthenticated: boolean;
   user: { id: string; email: string } | null;
   error: string | null;
@@ -1011,7 +1110,7 @@ export const checkAuthStatus = async (): Promise<{
         error.message.includes("Forbidden")
       ) {
         console.log("🔄 Automatische Session-Bereinigung bei Auth-Fehler...");
-        await clearAuthSession();
+        await clearAuthSession(supabase);
       }
 
       return { isAuthenticated: false, user: null, error: error.message };
@@ -1034,7 +1133,7 @@ export const checkAuthStatus = async (): Promise<{
     console.error("Session-Prüfung fehlgeschlagen:", error);
 
     // Bei unerwarteten Fehlern auch Session bereinigen
-    await clearAuthSession();
+    await clearAuthSession(supabase);
 
     return {
       isAuthenticated: false,
@@ -1045,7 +1144,9 @@ export const checkAuthStatus = async (): Promise<{
 };
 
 // Super-Admin Funktionen
-export const getAllUsers = async (): Promise<UserProfile[]> => {
+export const getAllUsers = async (
+  supabase: SupabaseClient,
+): Promise<UserProfile[]> => {
   if (!supabase) return [];
 
   try {
@@ -1067,6 +1168,7 @@ export const getAllUsers = async (): Promise<UserProfile[]> => {
 };
 
 export const getUserActivity = async (
+  supabase: SupabaseClient,
   userId: string,
 ): Promise<UserActivity[]> => {
   if (!supabase) return [];
@@ -1092,6 +1194,7 @@ export const getUserActivity = async (
 };
 
 export const getUserSessions = async (
+  supabase: SupabaseClient,
   userId: string,
 ): Promise<UserSession[]> => {
   if (!supabase) return [];
@@ -1117,6 +1220,7 @@ export const getUserSessions = async (
 };
 
 export const blockUser = async (
+  supabase: SupabaseClient,
   userId: string,
   reason?: string,
 ): Promise<boolean> => {
@@ -1134,7 +1238,7 @@ export const blockUser = async (
     }
 
     // Log admin action
-    await logAdminAction("user_block", userId, reason);
+    await logAdminAction(supabase, "user_block", userId, reason);
 
     return true;
   } catch (error) {
@@ -1144,6 +1248,7 @@ export const blockUser = async (
 };
 
 export const unblockUser = async (
+  supabase: SupabaseClient,
   userId: string,
   reason?: string,
 ): Promise<boolean> => {
@@ -1161,7 +1266,7 @@ export const unblockUser = async (
     }
 
     // Log admin action
-    await logAdminAction("user_unblock", userId, reason);
+    await logAdminAction(supabase, "user_unblock", userId, reason);
 
     return true;
   } catch (error) {
@@ -1171,6 +1276,7 @@ export const unblockUser = async (
 };
 
 export const changeUserRole = async (
+  supabase: SupabaseClient,
   userId: string,
   newRole: "admin" | "editor" | "user" | "super_admin",
   reason?: string,
@@ -1189,7 +1295,7 @@ export const changeUserRole = async (
     }
 
     // Log admin action
-    await logAdminAction("role_change", userId, reason, { newRole });
+    await logAdminAction(supabase, "role_change", userId, reason, { newRole });
 
     return true;
   } catch (error) {
@@ -1199,6 +1305,7 @@ export const changeUserRole = async (
 };
 
 export const deleteUser = async (
+  supabase: SupabaseClient,
   userId: string,
   reason?: string,
 ): Promise<boolean> => {
@@ -1216,7 +1323,7 @@ export const deleteUser = async (
     }
 
     // Log admin action
-    await logAdminAction("user_delete", userId, reason);
+    await logAdminAction(supabase, "user_delete", userId, reason);
 
     return true;
   } catch (error) {
@@ -1225,7 +1332,9 @@ export const deleteUser = async (
   }
 };
 
-export const getAdminActions = async (): Promise<AdminAction[]> => {
+export const getAdminActions = async (
+  supabase: SupabaseClient,
+): Promise<AdminAction[]> => {
   if (!supabase) return [];
 
   try {
@@ -1249,6 +1358,7 @@ export const getAdminActions = async (): Promise<AdminAction[]> => {
 
 // Hilfsfunktionen
 const logAdminAction = async (
+  supabase: SupabaseClient,
   actionType: string,
   targetUserId?: string,
   reason?: string,
@@ -1257,7 +1367,7 @@ const logAdminAction = async (
   if (!supabase) return;
 
   try {
-    const currentUser = await getCurrentSession();
+    const currentUser = await getCurrentSession(supabase);
     if (!currentUser) return;
 
     await supabase.from("admin_actions").insert({
@@ -1273,6 +1383,7 @@ const logAdminAction = async (
 };
 
 export const logUserActivity = async (
+  supabase: SupabaseClient,
   activityType: string,
   description?: string,
   metadata?: Record<string, unknown>,
@@ -1280,7 +1391,7 @@ export const logUserActivity = async (
   if (!supabase) return;
 
   try {
-    const currentUser = await getCurrentSession();
+    const currentUser = await getCurrentSession(supabase);
     if (!currentUser) return;
 
     await supabase.from("user_activity").insert({
@@ -1295,7 +1406,10 @@ export const logUserActivity = async (
 };
 
 // Automatische Auth-Fehler-Behandlung
-export const handleAuthError = async (error: unknown): Promise<void> => {
+export const handleAuthError = async (
+  supabase: SupabaseClient,
+  error: unknown,
+): Promise<void> => {
   if (!error) return;
 
   console.error("🔐 Auth-Fehler erkannt:", error);
@@ -1313,7 +1427,7 @@ export const handleAuthError = async (error: unknown): Promise<void> => {
     errorMessage.includes("Refresh Token Not Found")
   ) {
     console.log("🔄 Bereinige Session aufgrund von Auth-Fehler...");
-    await clearAuthSession();
+    await clearAuthSession(supabase);
   }
 };
 
@@ -1356,7 +1470,9 @@ export const validateJWTDirect = async (
 };
 
 // Verbesserte Token-Validierung mit direkter JWT-Prüfung
-export const validateToken = async (): Promise<boolean> => {
+export const validateToken = async (
+  supabase: SupabaseClient,
+): Promise<boolean> => {
   if (!supabase) return false;
 
   try {
@@ -1366,7 +1482,7 @@ export const validateToken = async (): Promise<boolean> => {
 
     if (sessionError) {
       console.error("❌ Session-Fehler bei Token-Validierung:", sessionError);
-      await clearAuthSession();
+      await clearAuthSession(supabase);
       return false;
     }
 
@@ -1383,7 +1499,7 @@ export const validateToken = async (): Promise<boolean> => {
 
     if (error) {
       console.error("❌ Token-Validierung fehlgeschlagen:", error);
-      await clearAuthSession();
+      await clearAuthSession(supabase);
       return false;
     }
 
@@ -1396,16 +1512,19 @@ export const validateToken = async (): Promise<boolean> => {
     return true;
   } catch (error) {
     console.error("❌ Unerwarteter Fehler bei Token-Validierung:", error);
-    await clearAuthSession();
+    await clearAuthSession(supabase);
     return false;
   }
 };
 
 // Verbesserte 403-Fehler-Behandlung
-export const handle403Error = async (error: unknown): Promise<void> => {
+export const handle403Error = async (
+  supabase: SupabaseClient,
+  error: unknown,
+): Promise<void> => {
   if (!error) return;
 
-  console.error("🔐 403-Fehler erkannt:", error);
+  console.error("�� 403-Fehler erkannt:", error);
 
   const errorMessage =
     error instanceof Error ? error.message : JSON.stringify(error);
@@ -1422,7 +1541,7 @@ export const handle403Error = async (error: unknown): Promise<void> => {
     console.log("🔄 Bereinige Session aufgrund von 403-Fehler...");
 
     try {
-      await clearAuthSession();
+      await clearAuthSession(supabase);
     } catch (clearError) {
       console.log(
         "ℹ️ Session-Bereinigung fehlgeschlagen (normal):",
@@ -1442,12 +1561,13 @@ export const handle403Error = async (error: unknown): Promise<void> => {
 };
 
 // Verbesserte Session-Prüfung mit 403-Behandlung
-export const checkSessionWith403Handling =
-  async (): Promise<Session | null> => {
-    try {
-      return await getCurrentSession();
-    } catch (error) {
-      await handle403Error(error);
-      return null;
-    }
-  };
+export const checkSessionWith403Handling = async (
+  supabase: SupabaseClient,
+): Promise<Session | null> => {
+  try {
+    return await getCurrentSession(supabase);
+  } catch (error) {
+    await handle403Error(supabase, error);
+    return null;
+  }
+};

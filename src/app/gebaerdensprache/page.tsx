@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Video, Hand, Phone, Mail, AlertTriangle } from "lucide-react";
-import PublicPageLayout from "~/components/layout/PublicPageLayout";
+import StaticPageLayout from "~/components/layout/StaticPageLayout";
 
 export const metadata: Metadata = {
   title: "Gebärdensprache | LKA Baden-Württemberg",
@@ -10,7 +10,7 @@ export const metadata: Metadata = {
 
 export default function GebaerdensprachePage() {
   return (
-    <PublicPageLayout>
+    <StaticPageLayout>
       <div className="mx-auto max-w-4xl px-4 py-8">
         <div className="prose prose-gray dark:prose-invert max-w-none">
           <h1 className="mb-8 text-3xl font-bold">Gebärdensprache</h1>
@@ -175,6 +175,6 @@ export default function GebaerdensprachePage() {
           </div>
         </div>
       </div>
-    </PublicPageLayout>
+    </StaticPageLayout>
   );
 }

@@ -311,7 +311,7 @@ const AdaptiveDesktopHeader = ({
           }}
         >
           <div
-            className={`${styles.headerContainer} ${isScrolled ? styles.headerContainerScrolled : styles.headerContainerNotScrolled}`}
+            className={`${styles['headerContainer']} ${isScrolled ? styles['headerContainerScrolled'] : styles['headerContainerNotScrolled']}`}
           >
             {/* Logo - adaptiert Größe */}
             <div className="flex-shrink-0">

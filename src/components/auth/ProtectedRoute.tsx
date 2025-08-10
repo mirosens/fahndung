@@ -1,9 +1,12 @@
 "use client";
 
 import React, { useEffect } from "react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useRouter } from "next/navigation";
 import { useAuth } from "~/hooks/useAuth";
 import { Loader2 } from "lucide-react";
+
+// 🚀 PROTOYP-MODUS: Automatische Authentifizierung für Entwicklung
+const PROTOTYPE_MODE = process.env.NODE_ENV === "development";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -20,9 +23,16 @@ export default function ProtectedRoute({
 }: ProtectedRouteProps) {
   const { session, loading, initialized, isAuthenticated } = useAuth();
   const router = useRouter();
-  const searchParams = useSearchParams();
 
   useEffect(() => {
+    // 🚀 PROTOYP-MODUS: Automatische Authentifizierung
+    if (PROTOTYPE_MODE) {
+      console.log(
+        "🚀 Prototyp-Modus: ProtectedRoute umgangen - alle Routen frei",
+      );
+      return;
+    }
+
     console.log("🔐 ProtectedRoute: Prüfe Authentifizierung...", {
       loading,
       initialized,
@@ -82,6 +92,11 @@ export default function ProtectedRoute({
     redirectTo,
     isAuthenticated,
   ]);
+
+  // 🚀 PROTOYP-MODUS: Zeige direkt den Inhalt
+  if (PROTOTYPE_MODE) {
+    return <>{children}</>;
+  }
 
   // Loading state für Hydration
   if (!initialized || loading) {

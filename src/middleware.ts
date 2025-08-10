@@ -1,38 +1,41 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
-export function middleware(request: NextRequest) {
-  // Nur geschützte Routen prüfen
-  const protectedRoutes = ["/dashboard", "/fahndungen/neu", "/admin"];
-  const isProtected = protectedRoutes.some((route) =>
-    request.nextUrl.pathname.startsWith(route),
-  );
+export function middleware(_request: NextRequest) {
+  // 🚀 PROTOYP-MODUS: Keine Authentifizierung erforderlich
+  // Alle Routen sind frei zugänglich für schnelle Entwicklung
 
-  if (isProtected) {
-    // Prüfe auf Supabase Auth Cookies
-    const supabaseCookies = [
-      "sb-access-token",
-      "sb-refresh-token",
-      "supabase-auth-token",
-      "supabase-auth-refresh-token",
-    ];
+  // TODO: Für Produktion wieder aktivieren
+  // const protectedRoutes = ["/dashboard", "/fahndungen/neu", "/admin"];
+  // const isProtected = protectedRoutes.some((route) =>
+  //   request.nextUrl.pathname.startsWith(route),
+  // );
 
-    const hasValidSession = supabaseCookies.some((cookieName) => {
-      const cookie = request.cookies.get(cookieName);
-      return cookie && cookie.value && cookie.value.length > 10;
-    });
+  // if (isProtected) {
+  //   // Prüfe auf Supabase Auth Cookies
+  //   const supabaseCookies = [
+  //     "sb-access-token",
+  //     "sb-refresh-token",
+  //     "supabase-auth-token",
+  //     "supabase-auth-refresh-token",
+  //   ];
 
-    // Zusätzlich prüfe Authorization Header für API-Aufrufe
-    const authHeader = request.headers.get("Authorization");
-    const hasAuthHeader = authHeader?.startsWith("Bearer ");
+  //   const hasValidSession = supabaseCookies.some((cookieName) => {
+  //     const cookie = request.cookies.get(cookieName);
+  //     return cookie && cookie.value && cookie.value.length > 10;
+  //   });
 
-    if (!hasValidSession && !hasAuthHeader) {
-      // Keine Session gefunden - Weiterleitung zu Login
-      const loginUrl = new URL("/login", request.url);
-      loginUrl.searchParams.set("redirect", request.nextUrl.pathname);
-      return NextResponse.redirect(loginUrl);
-    }
-  }
+  //   // Zusätzlich prüfe Authorization Header für API-Aufrufe
+  //   const authHeader = request.headers.get("Authorization");
+  //   const hasAuthHeader = authHeader?.startsWith("Bearer ");
+
+  //   if (!hasValidSession && !hasAuthHeader) {
+  //     // Keine Session gefunden - Weiterleitung zu Login
+  //     const loginUrl = new URL("/login", request.url);
+  //     loginUrl.searchParams.set("redirect", request.nextUrl.pathname);
+  //     return NextResponse.redirect(loginUrl);
+  //   }
+  // }
 
   return NextResponse.next();
 }

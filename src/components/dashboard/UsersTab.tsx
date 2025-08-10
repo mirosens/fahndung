@@ -23,6 +23,7 @@ import {
   deleteUser,
   logUserActivity,
 } from "~/lib/auth";
+import { getBrowserClient } from "~/lib/supabase/supabase-browser";
 
 // Lokale Hilfsfunktion um Turbopack-Import-Probleme zu vermeiden
 const getIsActiveFromStatus = (status?: string): boolean => {
@@ -101,12 +102,13 @@ export default function UsersTab({
       try {
         let success = false;
 
+        const supabase = getBrowserClient();
         switch (action) {
           case "block":
-            success = await blockUser(userId, reason);
+            success = await blockUser(supabase, userId, reason);
             break;
           case "unblock":
-            success = await unblockUser(userId, reason);
+            success = await unblockUser(supabase, userId, reason);
             break;
           case "delete":
             if (
@@ -114,7 +116,7 @@ export default function UsersTab({
                 "Benutzer wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.",
               )
             ) {
-              success = await deleteUser(userId, reason);
+              success = await deleteUser(supabase, userId, reason);
             }
             break;
         }
@@ -122,6 +124,7 @@ export default function UsersTab({
         if (success) {
           await onLoadAdminData();
           await logUserActivity(
+            supabase,
             "admin_action",
             `${action} für Benutzer ${userId}`,
           );
@@ -139,7 +142,9 @@ export default function UsersTab({
       newRole: "admin" | "editor" | "user" | "super_admin",
     ) => {
       try {
+        const supabase = getBrowserClient();
         const success = await changeUserRole(
+          supabase,
           userId,
           newRole,
           `Rolle geändert zu ${newRole}`,
@@ -147,6 +152,7 @@ export default function UsersTab({
         if (success) {
           await onLoadAdminData();
           await logUserActivity(
+            supabase,
             "admin_action",
             `Rolle für Benutzer ${userId} zu ${newRole} geändert`,
           );
@@ -230,7 +236,7 @@ export default function UsersTab({
 
   if (!isAdmin) {
     return (
-      <div className="shadow-xs rounded-lg border border-border bg-white p-6 dark:border-border dark:bg-muted">
+      <div className="rounded-lg border border-border bg-white p-6 shadow-xs dark:border-border dark:bg-muted">
         <div className="text-center">
           <Shield className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
           <h3 className="mb-2 text-lg font-medium text-muted-foreground dark:text-muted-foreground">
@@ -293,7 +299,7 @@ export default function UsersTab({
       </div>
 
       {/* Admin Tabs */}
-      <div className="shadow-xs rounded-lg border border-border bg-white dark:border-border dark:bg-muted">
+      <div className="rounded-lg border border-border bg-white shadow-xs dark:border-border dark:bg-muted">
         <div className="border-b border-border dark:border-border">
           <nav className="flex space-x-8 px-6">
             {[
@@ -409,11 +415,13 @@ function StatCard({ icon: Icon, title, value, color }: StatCardProps) {
   };
 
   return (
-    <div className="shadow-xs rounded-lg border border-border bg-white p-6 dark:border-border dark:bg-muted">
+    <div className="rounded-lg border border-border bg-white p-6 shadow-xs dark:border-border dark:bg-muted">
       <div className="flex items-center space-x-3">
         <Icon className={`h-8 w-8 ${colorClasses[color]}`} />
         <div>
-          <p className="text-sm text-muted-foreground dark:text-muted-foreground">{title}</p>
+          <p className="text-sm text-muted-foreground dark:text-muted-foreground">
+            {title}
+          </p>
           <p className="text-2xl font-bold text-muted-foreground dark:text-white">
             {value}
           </p>
@@ -534,7 +542,7 @@ function AdminUserList({
           filteredUsers.map((user) => (
             <div
               key={user.id}
-              className="shadow-xs flex items-center justify-between rounded-lg border border-border bg-white p-4 dark:border-border dark:bg-muted"
+              className="flex items-center justify-between rounded-lg border border-border bg-white p-4 shadow-xs dark:border-border dark:bg-muted"
             >
               <div className="flex-1">
                 <div className="flex items-center space-x-3">
@@ -699,7 +707,7 @@ function PendingRegistrations({
           pendingRegistrations.map((registration) => (
             <div
               key={registration.id}
-              className="shadow-xs rounded-lg border border-border bg-white p-4 dark:border-border dark:bg-muted"
+              className="rounded-lg border border-border bg-white p-4 shadow-xs dark:border-border dark:bg-muted"
             >
               <div className="mb-4 flex items-center justify-between">
                 <div>
@@ -796,7 +804,7 @@ function UserActivityList({
         {userActivity.map((activity) => (
           <div
             key={activity.id}
-            className="shadow-xs flex items-center justify-between rounded-lg border border-border bg-white p-4 dark:border-border dark:bg-muted"
+            className="flex items-center justify-between rounded-lg border border-border bg-white p-4 shadow-xs dark:border-border dark:bg-muted"
           >
             <div>
               <p className="text-muted-foreground dark:text-white">
@@ -829,7 +837,7 @@ function AdminActionsList({ adminActions }: AdminActionsListProps) {
       {adminActions.map((action) => (
         <div
           key={action.id}
-          className="shadow-xs flex items-center justify-between rounded-lg border border-border bg-white p-4 dark:border-border dark:bg-muted"
+          className="flex items-center justify-between rounded-lg border border-border bg-white p-4 shadow-xs dark:border-border dark:bg-muted"
         >
           <div>
             <p className="text-muted-foreground dark:text-white">

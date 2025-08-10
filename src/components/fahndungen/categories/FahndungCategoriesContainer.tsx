@@ -2,7 +2,7 @@
 
 import React, { useState, useCallback, useMemo } from "react";
 import Link from "next/link";
-import { ArrowLeft, Save, Edit, Eye, Trash2 } from "lucide-react";
+import { Save, Edit, Eye, Trash2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { api } from "~/trpc/react";
 import { useInvestigationSync } from "~/hooks/useInvestigationSync";
@@ -12,15 +12,33 @@ import { canEdit } from "~/lib/auth";
 import PageLayout from "~/components/layout/PageLayout";
 import { InvestigationEditErrorBoundary } from "~/components/fahndungen/InvestigationEditErrorBoundary";
 import { Button } from "~/components/ui/button";
+import { Breadcrumbs } from "~/components/ui/breadcrumbs";
 import dynamic from "next/dynamic";
 import { InvestigationDataConverter } from "~/lib/services/investigationDataConverter";
 import type { UIInvestigationData } from "~/lib/types/investigation.types";
 import { isValidInvestigationId } from "~/lib/utils/validation";
+import { getBreadcrumbsForInvestigation } from "~/lib/seo";
 
 import CategoryLayout from "./CategoryLayout";
 
 // Lazy Loading für bessere Performance
-// Nutze die modernisierte Overview‑Kategorie mit optimierter Performance
+const FahndungTab = dynamic(() => import("./FahndungTab"), {
+  loading: () => (
+    <div className="animate-pulse">
+      <div className="h-64 rounded-lg bg-muted dark:bg-muted" />
+    </div>
+  ),
+  ssr: false,
+});
+
+const ContactCategory = dynamic(() => import("./ModernContactCategory"), {
+  loading: () => (
+    <div className="animate-pulse">
+      <div className="h-64 rounded-lg bg-muted dark:bg-muted" />
+    </div>
+  ),
+  ssr: false,
+});
 
 const DescriptionCategory = dynamic(
   () => import("./ModernDescriptionCategory"),
@@ -52,15 +70,6 @@ const LocationsCategory = dynamic(() => import("./ModernLocationsCategory"), {
   ssr: false,
 });
 
-const ContactCategory = dynamic(() => import("./ModernContactCategory"), {
-  loading: () => (
-    <div className="animate-pulse">
-      <div className="h-64 rounded-lg bg-muted dark:bg-muted" />
-    </div>
-  ),
-  ssr: false,
-});
-
 interface FahndungCategoriesContainerProps {
   investigationId: string;
 }
@@ -70,10 +79,25 @@ export default function FahndungCategoriesContainer({
 }: FahndungCategoriesContainerProps) {
   const router = useRouter();
   const { session } = useAuth();
-  const [activeCategory, setActiveCategory] = useState("contact");
+  const [activeCategory, setActiveCategory] = useState("fahndung");
 
   // Validiere investigationId
   const isValidId = isValidInvestigationId(investigationId);
+
+  // Debug-Log für UUID-Probleme
+  if (process.env.NODE_ENV === "development") {
+    console.log("🔍 FahndungCategoriesContainer Debug:", {
+      investigationId,
+      isValidId,
+      isUUID:
+        /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(
+          investigationId,
+        ),
+      isCaseNumber: /^(?:POL-)?\d{4}-[A-Z]-\d{3,6}(?:-[A-Z])?$/.test(
+        investigationId,
+      ),
+    });
+  }
 
   // Optimierte Hooks mit reduzierter Synchronisation
   const { investigation, isLoading } = useInvestigationSync(investigationId);
@@ -98,7 +122,7 @@ export default function FahndungCategoriesContainer({
   // Memoized Save Handler
   const handleSave = useCallback(async () => {
     await save();
-    setActiveCategory("overview");
+    setActiveCategory("fahndung");
   }, [save]);
 
   // Memoized Delete Handler
@@ -147,7 +171,8 @@ export default function FahndungCategoriesContainer({
                 Ungültige Fahndungs-ID
               </h2>
               <p className="text-muted-foreground dark:text-muted-foreground">
-                Die angegebene Fahndungs-ID ist ungültig oder leer.
+                Die angegebene Fahndungs-ID ist ungültig oder leer:{" "}
+                {investigationId}
               </p>
               <Link
                 href="/fahndungen"
@@ -173,7 +198,8 @@ export default function FahndungCategoriesContainer({
                 Fahndung nicht gefunden
               </h2>
               <p className="text-muted-foreground dark:text-muted-foreground">
-                Die angeforderte Fahndung konnte nicht gefunden werden.
+                Die angeforderte Fahndung konnte nicht gefunden werden. ID:{" "}
+                {investigationId}
               </p>
               <Link
                 href="/fahndungen"
@@ -242,6 +268,13 @@ export default function FahndungCategoriesContainer({
     }
   }, [investigation]);
 
+  // Memoized Breadcrumbs mit korrekter URL
+  const breadcrumbs = useMemo(
+    () =>
+      investigation ? getBreadcrumbsForInvestigation(investigation.title) : [],
+    [investigation],
+  );
+
   // Memoized Category Content
   const categoryContent = useMemo(() => {
     if (!convertedData) return null;
@@ -265,10 +298,33 @@ export default function FahndungCategoriesContainer({
     };
 
     switch (activeCategory) {
+      case "fahndung":
+        return (
+          <CategoryLayout
+            activeCategory={activeCategory}
+            onCategoryChange={navigateToCategory}
+          >
+            <FahndungTab data={data} />
+          </CategoryLayout>
+        );
+
+      case "contact":
+        return (
+          <CategoryLayout
+            activeCategory={activeCategory}
+            onCategoryChange={navigateToCategory}
+          >
+            <ContactCategory
+              {...commonProps}
+              onNext={() => navigateToCategory("description")}
+              onSave={handleSave}
+            />
+          </CategoryLayout>
+        );
+
       case "description":
         return (
           <CategoryLayout
-            data={data}
             activeCategory={activeCategory}
             onCategoryChange={navigateToCategory}
           >
@@ -279,7 +335,6 @@ export default function FahndungCategoriesContainer({
       case "media":
         return (
           <CategoryLayout
-            data={data}
             activeCategory={activeCategory}
             onCategoryChange={navigateToCategory}
           >
@@ -294,7 +349,6 @@ export default function FahndungCategoriesContainer({
       case "locations":
         return (
           <CategoryLayout
-            data={data}
             activeCategory={activeCategory}
             onCategoryChange={navigateToCategory}
           >
@@ -302,21 +356,6 @@ export default function FahndungCategoriesContainer({
               {...commonProps}
               onNext={() => navigateToCategory("contact")}
               onPrevious={() => navigateToCategory("media")}
-            />
-          </CategoryLayout>
-        );
-
-      case "contact":
-        return (
-          <CategoryLayout
-            data={data}
-            activeCategory={activeCategory}
-            onCategoryChange={navigateToCategory}
-          >
-            <ContactCategory
-              {...commonProps}
-              onNext={() => navigateToCategory("description")}
-              onSave={handleSave}
             />
           </CategoryLayout>
         );
@@ -348,18 +387,15 @@ export default function FahndungCategoriesContainer({
     <InvestigationEditErrorBoundary>
       <PageLayout session={session}>
         <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
+          {/* Breadcrumbs */}
+          <div className="mb-4">
+            <Breadcrumbs items={breadcrumbs} />
+          </div>
+
           {/* Header */}
           <div className="mb-8">
             <div className="mt-4 flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <Link
-                  href="/fahndungen"
-                  className="flex items-center gap-2 text-muted-foreground hover:text-muted-foreground dark:text-muted-foreground dark:hover:text-white"
-                >
-                  <ArrowLeft className="h-4 w-4" />
-                  Zurück zu allen Fahndungen
-                </Link>
-              </div>
+              <div className="flex items-center gap-4"></div>
 
               <div className="flex items-center gap-2">
                 {canEdit(session?.profile ?? null) && (

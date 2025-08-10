@@ -38,6 +38,7 @@ function AdminApprovalContent() {
         console.log(`🔐 Admin-Genehmigung: ${action} für ${email}`);
 
         // Hole Benutzer-Daten
+        const supabase = getBrowserClient();
         const { data: userProfile, error: fetchError } = await supabase
           .from("user_profiles")
           .select("*")
@@ -273,7 +274,9 @@ export default function AdminApprovalPage() {
         <div className="flex min-h-screen items-center justify-center bg-muted dark:bg-muted">
           <div className="text-center">
             <Loader2 className="mx-auto h-8 w-8 animate-spin text-blue-600" />
-            <p className="mt-4 text-muted-foreground dark:text-muted-foreground">Lade...</p>
+            <p className="mt-4 text-muted-foreground dark:text-muted-foreground">
+              Lade...
+            </p>
           </div>
         </div>
       }

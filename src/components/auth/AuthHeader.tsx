@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { useRouter } from "next/navigation";
+// import { useRouter } from "next/navigation";
 import { LogIn, UserPlus, User, LogOut, ChevronDown } from "lucide-react";
 import { useAuth } from "~/hooks/useAuth";
 import { navigationData, type NavItem } from "@/constants/navigationData";
@@ -19,7 +19,7 @@ export default function AuthHeader({
 }: AuthHeaderProps) {
   const [showAuthDropdown, setShowAuthDropdown] = useState(false);
   const { logout } = useAuth();
-  const router = useRouter();
+  // const _router = useRouter();
 
   const handleLogout = async () => {
     await logout();
@@ -44,6 +44,7 @@ export default function AuthHeader({
     if (isAuthenticated) {
       // Zeige nur Items für angemeldete Benutzer
       return navigationData.POLIZEI.filter(
+        // eslint-disable-next-line @typescript-eslint/prefer-nullish-coalescing
         (item) => item.requiresAuth || !item.authOnly,
       );
     } else {
@@ -66,7 +67,7 @@ export default function AuthHeader({
             </div>
             <div className="hidden text-sm md:block">
               <div className="font-medium text-foreground">
-                {userEmail?.split("@")[0] || "Benutzer"}
+                {userEmail?.split("@")[0] ?? "Benutzer"}
               </div>
               <div className="text-xs text-muted-foreground">
                 {getRoleDisplayName(userRole)}

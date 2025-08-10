@@ -100,7 +100,7 @@ export const postRouter = createTRPCRouter({
         category: z.string().optional(),
       }),
     )
-    .query(async ({ ctx, input }) => {
+    .query(async ({ ctx }) => {
       try {
         const { data, error } = await ctx.db.from("investigations").select("*");
 
@@ -311,12 +311,20 @@ export const postRouter = createTRPCRouter({
           );
         }
 
-        // Importiere generateSeoSlug für Client-Side Kompatibilität
-        const { generateSeoSlug } = await import("~/lib/seo");
+        // Importiere SEO-Funktionen für Client-Side Kompatibilität
+        const { generateSeoSlug, generateShortSeoSlug } = await import(
+          "~/lib/seo"
+        );
 
         for (const investigation of (investigations ?? []) as Investigation[]) {
+          // Prüfe sowohl normale als auch kurze Slugs
           const expectedSlug = generateSeoSlug(investigation.title);
-          if (expectedSlug === input.slug) {
+          const expectedShortSlug = generateShortSeoSlug(
+            investigation.title,
+            10,
+          );
+
+          if (expectedSlug === input.slug || expectedShortSlug === input.slug) {
             // Debug-Log nur in Development
             if (process.env.NODE_ENV === "development") {
               console.log("✅ API DEBUG: Fahndung gefunden für Slug:", {

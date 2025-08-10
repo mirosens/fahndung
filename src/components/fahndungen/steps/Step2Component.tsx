@@ -136,8 +136,8 @@ const Step2Component: React.FC<Step2ComponentProps> = ({
               type="button"
               aria-label="Demo füllen"
               className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-muted-foreground hover:bg-muted"
-              onClick={() => {
-                const demo = generateDemoShortDescription({
+              onClick={async () => {
+                const demo = await generateDemoShortDescription({
                   ...(wizard ?? {}),
                   step2: data,
                 });
@@ -180,8 +180,8 @@ const Step2Component: React.FC<Step2ComponentProps> = ({
               type="button"
               aria-label="Demo füllen"
               className="absolute right-2 top-2 rounded p-1 text-muted-foreground hover:bg-muted"
-              onClick={() => {
-                const demo = generateDemoDescription({
+              onClick={async () => {
+                const demo = await generateDemoDescription({
                   ...(wizard ?? {}),
                   step2: data,
                 });

@@ -236,7 +236,7 @@ const Fahndungskarte: React.FC<ModernFahndungskarteProps> = ({
   // Zeige NetworkError-Diagnose wenn Fehler vorhanden
   if (networkError) {
     return (
-      <div className={`${styles.fahndungskarte} ${className}`}>
+      <div className={`${styles['fahndungskarte']} ${className}`}>
         <NetworkErrorDiagnostic
           error={networkError}
           onRetry={handleRetry}
@@ -249,7 +249,7 @@ const Fahndungskarte: React.FC<ModernFahndungskarteProps> = ({
   // Zeige Loading nur wenn wirklich Daten geladen werden (nicht im Preview-Modus)
   if (isDataLoading && investigationId && !disableNavigation) {
     return (
-      <div className={`${styles.fahndungskarte} ${className}`}>
+      <div className={`${styles['fahndungskarte']} ${className}`}>
         <div className="flex items-center justify-center p-8">
           <div className="flex flex-col items-center gap-4">
             <div className="h-8 w-8 animate-spin rounded-full border-2 border-blue-600 border-t-transparent"></div>

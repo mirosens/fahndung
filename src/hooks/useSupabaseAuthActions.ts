@@ -3,6 +3,7 @@
 import { useState, useTransition } from "react";
 import { getBrowserClient } from "~/lib/supabase/supabase-browser";
 import { clearAuthSession } from "~/lib/auth";
+import type { Session as SupabaseSession } from "@supabase/supabase-js";
 
 // Verbesserte Logging-Funktionen
 const log = (message: string, ...args: unknown[]) => {
@@ -53,11 +54,11 @@ export function useSupabaseAuthActions() {
       try {
         log("🔐 Login: Versuche Anmeldung für:", email);
 
+        const supabase = getBrowserClient();
+
         // Zuerst Session bereinigen
         setDebugInfo("🧹 Bereinige alte Session...");
-        await clearAuthSession();
-
-        const supabase = getBrowserClient();
+        await clearAuthSession(supabase);
         setDebugInfo("🔍 Prüfe Anmeldedaten...");
 
         const { data, error } = await raceWithTimeout(
@@ -105,8 +106,10 @@ export function useSupabaseAuthActions() {
             if (sessionData.session) {
               setDebugInfo("✅ Session erstellt und Token verfügbar");
               log("✅ Session erstellt:", {
-                userId: sessionData.session.user.id,
-                tokenLength: sessionData.session.access_token?.length ?? 0,
+                userId: (sessionData.session as SupabaseSession).user.id,
+                tokenLength:
+                  (sessionData.session as SupabaseSession).access_token
+                    ?.length ?? 0,
               });
             } else {
               setDebugInfo("⚠️ Session erstellt, aber kein Token verfügbar");

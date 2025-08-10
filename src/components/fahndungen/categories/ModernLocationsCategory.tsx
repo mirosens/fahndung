@@ -125,19 +125,21 @@ export default function ModernLocationsCategory({
       {/* Location Details */}
       <div className="rounded-lg bg-white p-6 shadow-sm dark:bg-muted">
         {/* Tab Navigation */}
-        <div className="mb-6 flex gap-2 border-b border-border dark:border-border">
+        <div className="mb-6 flex gap-1 overflow-x-auto border-b border-border dark:border-border">
           {(
             [
               {
                 key: "main" as const,
                 icon: Target,
                 label: "Hauptstandorte",
+                shortLabel: "Haupt",
                 count: locations.filter((loc) => loc.type === "main").length,
               },
               {
                 key: "sighting" as const,
                 icon: Eye,
                 label: "Sichtungen",
+                shortLabel: "Sicht",
                 count: locations.filter((loc) => loc.type === "sighting")
                   .length,
               },
@@ -145,12 +147,13 @@ export default function ModernLocationsCategory({
                 key: "other" as const,
                 icon: MapPin,
                 label: "Sonstige",
+                shortLabel: "Sonst",
                 count: locations.filter(
                   (loc) => !["main", "sighting"].includes(loc.type),
                 ).length,
               },
             ] as const
-          ).map(({ key, icon: Icon, label, count }) => (
+          ).map(({ key, icon: Icon, label, shortLabel, count }) => (
             <button
               key={key}
               onClick={() => {
@@ -165,13 +168,17 @@ export default function ModernLocationsCategory({
                   setSelectedLocation(firstLocation);
                 }
               }}
-              className={`flex items-center gap-2 rounded-t-lg px-4 py-2 font-medium transition-colors ${
+              className={`flex min-w-fit items-center gap-1 whitespace-nowrap rounded-t-lg px-2 py-2 font-medium transition-colors md:gap-2 md:px-4 ${
                 selectedTab === key
                   ? "bg-emerald-600 text-white"
                   : "text-muted-foreground hover:bg-muted dark:text-muted-foreground dark:hover:bg-muted"
               }`}
+              title={label}
             >
-              <Icon className="h-4 w-4" /> {label} ({count})
+              <Icon className="h-4 w-4" />
+              <span className="hidden sm:inline">{label}</span>
+              <span className="sm:hidden">{shortLabel}</span>
+              <span className="text-xs">({count})</span>
             </button>
           ))}
         </div>

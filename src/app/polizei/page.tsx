@@ -1,3 +1,5 @@
+"use client";
+
 import {
   Building2,
   Users,
@@ -7,6 +9,9 @@ import {
   Shield,
 } from "lucide-react";
 import Link from "next/link";
+
+// Verhindere Pre-rendering für diese Seite
+export const dynamic = "force-dynamic";
 
 export default function PolizeiPage() {
   return (

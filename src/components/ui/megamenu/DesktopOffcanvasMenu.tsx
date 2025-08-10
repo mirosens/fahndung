@@ -15,7 +15,6 @@ import {
   Phone,
   HelpCircle,
   User,
-  Layout,
   Zap,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -171,17 +170,7 @@ export function DesktopOffcanvasMenu({
     }
   };
 
-  // Hilfsfunktion für Header-Variant-Wechsel zurück zum klassischen Menü
-  const switchToClassicHeader = () => {
-    if (typeof window !== "undefined") {
-      localStorage.setItem("header-variant", "classic");
-      window.dispatchEvent(
-        new CustomEvent<"modern" | "classic">("header-variant-change", {
-          detail: "classic",
-        }),
-      );
-    }
-  };
+
 
   return (
     <>
