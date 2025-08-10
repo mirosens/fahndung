@@ -1,7 +1,8 @@
 "use client";
 import React, { useEffect, useRef, useState } from "react";
-import { Accessibility, Type, Contrast, Layout } from "lucide-react";
+import { Type, Contrast, Layout } from "lucide-react";
 import { SystemThemeToggle } from "~/components/ui/SystemThemeToggle";
+import { A11yButton } from "~/components/ui/A11yButton";
 
 interface A11navEnhancedProps {
   isCompact?: boolean;
@@ -125,18 +126,7 @@ export default function A11navEnhanced({
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
-      <button
-        ref={btnRef}
-        type="button"
-        onClick={toggleOpen}
-        aria-haspopup="menu"
-        aria-expanded={open}
-        className="group relative h-10 w-10 rounded-full border border-input/50 bg-background/60 shadow-sm backdrop-blur-xl transition-all duration-200 hover:bg-accent/50 focus:outline-none focus:ring-2 focus:ring-primary/50 dark:border-slate-600 dark:bg-slate-800/90 dark:hover:bg-accent/50"
-        title="A11y & Meta Einstellungen"
-        aria-label="A11y & Meta Einstellungen"
-      >
-        <Accessibility className="absolute inset-0 m-auto h-4 w-4 text-foreground transition-colors duration-200 group-hover:text-primary" />
-      </button>
+      <A11yButton ref={btnRef} onClick={toggleOpen} isExpanded={open} />
 
       {open && (
         <div
