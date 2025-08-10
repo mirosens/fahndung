@@ -1,13 +1,22 @@
 import React, { useState, useRef } from "react";
 import { ChevronDown, Search, Menu, X } from "lucide-react";
+import dynamic from "next/dynamic";
 import { Logo } from "../ui/Logo";
-import A11navEnhanced from "@/components/layout/A11navEnhanced";
 import { useScrollDetection } from "~/hooks/useScrollDetection";
 import {
   navigationData,
   type NavItem,
   type NavSection,
 } from "@/constants/navigationData";
+
+// 🚀 CODE SPLITTING OPTIMIERUNGEN
+// Lazy Loading für schwere Komponenten reduziert das initiale JavaScript Bundle
+
+// Lazy Loading für schwere Komponenten
+const A11navEnhanced = dynamic(() => import("./A11navEnhanced"), {
+  loading: () => <div className="h-8 w-8 animate-pulse rounded bg-muted" />,
+  ssr: false,
+});
 
 /**
  * ModernHeader Component
