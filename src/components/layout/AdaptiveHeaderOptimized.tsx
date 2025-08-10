@@ -1,7 +1,7 @@
 "use client";
 
 import React, {
-  useState,
+  useReducer,
   useEffect,
   useMemo,
   useCallback,
@@ -27,42 +27,105 @@ interface AdaptiveHeaderProps {
   onLogout?: () => void;
 }
 
+// State Interface
+interface HeaderState {
+  isScrolled: boolean;
+  mobileMenuOpen: boolean;
+  showMetaBar: boolean;
+  isMenuOpen: boolean;
+  showMetaControls: boolean;
+  isClient: boolean;
+}
+
+// Action Types
+type HeaderAction =
+  | { type: "SET_SCROLLED"; payload: boolean }
+  | { type: "TOGGLE_MOBILE_MENU" }
+  | { type: "SET_MOBILE_MENU"; payload: boolean }
+  | { type: "TOGGLE_META_BAR" }
+  | { type: "SET_META_BAR"; payload: boolean }
+  | { type: "TOGGLE_MENU" }
+  | { type: "SET_MENU"; payload: boolean }
+  | { type: "TOGGLE_META_CONTROLS" }
+  | { type: "SET_META_CONTROLS"; payload: boolean }
+  | { type: "SET_CLIENT"; payload: boolean };
+
+// Initial State
+const initialState: HeaderState = {
+  isScrolled: false,
+  mobileMenuOpen: false,
+  showMetaBar: false,
+  isMenuOpen: false,
+  showMetaControls: false,
+  isClient: false,
+};
+
+// Reducer Function
+const headerReducer = (
+  state: HeaderState,
+  action: HeaderAction,
+): HeaderState => {
+  switch (action.type) {
+    case "SET_SCROLLED":
+      return { ...state, isScrolled: action.payload };
+    case "TOGGLE_MOBILE_MENU":
+      return { ...state, mobileMenuOpen: !state.mobileMenuOpen };
+    case "SET_MOBILE_MENU":
+      return { ...state, mobileMenuOpen: action.payload };
+    case "TOGGLE_META_BAR":
+      return { ...state, showMetaBar: !state.showMetaBar };
+    case "SET_META_BAR":
+      return { ...state, showMetaBar: action.payload };
+    case "TOGGLE_MENU":
+      return { ...state, isMenuOpen: !state.isMenuOpen };
+    case "SET_MENU":
+      return { ...state, isMenuOpen: action.payload };
+    case "TOGGLE_META_CONTROLS":
+      return { ...state, showMetaControls: !state.showMetaControls };
+    case "SET_META_CONTROLS":
+      return { ...state, showMetaControls: action.payload };
+    case "SET_CLIENT":
+      return { ...state, isClient: action.payload };
+    default:
+      return state;
+  }
+};
+
 // OPTIMIERTER Scroll Hook - Eliminiert Zittern mit RequestAnimationFrame
 const useOptimizedScroll = (threshold = 50) => {
-  const [isScrolled, setIsScrolled] = useState(false);
-  const [isClient, setIsClient] = useState(false);
+  const [state, dispatch] = useReducer(headerReducer, initialState);
   const lastScrollY = useRef(0);
   const ticking = useRef(false);
 
   // Hydration-Sicherheit: Erst nach Client-Side Mount aktivieren
   useEffect(() => {
-    setIsClient(true);
+    dispatch({ type: "SET_CLIENT", payload: true });
   }, []);
 
   const updateScrollState = useCallback(() => {
-    if (!isClient) return;
+    if (!state.isClient) return;
 
     const currentScrollY = window.scrollY;
     const shouldBeScrolled = currentScrollY > threshold;
 
     // Nur aktualisieren wenn sich der Zustand wirklich ändert
-    if (isScrolled !== shouldBeScrolled) {
-      setIsScrolled(shouldBeScrolled);
+    if (state.isScrolled !== shouldBeScrolled) {
+      dispatch({ type: "SET_SCROLLED", payload: shouldBeScrolled });
     }
 
     lastScrollY.current = currentScrollY;
     ticking.current = false;
-  }, [isScrolled, threshold, isClient]);
+  }, [state.isScrolled, threshold, state.isClient]);
 
   const handleScroll = useCallback(() => {
-    if (!ticking.current && isClient) {
+    if (!ticking.current && state.isClient) {
       window.requestAnimationFrame(updateScrollState);
       ticking.current = true;
     }
-  }, [updateScrollState, isClient]);
+  }, [updateScrollState, state.isClient]);
 
   useEffect(() => {
-    if (!isClient) return;
+    if (!state.isClient) return;
 
     // Passive Listener für bessere Performance
     window.addEventListener("scroll", handleScroll, { passive: true });
@@ -73,10 +136,10 @@ const useOptimizedScroll = (threshold = 50) => {
     return () => {
       window.removeEventListener("scroll", handleScroll);
     };
-  }, [handleScroll, updateScrollState, isClient]);
+  }, [handleScroll, updateScrollState, state.isClient]);
 
   // Beim SSR immer false zurückgeben, um Hydration-Fehler zu vermeiden
-  return isClient ? isScrolled : false;
+  return state.isClient ? state.isScrolled : false;
 };
 
 // Throttle-Funktion für Performance (entfernt - ungenutzt)
@@ -134,16 +197,14 @@ const AdaptiveDesktopHeader = ({
   isScrolled,
   session: externalSession,
   showMetaBar,
-  setShowMetaBar,
   isMenuOpen,
-  setIsMenuOpen,
+  dispatch,
 }: {
   isScrolled: boolean;
   session?: Session | null;
   showMetaBar: boolean;
-  setShowMetaBar: (show: boolean) => void;
   isMenuOpen: boolean;
-  setIsMenuOpen: (open: boolean) => void;
+  dispatch: React.Dispatch<HeaderAction>;
 }) => {
   const router = useRouter();
   const pathname = usePathname();
@@ -191,7 +252,7 @@ const AdaptiveDesktopHeader = ({
 
           {/* Hamburger Menu Button - auch für angemeldete Benutzer */}
           <button
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            onClick={() => dispatch({ type: "TOGGLE_MENU" })}
             className="inline-flex items-center gap-x-2 rounded-lg border border-border bg-white px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 dark:border-border dark:bg-muted dark:text-muted-foreground dark:hover:bg-muted"
             aria-haspopup="dialog"
             aria-expanded={isMenuOpen}
@@ -206,7 +267,7 @@ const AdaptiveDesktopHeader = ({
       return (
         <div className="flex h-9 items-center gap-3">
           <button
-            onClick={() => setIsMenuOpen(!isMenuOpen)}
+            onClick={() => dispatch({ type: "TOGGLE_MENU" })}
             className="inline-flex items-center gap-x-2 rounded-lg border border-border bg-white px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:border-border dark:bg-muted dark:text-muted-foreground dark:hover:bg-muted"
             aria-haspopup="dialog"
             aria-expanded={isMenuOpen}
@@ -225,7 +286,7 @@ const AdaptiveDesktopHeader = ({
     pathname,
     router,
     isMenuOpen,
-    setIsMenuOpen,
+    dispatch,
   ]);
 
   return (
@@ -303,7 +364,7 @@ const AdaptiveDesktopHeader = ({
                 >
                   {isScrolled && (
                     <button
-                      onClick={() => setShowMetaBar(!showMetaBar)}
+                      onClick={() => dispatch({ type: "TOGGLE_META_BAR" })}
                       className="relative h-full w-full touch-manipulation select-none rounded-lg border border-border bg-white/90 p-1.5 shadow-sm backdrop-blur-sm transition-all duration-200 hover:border-border hover:bg-white hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-500/50 focus:ring-offset-2 dark:border-slate-600 dark:bg-slate-800/90 dark:hover:border-slate-500 dark:hover:bg-slate-800"
                       title={
                         showMetaBar
@@ -338,11 +399,13 @@ const AdaptiveDesktopHeader = ({
 // Mobile Header mit integrierten Meta-Controls
 const ResponsiveMobileHeader = ({
   onMenuToggle,
+  showMetaControls,
+  dispatch,
 }: {
   onMenuToggle: () => void;
+  showMetaControls: boolean;
+  dispatch: React.Dispatch<HeaderAction>;
 }) => {
-  const [showMetaControls, setShowMetaControls] = useState(false);
-
   return (
     <div
       className="sticky top-0 z-50 w-full rounded-lg border-b border-border bg-muted shadow-sm transition-all duration-300 hover:shadow-sm dark:border-border dark:bg-muted lg:hidden"
@@ -392,7 +455,9 @@ const ResponsiveMobileHeader = ({
             <div className="flex items-center gap-3">
               <SystemThemeToggle />
               <button
-                onClick={() => setShowMetaControls(false)}
+                onClick={() =>
+                  dispatch({ type: "SET_META_CONTROLS", payload: false })
+                }
                 className="text-slate-600 hover:text-slate-800 dark:text-slate-400 dark:hover:text-white"
               >
                 <X className="h-4 w-4" />
@@ -409,7 +474,7 @@ const ResponsiveMobileHeader = ({
         <div className="flex items-center gap-2">
           {/* Meta Controls Toggle */}
           <button
-            onClick={() => setShowMetaControls(!showMetaControls)}
+            onClick={() => dispatch({ type: "TOGGLE_META_CONTROLS" })}
             className="relative touch-manipulation select-none overflow-hidden rounded-lg border border-border bg-muted/90 p-1.5 shadow-sm backdrop-blur-sm transition-all duration-200 hover:border-border hover:bg-muted hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-400/50 dark:border-slate-600 dark:bg-slate-800/90 dark:hover:border-slate-500 dark:hover:bg-slate-800"
             aria-label="Barrierefreiheit"
           >
@@ -434,17 +499,15 @@ const ResponsiveMobileHeader = ({
 const AdaptiveHeaderOptimized = ({
   session: externalSession,
 }: AdaptiveHeaderProps) => {
+  const [state, dispatch] = useReducer(headerReducer, initialState);
   const isScrolled = useOptimizedScroll(50);
-  const [showMetaBar, setShowMetaBar] = useState(false);
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [isMenuOpen, setIsMenuOpen] = useState(false);
 
   // RADIKALE LÖSUNG: Verwende useStableSession für stabile Session-Behandlung
   const { session } = useStableSession(externalSession);
 
   // Prevent body scroll when mobile menu is open
   useEffect(() => {
-    if (mobileMenuOpen) {
+    if (state.mobileMenuOpen) {
       document.body.style.overflow = "hidden";
       document.body.classList.add("menu-open");
     } else {
@@ -456,7 +519,7 @@ const AdaptiveHeaderOptimized = ({
       document.body.style.overflow = "";
       document.body.classList.remove("menu-open");
     };
-  }, [mobileMenuOpen]);
+  }, [state.mobileMenuOpen]);
 
   return (
     <>
@@ -478,25 +541,30 @@ const AdaptiveHeaderOptimized = ({
       <AdaptiveDesktopHeader
         isScrolled={isScrolled}
         session={session}
-        showMetaBar={showMetaBar}
-        setShowMetaBar={setShowMetaBar}
-        isMenuOpen={isMenuOpen}
-        setIsMenuOpen={setIsMenuOpen}
+        showMetaBar={state.showMetaBar}
+        isMenuOpen={state.isMenuOpen}
+        dispatch={dispatch}
       />
 
       {/* Mobile Header */}
-      <ResponsiveMobileHeader onMenuToggle={() => setMobileMenuOpen(true)} />
+      <ResponsiveMobileHeader
+        onMenuToggle={() =>
+          dispatch({ type: "SET_MOBILE_MENU", payload: true })
+        }
+        showMetaControls={state.showMetaControls}
+        dispatch={dispatch}
+      />
 
       {/* Mobile Drawer Menu */}
       <MobileDrawerMenu
-        isOpen={mobileMenuOpen}
-        onClose={() => setMobileMenuOpen(false)}
+        isOpen={state.mobileMenuOpen}
+        onClose={() => dispatch({ type: "SET_MOBILE_MENU", payload: false })}
       />
 
       {/* Desktop Offcanvas Menu */}
       <DesktopOffcanvasMenu
-        isOpen={isMenuOpen}
-        onClose={() => setIsMenuOpen(false)}
+        isOpen={state.isMenuOpen}
+        onClose={() => dispatch({ type: "SET_MENU", payload: false })}
       />
     </>
   );
