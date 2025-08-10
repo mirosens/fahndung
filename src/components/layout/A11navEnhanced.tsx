@@ -116,8 +116,8 @@ export default function A11navEnhanced({
   return (
     <div
       className="relative"
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+
+
     >
       <button
         ref={btnRef}
