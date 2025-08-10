@@ -1,7 +1,15 @@
-import presets from "@/lib/demo/presets.json";
 import type { PresetsShape } from "@/lib/demo/presets.types";
 import type { WizardData } from "@/components/fahndungen/types/WizardTypes";
 import { DEMO_DEFAULTS, resolvePlaceholders } from "@/lib/demo/helpers";
+
+// Dynamischer Import für JSON-Datei (SSR-sicher)
+let presets: PresetsShape | null = null;
+const getPresets = async (): Promise<PresetsShape> => {
+  if (!presets) {
+    presets = (await import("@/lib/demo/presets.json")).default as PresetsShape;
+  }
+  return presets;
+};
 
 type PresetCategoryKey =
   | "Straftaeter"
@@ -112,16 +120,16 @@ function pickFirst(arr?: string[]): string | null {
   return arr[0] ?? null;
 }
 
-export function generateDemoTitle(
+export async function generateDemoTitle(
   data: Partial<WizardData>,
   overrides?: DemoOverrides,
-): string {
+): Promise<string> {
   const catKey = wizardToPresetCategory(data.step1?.category ?? "");
   const ctx = buildContext(data, overrides);
   if (!catKey) return resolvePlaceholders("Fahndung – {city}", ctx);
 
   let template: string | null = null;
-  const P: PresetsShape = presets as unknown as PresetsShape;
+  const P = await getPresets();
   if (catKey === "Vermisst") {
     // Wähle nach Variante, fallback auf Standard
     const variant = data.step1?.variant ?? "Standard";
@@ -146,15 +154,15 @@ export function generateDemoTitle(
   return resolvePlaceholders(template ?? "Fahndung – {city}", ctx);
 }
 
-export function generateDemoShortDescription(
+export async function generateDemoShortDescription(
   data: Partial<WizardData>,
   overrides?: DemoOverrides,
-): string {
+): Promise<string> {
   const catKey = wizardToPresetCategory(data.step1?.category ?? "");
   const ctx = buildContext(data, overrides);
   if (!catKey) return resolvePlaceholders("Kurzbeschreibung – {city}", ctx);
   let template: string | null = null;
-  const P: PresetsShape = presets as unknown as PresetsShape;
+  const P = await getPresets();
   if (catKey === "Vermisst") {
     // Für Kurzbeschreibung nutzen wir die erste Zeile der Beschreibung
     const variant = data.step1?.variant ?? "Standard";
@@ -178,10 +186,10 @@ export function generateDemoShortDescription(
   return resolvePlaceholders(template ?? "Kurzbeschreibung – {city}", ctx);
 }
 
-export function generateDemoDescription(
+export async function generateDemoDescription(
   data: Partial<WizardData>,
   overrides?: DemoOverrides,
-): string {
+): Promise<string> {
   // Für jetzt identisch zur ShortDescription; später können wir längere Textbausteine unterscheiden
   return generateDemoShortDescription(data, overrides);
 }

@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { supabase } from "~/lib/supabase";
+import { getBrowserClient } from "~/lib/supabase/supabase-browser";
 import {
   getCurrentSession,
   clearAuthSession,
@@ -118,6 +118,7 @@ export const useAuth = () => {
 
   // Auth State Change Listener mit reduzierten Logs
   useEffect(() => {
+    const supabase = getBrowserClient();
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {

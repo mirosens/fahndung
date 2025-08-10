@@ -85,13 +85,15 @@ export const GlobalBackgroundLight: React.FC<GlobalBackgroundLightProps> = ({
             <script
               dangerouslySetInnerHTML={{
                 __html: `
-                  window.addEventListener('scroll', function() {
-                    const scrollY = window.scrollY;
-                    const sphereLight = document.querySelector('.sphere-light');
-                    if (sphereLight) {
-                      sphereLight.style.setProperty('--scroll-offset', scrollY * 0.3 + 'px');
-                    }
-                  });
+                  if (typeof window !== 'undefined') {
+                    window.addEventListener('scroll', function() {
+                      const scrollY = window.scrollY;
+                      const sphereLight = document.querySelector('.sphere-light');
+                      if (sphereLight) {
+                        sphereLight.style.setProperty('--scroll-offset', scrollY * 0.3 + 'px');
+                      }
+                    });
+                  }
                 `,
               }}
             />

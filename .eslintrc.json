@@ -23,6 +23,42 @@
     "@typescript-eslint/prefer-optional-chain": "warn",
     "react-hooks/exhaustive-deps": "warn",
     "@typescript-eslint/no-unsafe-call": "warn",
-    "@typescript-eslint/no-unsafe-return": "warn"
-  }
+    "@typescript-eslint/no-unsafe-return": "warn",
+    "no-restricted-imports": [
+      "error",
+      {
+        "name": "~/lib/supabase/supabase-browser",
+        "message": "Use supabase-browser only in Client Components."
+      }
+    ]
+  },
+  "overrides": [
+    {
+      "files": ["next.config.js"],
+      "parserOptions": {
+        "ecmaVersion": 2022,
+        "sourceType": "module"
+      },
+      "env": {
+        "node": true,
+        "es2022": true
+      }
+    },
+    {
+      "files": ["src/server/**/*", "src/app/**/route.ts", "src/server/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "~/lib/supabase/supabase-browser",
+                "message": "Not allowed on server"
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
 }

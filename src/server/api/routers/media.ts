@@ -7,9 +7,9 @@ import {
   adminProcedure,
 } from "~/server/api/trpc";
 import { MediaService } from "~/lib/services/media.service";
-import { supabase } from "~/lib/supabase";
+import { getServerClient } from "~/lib/supabase/supabase-server";
 
-const mediaService = new MediaService(supabase);
+const mediaService = new MediaService(getServerClient());
 
 export const mediaRouter = createTRPCRouter({
   // Upload media with base64 data
@@ -53,11 +53,7 @@ export const mediaRouter = createTRPCRouter({
 
       try {
         // Zulässige MIME-Typen einschränken
-        const allowedMimeTypes = [
-          "image/jpeg",
-          "image/png",
-          "video/mp4",
-        ];
+        const allowedMimeTypes = ["image/jpeg", "image/png", "video/mp4"];
         if (!allowedMimeTypes.includes(input.contentType)) {
           console.error("❌ Unsupported MIME type:", input.contentType);
           throw new TRPCError({
@@ -101,6 +97,7 @@ export const mediaRouter = createTRPCRouter({
         });
 
         // Upload to Supabase Storage
+        const supabase = getServerClient();
         const { data: uploadData, error: uploadError } = await supabase.storage
           .from("media-gallery")
           .upload(path, buffer, {

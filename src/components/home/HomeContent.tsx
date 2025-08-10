@@ -191,7 +191,9 @@ export default function HomeContent() {
         }}
         onSecondaryClick={() => {
           // Navigate to contact page or open contact form
-          window.location.href = "/kontakt";
+          if (typeof window !== "undefined") {
+            window.location.href = "/kontakt";
+          }
         }}
       />
 

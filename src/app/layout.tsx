@@ -1,3 +1,4 @@
+import "./_polyfills";
 import type { Metadata } from "next";
 import "~/styles/globals.css";
 import "~/styles/fonts.css";
@@ -43,6 +44,14 @@ export default function RootLayout({
         <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com" />
         <link rel="dns-prefetch" href="https://supabase.co" />
         <link rel="dns-prefetch" href="https://images.unsplash.com" />
+        {/* Font Loading Fix */}
+        <link
+          rel="preload"
+          href="/fonts/Inter.woff2"
+          as="font"
+          type="font/woff2"
+          crossOrigin="anonymous"
+        />
       </head>
       <body className="antialiased" suppressHydrationWarning>
         {/* Skip-Link for better accessibility. When focused (via Tab key), this becomes visible

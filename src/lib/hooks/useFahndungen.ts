@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { FahndungsService } from "@/lib/services/fahndungs.service";
-import { supabase } from "~/lib/supabase";
+import { getBrowserClient } from "~/lib/supabase/supabase-browser";
 import type { InvestigationData } from "@/lib/services/fahndungs.service";
 import { getErrorMessage } from "@/types/errors";
 
@@ -19,6 +19,7 @@ export function useFahndungen(filters?: {
   const loadInvestigations = useCallback(async () => {
     try {
       setLoading(true);
+      const supabase = getBrowserClient();
       const service = new FahndungsService(supabase);
       const data = await service.getInvestigations(filters);
       setInvestigations(data);

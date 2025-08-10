@@ -10,7 +10,17 @@ const nextConfig = {
   eslint: { ignoreDuringBuilds: true },
   typescript: { ignoreBuildErrors: true },
 
+  experimental: {
+    optimizeCss: true,
+    optimizePackageImports: ["lucide-react", "@radix-ui/*", "framer-motion"],
+  },
+  compiler: {
+    removeConsole: true,
+  },
   images: {
+    deviceSizes: [640, 828],
+    imageSizes: [64, 128],
+    minimumCacheTTL: 31536000,
     remotePatterns: [
       { protocol: "https", hostname: "**.supabase.co" },
       { protocol: "https", hostname: "images.unsplash.com" },
@@ -18,13 +28,7 @@ const nextConfig = {
     ],
     formats: ["image/avif", "image/webp"],
   },
-  experimental: {
-    optimizePackageImports: ["lucide-react"],
-    optimizeCss: true,
-  },
-  compiler: {
-    removeConsole: process.env.NODE_ENV === "production",
-  },
+  // ❌ no fallbacks/polyfills here
 };
 
 export default withBundleAnalyzer(nextConfig);

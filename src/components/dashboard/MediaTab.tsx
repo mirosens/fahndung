@@ -18,7 +18,7 @@ import { useMediaStore } from "~/stores/media.store";
 import MediaUpload from "~/components/media/MediaUpload";
 import MediaGrid from "~/components/media/MediaGrid";
 import type { MediaItem } from "~/lib/services/media.service";
-import { supabase } from "~/lib/supabase";
+import { supabase } from "~/lib/supabase-client";
 
 interface UploadResult {
   path: string;

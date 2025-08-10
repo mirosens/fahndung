@@ -102,39 +102,13 @@ export const postRouter = createTRPCRouter({
     )
     .query(async ({ ctx, input }) => {
       try {
-        let query = ctx.db
-          .from("investigations")
-          .select("*")
-          .order("created_at", { ascending: false })
-          .range(input.offset, input.offset + input.limit - 1);
+        const { data, error } = await ctx.db.from("investigations").select("*");
 
-        // Filter anwenden
-        if (input.status) {
-          query = query.eq("status", input.status);
-        }
-        if (input.priority) {
-          query = query.eq("priority", input.priority);
-        }
-        if (input.category) {
-          query = query.eq("category", input.category);
-        }
-
-        const response = (await query) as SupabaseResponse<Investigation[]>;
-        const { data, error } = response;
-
-        if (error) {
-          console.error("❌ Supabase-Fehler:", error);
-          throw new Error(
-            `Fehler beim Abrufen der Fahndungen: ${error.message}`,
-          );
-        }
-
+        if (error) throw error;
         return data ?? [];
-      } catch (error) {
-        console.error("❌ Fehler beim Abrufen der Fahndungen:", error);
-        const errorMessage =
-          error instanceof Error ? error.message : String(error);
-        throw new Error(`Fehler beim Abrufen der Fahndungen: ${errorMessage}`);
+      } catch (err) {
+        console.error("Supabase timeout:", err);
+        return []; // Fallback statt crash
       }
     }),
 

@@ -63,6 +63,8 @@ export function useGlobalSync() {
 
   // Event Listener für Browser-Fokus (wenn Tab wieder aktiv wird)
   useEffect(() => {
+    if (typeof window === "undefined") return;
+
     const handleFocus = () => {
       const now = Date.now();
       if (now - lastSyncRef.current > 60000) { // Nur alle 60 Sekunden
@@ -76,6 +78,8 @@ export function useGlobalSync() {
 
   // Event Listener für Online-Status
   useEffect(() => {
+    if (typeof window === "undefined") return;
+
     const handleOnline = () => {
       globalSync();
     };

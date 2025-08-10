@@ -10,6 +10,8 @@ export function useScrollDetection() {
   const searchRef = useRef<HTMLDivElement | null>(null);
 
   useEffect(() => {
+    if (typeof window === "undefined") return;
+
     const header = headerRef.current;
     const spacer = spacerRef.current;
     const search = searchRef.current;

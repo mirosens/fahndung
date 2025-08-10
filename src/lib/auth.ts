@@ -1,4 +1,4 @@
-import { supabase } from "./supabase";
+import { getServerClient } from "./supabase/supabase-server";
 
 export interface UserProfile {
   id: string;
@@ -173,13 +173,9 @@ export const isEditor = (profile: UserProfile | null): boolean => {
 
 // Aktuelle Session abrufen mit optimierten Timeouts
 export const getCurrentSession = async (): Promise<Session | null> => {
-  if (!supabase) {
-    console.error("❌ Supabase ist nicht konfiguriert");
-    return null;
-  }
-
   try {
     // Reduzierte Logs - nur bei Fehlern
+    const supabase = getServerClient();
     const sessionPromise = supabase.auth.getSession();
     const timeoutPromise = new Promise<{
       data: { session: null };

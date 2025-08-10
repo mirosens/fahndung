@@ -129,7 +129,9 @@ export default function MediaTabSimple() {
   // Login Handler
   const handleLogin = async () => {
     // Redirect zur Login-Seite
-    window.location.href = "/login";
+    if (typeof window !== "undefined") {
+      window.location.href = "/login";
+    }
   };
 
   // Gefilterte Medien

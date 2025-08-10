@@ -29,6 +29,8 @@ export default function NavigationWrapper({ logo }: NavigationWrapperProps) {
 
   // Optimierte Device-Erkennung mit Debouncing
   const checkDevice = useCallback(() => {
+    if (typeof window === "undefined") return;
+    
     const newIsMobile = window.innerWidth < 768;
     if (newIsMobile !== isMobile) {
       setIsMobile(newIsMobile);
@@ -43,18 +45,20 @@ export default function NavigationWrapper({ logo }: NavigationWrapperProps) {
     checkDevice();
 
     // Event Listener mit Debouncing
-    let timeoutId: NodeJS.Timeout;
-    const handleResize = () => {
-      clearTimeout(timeoutId);
-      timeoutId = setTimeout(checkDevice, 100);
-    };
+    if (typeof window !== "undefined") {
+      let timeoutId: NodeJS.Timeout;
+      const handleResize = () => {
+        clearTimeout(timeoutId);
+        timeoutId = setTimeout(checkDevice, 100);
+      };
 
-    window.addEventListener("resize", handleResize);
+      window.addEventListener("resize", handleResize);
 
-    return () => {
-      window.removeEventListener("resize", handleResize);
-      clearTimeout(timeoutId);
-    };
+      return () => {
+        window.removeEventListener("resize", handleResize);
+        clearTimeout(timeoutId);
+      };
+    }
   }, [checkDevice]);
 
   // Verhindere Hydration-Mismatch

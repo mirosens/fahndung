@@ -46,6 +46,8 @@ export const OptimizedImage = ({
 
   useEffect(() => {
     const updateImageSize = () => {
+      if (typeof window === "undefined") return;
+      
       const isMobile = window.innerWidth < 768;
       const isTablet = window.innerWidth < 1024;
 
@@ -65,8 +67,10 @@ export const OptimizedImage = ({
     };
 
     updateImageSize();
-    window.addEventListener("resize", updateImageSize);
-    return () => window.removeEventListener("resize", updateImageSize);
+    if (typeof window !== "undefined") {
+      window.addEventListener("resize", updateImageSize);
+      return () => window.removeEventListener("resize", updateImageSize);
+    }
   }, [width, height]);
 
   // Intersection Observer für Lazy Loading

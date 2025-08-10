@@ -14,6 +14,11 @@ export const compressImage = async (
   file: File,
   options: CompressionOptions = {},
 ): Promise<File> => {
+  // Browser-Check
+  if (typeof window === "undefined" || typeof document === "undefined") {
+    throw new Error("Bildkompression ist nur im Browser verfügbar");
+  }
+
   const {
     maxWidth = 1920,
     maxHeight = 1080,

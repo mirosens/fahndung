@@ -50,11 +50,11 @@ export function Logo({ className = "", showLink = true }: LogoProps) {
             gradientTransform="translate(0 192.27) scale(1 -1)"
             gradientUnits="userSpaceOnUse"
           >
-            <stop offset="0" stop-color="#fff" />
-            <stop offset=".18" stop-color="#f9f9f9" />
-            <stop offset=".44" stop-color="#e5e6e6" />
-            <stop offset=".74" stop-color="#c7c7c8" />
-            <stop offset="1" stop-color="#a5a7a8" />
+            <stop offset="0" stopColor="#fff" />
+            <stop offset=".18" stopColor="#f9f9f9" />
+            <stop offset=".44" stopColor="#e5e6e6" />
+            <stop offset=".74" stopColor="#c7c7c8" />
+            <stop offset="1" stopColor="#a5a7a8" />
           </radialGradient>
           <radialGradient
             id="Unbenannter_Verlauf_4"
@@ -67,11 +67,11 @@ export function Logo({ className = "", showLink = true }: LogoProps) {
             gradientTransform="translate(0 192.27) scale(1 -1)"
             gradientUnits="userSpaceOnUse"
           >
-            <stop offset=".43" stop-color="#fff" />
-            <stop offset=".53" stop-color="#f9f9f9" />
-            <stop offset=".68" stop-color="#e5e6e6" />
-            <stop offset=".85" stop-color="#c7c7c8" />
-            <stop offset="1" stop-color="#a5a7a8" />
+            <stop offset=".43" stopColor="#fff" />
+            <stop offset=".53" stopColor="#f9f9f9" />
+            <stop offset=".68" stopColor="#e5e6e6" />
+            <stop offset=".85" stopColor="#c7c7c8" />
+            <stop offset="1" stopColor="#a5a7a8" />
           </radialGradient>
           <radialGradient
             id="Unbenannter_Verlauf_20"
@@ -83,8 +83,8 @@ export function Logo({ className = "", showLink = true }: LogoProps) {
             r="64.16"
             gradientUnits="userSpaceOnUse"
           >
-            <stop offset=".01" stop-color="#fff" />
-            <stop offset=".67" stop-color="#fdc619" />
+            <stop offset=".01" stopColor="#fff" />
+            <stop offset=".67" stopColor="#fdc619" />
           </radialGradient>
         </defs>
         <g id="Ebene_1-2" data-name="Ebene 1">

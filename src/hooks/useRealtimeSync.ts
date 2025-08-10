@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { api } from "~/trpc/react";
-import { subscribeToInvestigations } from "~/lib/supabase";
+import { getBrowserClient } from "~/lib/supabase/supabase-browser";
 
 interface RealtimePayload {
   new?: { id?: string; [key: string]: unknown };
@@ -28,8 +28,10 @@ export function useRealtimeSync() {
   const setupSubscription = useCallback(async () => {
     try {
       // Versuche zuerst Postgres Changes (einfacher Ansatz)
-      const subscription = subscribeToInvestigations(
-        (payload: RealtimePayload) => {
+      const supabase = getBrowserClient();
+      const channel = supabase
+        .channel('investigations')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'investigations' }, (payload: RealtimePayload) => {
           // Sofortige Cache-Invalidierung für alle relevanten Queries
           void utils.post.getInvestigations.invalidate();
           void utils.post.getMyInvestigations.invalidate();
@@ -45,10 +47,10 @@ export function useRealtimeSync() {
           // Sofortiger Refetch für sofortige UI-Updates
           void utils.post.getInvestigations.refetch();
           void utils.post.getMyInvestigations.refetch();
-        },
-      );
+        })
+        .subscribe();
 
-      subscriptionRef.current = subscription;
+      subscriptionRef.current = { unsubscribe: () => { void supabase.removeChannel(channel); } };
       setIsConnected(true);
       setConnectionType("postgres");
       setConnectionAttempts(0);
@@ -75,6 +77,8 @@ export function useRealtimeSync() {
 
   // Automatische Reconnection bei Netzwerkänderungen
   useEffect(() => {
+    if (typeof window === "undefined") return;
+
     const handleOnline = () => {
       console.log(
         "🌐 Netzwerk wieder online - Reconnecte Real-time Subscription",

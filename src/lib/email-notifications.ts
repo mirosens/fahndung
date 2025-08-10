@@ -1,4 +1,4 @@
-import { supabase } from "~/lib/supabase";
+import { getServerClient } from "~/lib/supabase/supabase-server";
 
 export interface RegistrationNotification {
   userEmail: string;
@@ -51,6 +51,7 @@ Fahndung System - Automatische Benachrichtigung
 `;
 
     // Verwende Supabase Edge Function für E-Mail-Versand
+    const supabase = getServerClient();
     const result = await supabase.functions.invoke("send-email", {
       body: {
         to: "ptlsweb@gmail.com",
@@ -89,9 +90,8 @@ Fahndung System - Automatische Benachrichtigung
  * Speichert E-Mail-Benachrichtigung in der Datenbank
  */
 async function saveEmailNotification(notification: RegistrationNotification) {
-  if (!supabase) return;
-
   try {
+    const supabase = getServerClient();
     const result = await supabase.from("user_notifications").insert({
       user_email: notification.userEmail,
       user_name: notification.userName,
@@ -168,6 +168,7 @@ Fahndung System - Automatische Benachrichtigung
     // Optional: Speichere Bestätigung in der Datenbank
     if (supabase) {
       try {
+        const supabase = getServerClient();
         await supabase.from("user_notifications").insert({
           user_email: userEmail,
           user_name: userName,
@@ -240,6 +241,7 @@ Fahndung System - Automatische Zusammenfassung
 `;
 
     // Sende Zusammenfassung an Admin
+    const supabase = getServerClient();
     const emailResult = await supabase.functions.invoke("send-email", {
       body: {
         to: "ptlsweb@gmail.com",

@@ -11,23 +11,13 @@ import { initTRPC, TRPCError } from "@trpc/server";
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
 import { ZodError } from "zod";
-import { createClient } from "@supabase/supabase-js";
 
 import {
   type Session,
   type AuthPermissions,
   getRolePermissions,
 } from "~/lib/auth";
-
-// Supabase Client für Server-Side
-const supabaseUrl = process.env["NEXT_PUBLIC_SUPABASE_URL"]!;
-const supabaseAnonKey = process.env["NEXT_PUBLIC_SUPABASE_ANON_KEY"]!;
-
-if (!supabaseUrl || !supabaseAnonKey) {
-  throw new Error("Missing Supabase environment variables");
-}
-
-const supabase = createClient(supabaseUrl, supabaseAnonKey);
+import { getServerClient } from "~/lib/supabase/supabase-server";
 
 // Erweiterte User-Typen für tRPC Context
 interface TRPCUser {
@@ -38,7 +28,7 @@ interface TRPCUser {
 }
 
 interface TRPCContext {
-  db: typeof supabase;
+  db: ReturnType<typeof getServerClient>;
   session: Session | null;
   user: TRPCUser | null;
   /**
@@ -93,15 +83,7 @@ export const createTRPCContext = async (opts: {
           console.log("🔍 Token extracted, length:", token.length);
         }
 
-        const supabaseAuth = createClient(
-          process.env["NEXT_PUBLIC_SUPABASE_URL"]!,
-          process.env["SUPABASE_SERVICE_ROLE_KEY"]!,
-          {
-            auth: {
-              persistSession: false,
-            },
-          },
-        );
+        const supabaseAuth = getServerClient();
 
         try {
           // Timeout für Token-Validierung hinzufügen
@@ -169,7 +151,7 @@ export const createTRPCContext = async (opts: {
                         console.log("❌ JWT Token ist abgelaufen");
                       }
                       return {
-                        db: supabase,
+                        db: getServerClient(),
                         session: null,
                         user: null,
                         ip,
@@ -254,7 +236,7 @@ export const createTRPCContext = async (opts: {
   }
 
   return {
-    db: supabase,
+    db: getServerClient(),
     session,
     user,
     ip,
@@ -310,9 +292,7 @@ if (upstashUrl && upstashToken) {
   });
 } else {
   if (process.env.NODE_ENV === "development") {
-    console.warn(
-      "Upstash credentials missing. Rate limiting is disabled.",
-    );
+    console.warn("Upstash credentials missing. Rate limiting is disabled.");
   }
 }
 
@@ -437,7 +417,6 @@ const adminMiddleware = t.middleware(async ({ ctx, next }) => {
     },
   });
 });
-
 
 /**
  * Protected (authenticated) procedure

@@ -236,9 +236,7 @@ const Fahndungskarte: React.FC<ModernFahndungskarteProps> = ({
   // Zeige NetworkError-Diagnose wenn Fehler vorhanden
   if (networkError) {
     return (
-      <div
-        className={`${styles.fahndungskarte} ${className}`}
-      >
+      <div className={`${styles.fahndungskarte} ${className}`}>
         <NetworkErrorDiagnostic
           error={networkError}
           onRetry={handleRetry}
@@ -251,9 +249,7 @@ const Fahndungskarte: React.FC<ModernFahndungskarteProps> = ({
   // Zeige Loading nur wenn wirklich Daten geladen werden (nicht im Preview-Modus)
   if (isDataLoading && investigationId && !disableNavigation) {
     return (
-      <div
-        className={`${styles.fahndungskarte} ${className}`}
-      >
+      <div className={`${styles.fahndungskarte} ${className}`}>
         <div className="flex items-center justify-center p-8">
           <div className="flex flex-col items-center gap-4">
             <div className="h-8 w-8 animate-spin rounded-full border-2 border-blue-600 border-t-transparent"></div>
@@ -338,11 +334,13 @@ const Fahndungskarte: React.FC<ModernFahndungskarteProps> = ({
             <Image
               src={safeData.step3?.mainImage || "/placeholder-image.jpg"}
               alt={`Hauptfoto von ${safeData.step1.title}`}
-              fill
-              sizes="(max-width: 768px) 100vw, 50vw"
+              width={400}
+              height={400}
+              sizes="(max-width: 768px) 100vw, 400px"
               className="object-cover transition-transform duration-500 group-hover:scale-105"
-              priority={true}
-              loading="eager"
+              loading="lazy"
+              placeholder="blur"
+              blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
               onError={handleImageError}
             />
 

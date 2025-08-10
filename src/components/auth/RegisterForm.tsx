@@ -14,7 +14,7 @@ import {
   ArrowLeft,
   CheckCircle,
 } from "lucide-react";
-import { supabase } from "~/lib/supabase";
+import { getBrowserClient } from "~/lib/supabase/supabase-browser";
 import { sendRegistrationNotification } from "~/lib/email-notifications";
 
 export default function RegisterForm() {
@@ -76,12 +76,7 @@ export default function RegisterForm() {
     }
 
     try {
-      if (!supabase) {
-        setError("Supabase ist nicht konfiguriert");
-        setLoading(false);
-        return;
-      }
-
+      const supabase = getBrowserClient();
       console.log("🔐 Starte Supabase Auth Registrierung...");
 
       // Prüfe zuerst, ob der Benutzer bereits existiert

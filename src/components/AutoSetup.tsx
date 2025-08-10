@@ -15,6 +15,9 @@ export default function AutoSetup() {
       // Prüfe, ob Setup bereits ausgeführt wurde
       if (hasRun) return;
 
+      // Prüfe, ob wir auf dem Client sind
+      if (typeof window === "undefined") return;
+
       // Prüfe, ob wir auf der Login-Seite sind
       const isLoginPage = window.location.pathname === "/login";
 

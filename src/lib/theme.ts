@@ -24,22 +24,14 @@ export const useTheme = create<ThemeStore>()(
           set({ theme });
         }
       },
-      resolvedTheme:
-        typeof window !== "undefined" &&
-        window.matchMedia("(prefers-color-scheme: dark)").matches
-          ? "dark"
-          : "light",
+      resolvedTheme: "light", // Wird in useEffect gesetzt
       setResolvedTheme: (resolvedTheme) => {
         const currentResolvedTheme = get().resolvedTheme;
         if (currentResolvedTheme !== resolvedTheme) {
           set({ resolvedTheme });
         }
       },
-      systemTheme:
-        typeof window !== "undefined" &&
-        window.matchMedia("(prefers-color-scheme: dark)").matches
-          ? "dark"
-          : "light",
+      systemTheme: "light", // Wird in useEffect gesetzt
       setSystemTheme: (systemTheme) => {
         const currentSystemTheme = get().systemTheme;
         if (currentSystemTheme !== systemTheme) {

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { supabase } from "~/lib/supabase";
+import { getBrowserClient } from "~/lib/supabase/supabase-browser";
 import { log, error as logError } from "~/lib/logger";
 
 // Helper to enforce a timeout on an async operation. If the wrapped
@@ -40,6 +40,7 @@ export function useSupabaseAuthActions() {
     startTransition(async () => {
       try {
         log("🔐 Login: Versuche Anmeldung für:", email);
+        const supabase = getBrowserClient();
         const { data, error } = await raceWithTimeout(
           supabase.auth.signInWithPassword({
             email,
@@ -70,6 +71,7 @@ export function useSupabaseAuthActions() {
     startTransition(async () => {
       try {
         log("📝 SignUp: Versuche Registrierung für:", email);
+        const supabase = getBrowserClient();
         const { data, error } = await raceWithTimeout(
           supabase.auth.signUp({ email, password }),
           10000,
@@ -98,6 +100,7 @@ export function useSupabaseAuthActions() {
     setSuccessMsg(null);
     startTransition(async () => {
       try {
+        const supabase = getBrowserClient();
         const { error } = await raceWithTimeout(
           supabase.auth.signOut(),
           5000,

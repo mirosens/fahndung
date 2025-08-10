@@ -8,7 +8,7 @@ import { useState } from "react";
 
 import { type AppRouter } from "~/server/api/root";
 import { createQueryClient } from "./query-client";
-import { supabase } from "~/lib/supabase";
+import { getBrowserClient } from "~/lib/supabase/supabase-browser";
 
 let clientQueryClientSingleton: QueryClient | undefined = undefined;
 const getQueryClient = () => {
@@ -45,6 +45,7 @@ async function getAuthToken(): Promise<string | null> {
 
   try {
     // Direkte Supabase Session-Abfrage mit kürzerem Timeout
+    const supabase = getBrowserClient();
     const sessionPromise = supabase.auth.getSession();
     const timeoutPromise = new Promise<null>((resolve) =>
       setTimeout(() => resolve(null), 5000),

@@ -104,7 +104,7 @@ const useOptimizedScroll = (threshold = 50) => {
   }, []);
 
   const updateScrollState = useCallback(() => {
-    if (!state.isClient) return;
+    if (!state.isClient || typeof window === "undefined") return;
 
     const currentScrollY = window.scrollY;
     const shouldBeScrolled = currentScrollY > threshold;
@@ -119,14 +119,14 @@ const useOptimizedScroll = (threshold = 50) => {
   }, [state.isScrolled, threshold, state.isClient]);
 
   const handleScroll = useCallback(() => {
-    if (!ticking.current && state.isClient) {
+    if (!ticking.current && state.isClient && typeof window !== "undefined") {
       window.requestAnimationFrame(updateScrollState);
       ticking.current = true;
     }
   }, [updateScrollState, state.isClient]);
 
   useEffect(() => {
-    if (!state.isClient) return;
+    if (!state.isClient || typeof window === "undefined") return;
 
     // Passive Listener für bessere Performance
     window.addEventListener("scroll", handleScroll, { passive: true });

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { Mail, Lock, Eye, EyeOff, AlertCircle } from "lucide-react";
-import { supabase } from "~/lib/supabase";
+import { getBrowserClient } from "~/lib/supabase/supabase-browser";
 import { clearAuthSession } from "~/lib/auth";
 import AuthPageLayout from "~/components/layout/AuthPageLayout";
 import AutoSetup from "~/components/AutoSetup";
@@ -22,15 +22,10 @@ export default function Login() {
     setError("");
 
     try {
-      if (!supabase) {
-        setError("Supabase ist nicht konfiguriert");
-        return;
-      }
-
       // Zuerst Session bereinigen
-
       await clearAuthSession();
 
+      const supabase = getBrowserClient();
       const { error } = await supabase.auth.signInWithPassword({
         email,
         password,
