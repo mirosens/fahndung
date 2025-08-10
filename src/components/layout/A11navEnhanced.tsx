@@ -126,7 +126,7 @@ export default function A11navEnhanced({
         onClick={toggleOpen}
         aria-haspopup="menu"
         aria-expanded={open}
-        className="inline-flex items-center gap-2 rounded-lg border border-input/50 bg-background/60 px-3 py-2 text-sm font-medium text-foreground shadow-sm backdrop-blur-xl transition-colors hover:bg-accent focus:outline-none focus:ring-2 focus:ring-primary/50"
+        className="inline-flex items-center gap-2 rounded-md border border-input/50 bg-background/60 px-3 py-2 text-sm font-medium text-foreground shadow-sm backdrop-blur-xl transition-colors hover:bg-accent focus:outline-none focus:ring-2 focus:ring-primary/50"
       >
         <Accessibility className="h-4 w-4" />
         {isCompact ? "A11y" : "A11y & Meta"}
@@ -157,7 +157,7 @@ export default function A11navEnhanced({
                   key={opt.key}
                   type="button"
                   onClick={() => setFontSize(opt.key)}
-                  className={`rounded-lg px-2 py-1.5 text-sm transition-colors ${
+                  className={`rounded-md px-2 py-1.5 text-sm transition-colors ${
                     fontSize === opt.key
                       ? "bg-primary/10 text-primary ring-1 ring-primary/30"
                       : "hover:bg-accent"
@@ -180,7 +180,7 @@ export default function A11navEnhanced({
               <button
                 type="button"
                 onClick={() => setThemeState("light")}
-                className={`inline-flex items-center justify-center gap-1.5 rounded-lg px-2 py-1.5 text-sm transition-colors ${
+                className={`inline-flex items-center justify-center gap-1.5 rounded-md px-2 py-1.5 text-sm transition-colors ${
                   theme === "light"
                     ? "bg-primary/10 text-primary ring-1 ring-primary/30"
                     : "hover:bg-accent"
@@ -192,7 +192,7 @@ export default function A11navEnhanced({
               <button
                 type="button"
                 onClick={() => setThemeState("dark")}
-                className={`inline-flex items-center justify-center gap-1.5 rounded-lg px-2 py-1.5 text-sm transition-colors ${
+                className={`inline-flex items-center justify-center gap-1.5 rounded-md px-2 py-1.5 text-sm transition-colors ${
                   theme === "dark"
                     ? "bg-primary/10 text-primary ring-1 ring-primary/30"
                     : "hover:bg-accent"
@@ -204,7 +204,7 @@ export default function A11navEnhanced({
               <button
                 type="button"
                 onClick={() => setThemeState("system")}
-                className={`inline-flex items-center justify-center gap-1.5 rounded-lg px-2 py-1.5 text-sm transition-colors ${
+                className={`inline-flex items-center justify-center gap-1.5 rounded-md px-2 py-1.5 text-sm transition-colors ${
                   theme === "system"
                     ? "bg-primary/10 text-primary ring-1 ring-primary/30"
                     : "hover:bg-accent"
