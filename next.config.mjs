@@ -28,6 +28,15 @@ const nextConfig = {
     ],
     formats: ["image/avif", "image/webp"],
   },
+  // 🚀 VERBESSERTE PORT-UND HOST-KONFIGURATION
+  serverRuntimeConfig: {
+    // Server-seitige Konfiguration
+  },
+  publicRuntimeConfig: {
+    // Client-seitige Konfiguration
+    appUrl: process.env.NEXT_PUBLIC_APP_URL,
+    port: process.env.PORT || "3000",
+  },
   // ❌ no fallbacks/polyfills here
 };
 

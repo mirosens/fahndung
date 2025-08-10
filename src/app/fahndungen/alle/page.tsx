@@ -13,7 +13,7 @@ export default function AlleFahndungenPage() {
     if (initialized && !loading) {
       if (!isAuthenticated) {
         // Speichere die gewünschte URL für Redirect nach Login
-        sessionStorage.setItem("redirectAfterLogin", "/fahndungen/alle");
+        sessionStorage.setItem("redirectAfterLogin", "/fahndungen");
         router.push("/login");
       }
     }

@@ -37,12 +37,15 @@ export default function Footer({ variant = "home" }: FooterProps) {
 
       case "login":
         return [
-          { href: "/login", label: "Anmelden", icon: LogIn },
-          { href: "/register", label: "Registrierung", icon: UserPlus },
+          { href: "/dashboard", label: "Dashboard", icon: User },
+          { href: "/fahndungen", label: "Alle Fahndungen", icon: FileText },
         ];
 
       case "register":
-        return [{ href: "/login", label: "Anmelden", icon: LogIn }];
+        return [
+          { href: "/dashboard", label: "Dashboard", icon: User },
+          { href: "/fahndungen", label: "Alle Fahndungen", icon: FileText },
+        ];
 
       case "admin":
         return [

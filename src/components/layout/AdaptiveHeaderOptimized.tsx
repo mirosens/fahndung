@@ -315,22 +315,31 @@ const AdaptiveDesktopHeader = ({
     } else {
       return (
         <div className="flex h-9 items-center gap-3">
-          {/* EINFACHER TEST - für nicht-angemeldete Benutzer */}
-          <div className="rounded bg-red-500 px-3 py-2 text-white">
-            <span>NICHT ANGEMELDET</span>
+          {/* Navigation Links für nicht-angemeldete Benutzer */}
+          <div className="hidden items-center space-x-4 lg:flex">
+            <a
+              href="/polizei"
+              className="text-sm font-medium text-foreground/90 transition-colors hover:text-primary"
+            >
+              Polizei
+            </a>
+            <a
+              href="/kontakt"
+              className="text-sm font-medium text-foreground/90 transition-colors hover:text-primary"
+            >
+              Kontakt
+            </a>
           </div>
 
           {/* Modern Header Button - für nicht-angemeldete Benutzer */}
           <button
-            onClick={() => {
-              alert("Modern Button geklickt!");
-              switchToModernHeader();
-            }}
-            className="inline-flex items-center gap-x-2 rounded-lg border-2 border-green-500 bg-green-50 px-4 py-2 text-sm font-bold text-green-700 hover:bg-green-100 focus:outline-none focus:ring-2 focus:ring-green-500 focus:ring-offset-2"
+            onClick={switchToModernHeader}
+            className="inline-flex items-center gap-x-2 rounded-lg border-2 border-blue-500 bg-blue-50 px-4 py-2 text-sm font-semibold text-blue-700 hover:bg-blue-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
             title="Zum modernen Menü wechseln"
             aria-label="Zum modernen Menü wechseln"
           >
-            <span>⚡ MODERN</span>
+            <Zap className="h-4 w-4" />
+            <span>Modern</span>
           </button>
 
           <button
@@ -415,15 +424,27 @@ const AdaptiveDesktopHeader = ({
 
               {/* Right Actions */}
               <div className="ml-6 flex items-center gap-3">
-                {/* TEST BUTTON - immer sichtbar */}
-                <button
-                  onClick={() => alert("Test Button funktioniert!")}
-                  className="inline-flex items-center gap-x-2 rounded-lg border-2 border-red-500 bg-red-50 px-4 py-2 text-sm font-semibold text-red-700 hover:bg-red-100 focus:outline-none focus:ring-2 focus:ring-red-500 focus:ring-offset-2"
-                  title="Test Button"
-                  aria-label="Test Button"
-                >
-                  <span>🚀 TEST</span>
-                </button>
+                {/* Navigation Links - konsistent mit Modern Header */}
+                <div className="hidden items-center space-x-4 lg:flex">
+                  <a
+                    href="/dashboard"
+                    className="text-sm font-medium text-foreground/90 transition-colors hover:text-primary"
+                  >
+                    Dashboard
+                  </a>
+                  <a
+                    href="/fahndungen"
+                    className="text-sm font-medium text-foreground/90 transition-colors hover:text-primary"
+                  >
+                    Fahndungen
+                  </a>
+                  <a
+                    href="/polizei"
+                    className="text-sm font-medium text-foreground/90 transition-colors hover:text-primary"
+                  >
+                    Polizei
+                  </a>
+                </div>
 
                 {/* Compact Meta Menu - für alle Benutzer sichtbar */}
                 <CompactMetaMenu />
@@ -440,16 +461,6 @@ const AdaptiveDesktopHeader = ({
                 </button>
 
                 {renderUserActions}
-
-                {/* Modern Header Button - immer sichtbar */}
-                <button
-                  onClick={switchToModernHeader}
-                  className="relative h-8 w-8 touch-manipulation select-none rounded-lg border border-border bg-white/90 p-1.5 shadow-sm backdrop-blur-sm transition-all duration-200 hover:border-border hover:bg-white hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-500/50 focus:ring-offset-2 dark:border-slate-600 dark:bg-slate-800/90 dark:hover:border-slate-500 dark:hover:bg-slate-800"
-                  title="Zum modernen Header wechseln"
-                  aria-label="Zum modernen Header wechseln"
-                >
-                  <Zap className="h-4 w-4" />
-                </button>
 
                 {/* A11y Button - immer sichtbar */}
                 <button
@@ -571,6 +582,22 @@ const ResponsiveMobileHeader = ({
       {/* Main Mobile Header */}
       <div className="flex items-center justify-between px-4 py-3">
         <Logo className="text-foreground" showLink={true} />
+
+        {/* Mobile Navigation Links */}
+        <div className="flex items-center space-x-3">
+          <a
+            href="/dashboard"
+            className="text-sm font-medium text-foreground/90 transition-colors hover:text-primary"
+          >
+            Dashboard
+          </a>
+          <a
+            href="/fahndungen"
+            className="text-sm font-medium text-foreground/90 transition-colors hover:text-primary"
+          >
+            Fahndungen
+          </a>
+        </div>
 
         <div className="flex items-center gap-2">
           {/* Compact Meta Menu - für alle Benutzer sichtbar */}

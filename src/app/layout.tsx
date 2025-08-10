@@ -44,25 +44,16 @@ export default function RootLayout({
         <link rel="dns-prefetch" href="https://cdnjs.cloudflare.com" />
         <link rel="dns-prefetch" href="https://supabase.co" />
         <link rel="dns-prefetch" href="https://images.unsplash.com" />
-        {/* Font Loading Fix */}
+        {/* Font Loading Fix - Korrigierter Pfad */}
         <link
           rel="preload"
-          href="/fonts/Inter.woff2"
+          href="/font/inter-4/Web fonts/InterVariable.woff2"
           as="font"
           type="font/woff2"
           crossOrigin="anonymous"
         />
       </head>
-      <body className="antialiased" suppressHydrationWarning>
-        {/* Skip-Link for better accessibility. When focused (via Tab key), this becomes visible
-         and allows users using screen readers or keyboard navigation to jump directly
-         to the main content area. */}
-        <a
-          href="#mainContent"
-          className="sr-only absolute left-0 top-0 z-50 m-2 rounded bg-primary px-4 py-2 text-sm font-medium text-background focus:not-sr-only focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-background"
-        >
-          Zum Hauptinhalt springen
-        </a>
+      <body>
         <TRPCReactProvider>
           <ThemeProvider
             attribute="class"
@@ -71,17 +62,12 @@ export default function RootLayout({
             disableTransitionOnChange
           >
             <SessionManager />
-            <RealtimeSyncWrapper>
-              <OptimizedLayout>
-                {/* Performance and DevTools components remain outside main region */}
-                <PerformanceMonitor />
-                <DevToolsSuppressor />
-                {/* Main content of every page; the skip link targets this element */}
-                <main id="mainContent" className="min-h-screen">
-                  {children}
-                </main>
-              </OptimizedLayout>
-            </RealtimeSyncWrapper>
+            <RealtimeSyncWrapper />
+            <OptimizedLayout>
+              <PerformanceMonitor />
+              <DevToolsSuppressor />
+              {children}
+            </OptimizedLayout>
           </ThemeProvider>
         </TRPCReactProvider>
       </body>

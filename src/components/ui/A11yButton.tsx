@@ -8,9 +8,13 @@ interface A11yButtonProps {
 }
 
 export const A11yButton = forwardRef<HTMLButtonElement, A11yButtonProps>(
-  ({ onClick, isExpanded = false, className = "", variant = "outline" }) => {
+  (
+    { onClick, isExpanded = false, className = "", variant = "outline" },
+    ref,
+  ) => {
     return (
       <button
+        ref={ref}
         type="button"
         aria-haspopup="menu"
         aria-expanded={isExpanded}

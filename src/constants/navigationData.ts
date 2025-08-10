@@ -80,6 +80,34 @@ export const navigationData: Record<NavSection, NavItem[]> = {
       urgent: false,
     },
     {
+      label: "Polizeipräsidium Stuttgart",
+      href: "/polizei/stuttgart",
+      description: "Hahnemannstraße 1, 70174 Stuttgart",
+      icon: Building,
+      urgent: false,
+    },
+    {
+      label: "Polizeipräsidium Karlsruhe",
+      href: "/polizei/karlsruhe",
+      description: "Erbprinzenstraße 96, 76133 Karlsruhe",
+      icon: Building,
+      urgent: false,
+    },
+    {
+      label: "Polizeipräsidium Mannheim",
+      href: "/polizei/mannheim",
+      description: "Collinistraße 1, 68161 Mannheim",
+      icon: Building,
+      urgent: false,
+    },
+    {
+      label: "Polizeipräsidium Freiburg",
+      href: "/polizei/freiburg",
+      description: "Basler Landstraße 113, 79111 Freiburg",
+      icon: Building,
+      urgent: false,
+    },
+    {
       label: "Barrierefreiheit",
       href: "/barrierefreiheit",
       description: "Leichte Sprache und Gebärdensprache",
@@ -100,7 +128,7 @@ export const navigationData: Record<NavSection, NavItem[]> = {
     },
     {
       label: "Alle Fahndungen",
-      href: "/fahndungen/alle",
+      href: "/fahndungen",
       description: "Übersicht aller aktiven Fahndungen",
       icon: Eye,
       urgent: false,

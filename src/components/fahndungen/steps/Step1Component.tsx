@@ -175,20 +175,20 @@ const Step1Component: React.FC<Step1ComponentProps> = ({
           >
             <option value="">Bitte Dienststelle auswählen …</option>
             {[
-              "LKA",
-              "Aalen",
-              "Freiburg",
-              "Heilbronn",
-              "Karlsruhe",
-              "Konstanz",
-              "Ludwigsburg",
-              "Mannheim",
-              "Offenburg",
-              "Pforzheim",
-              "Ravensburg",
-              "Reutlingen",
-              "Stuttgart",
-              "Ulm",
+              "LKA Baden-Württemberg - Stuttgart",
+              "Polizeipräsidium Stuttgart - Hahnemannstraße 1",
+              "Polizeipräsidium Karlsruhe - Erbprinzenstraße 96",
+              "Polizeipräsidium Mannheim - Collinistraße 1",
+              "Polizeipräsidium Freiburg - Basler Landstraße 113",
+              "Polizeipräsidium Heilbronn - Cäcilienstraße 56",
+              "Polizeipräsidium Aalen - Stuttgarter Straße 35",
+              "Polizeipräsidium Konstanz - Benediktinerplatz 1",
+              "Polizeipräsidium Ludwigsburg - Hindenburgstraße 29",
+              "Polizeipräsidium Offenburg - Weingartenstraße 14",
+              "Polizeipräsidium Pforzheim - Bahnhofstraße 26",
+              "Polizeipräsidium Ravensburg - Marienplatz 1",
+              "Polizeipräsidium Reutlingen - Kaiserstraße 54",
+              "Polizeipräsidium Ulm - Neue Straße 88",
             ].map((d) => (
               <option key={d} value={d}>
                 {d}

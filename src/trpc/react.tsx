@@ -166,7 +166,22 @@ export function TRPCReactProvider(props: { children: React.ReactNode }) {
 }
 
 function getBaseUrl() {
-  if (typeof window !== "undefined") return window.location.origin;
-  if (process.env["VERCEL_URL"]) return `https://${process.env["VERCEL_URL"]}`;
-  return `http://localhost:${process.env["PORT"] ?? 3000}`;
+  // 🚀 VERBESSERTE BASE-URL-ERKENNUNG FÜR ALLE UMGEBUNGEN
+  
+  // 1. Client-seitig: Verwende die aktuelle URL
+  if (typeof window !== "undefined") {
+    return window.location.origin;
+  }
+  
+  // 2. Vercel-Produktion: Verwende VERCEL_URL
+  if (process.env["VERCEL_URL"]) {
+    return `https://${process.env["VERCEL_URL"]}`;
+  }
+  
+  // 3. Lokale Entwicklung: Verwende PORT oder fallback auf 3000
+  const port = process.env["PORT"] || process.env["NEXT_PUBLIC_PORT"] || "3000";
+  const host = process.env["HOST"] || "localhost";
+  const protocol = process.env["NODE_ENV"] === "production" ? "https" : "http";
+  
+  return `${protocol}://${host}:${port}`;
 }
