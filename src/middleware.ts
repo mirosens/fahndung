@@ -1,12 +1,14 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
+import { createClient } from "@supabase/supabase-js";
 
 export function middleware(request: NextRequest) {
   // 🚀 OPTIMIERTE MIDDLEWARE FÜR SCHNELLERE NAVIGATION
 
   // Bestimme erlaubte Ursprung-Domain für CORS. Fällt auf localhost zurück.
   // Use bracket notation to satisfy TypeScript when accessing env variables
-  const allowedOrigin = process.env["NEXT_PUBLIC_APP_URL"] ?? "http://localhost:3000";
+  const allowedOrigin =
+    process.env["NEXT_PUBLIC_APP_URL"] ?? "http://localhost:3000";
 
   // CORS-Headers nur für API-Routen (reduziert Overhead)
   if (request.nextUrl.pathname.startsWith("/api/")) {
@@ -75,6 +77,37 @@ export function middleware(request: NextRequest) {
       response.headers.set("X-Logout-Status", "processing");
     }
 
+    return response;
+  }
+
+  // 🚀 AUTHENTIFIZIERUNGSSCHUTZ FÜR GESCHÜTZTE ROUTEN
+  const protectedRoutes = [
+    "/dashboard",
+    "/fahndungen/alle",
+    "/fahndungen/neu",
+    "/fahndungen/neu/enhanced",
+    "/admin",
+    "/profile",
+  ];
+
+  const isProtectedRoute = protectedRoutes.some((route) =>
+    request.nextUrl.pathname.startsWith(route),
+  );
+
+  if (isProtectedRoute) {
+    // Prüfe Session-Cookie
+    const sessionCookie = request.cookies.get("sb-access-token");
+
+    if (!sessionCookie) {
+      // Keine Session gefunden - Weiterleitung zu Login
+      const loginUrl = new URL("/login", request.url);
+      loginUrl.searchParams.set("redirect", request.nextUrl.pathname);
+      return NextResponse.redirect(loginUrl);
+    }
+
+    // Session vorhanden - Weiterleitung erlauben
+    const response = NextResponse.next();
+    response.headers.set("X-Auth-Protected", "true");
     return response;
   }
 

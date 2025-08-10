@@ -3,9 +3,9 @@
 import React, { useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "~/hooks/useAuth";
-import { Loader2, LayoutDashboard, Shield } from "lucide-react";
+import { Loader2, Eye, Shield } from "lucide-react";
 
-export default function DashboardPage() {
+export default function AlleFahndungenPage() {
   const { isAuthenticated, loading, initialized } = useAuth();
   const router = useRouter();
 
@@ -13,7 +13,7 @@ export default function DashboardPage() {
     if (initialized && !loading) {
       if (!isAuthenticated) {
         // Speichere die gewünschte URL für Redirect nach Login
-        sessionStorage.setItem("redirectAfterLogin", "/dashboard");
+        sessionStorage.setItem("redirectAfterLogin", "/fahndungen/alle");
         router.push("/login");
       }
     }
@@ -27,14 +27,14 @@ export default function DashboardPage() {
           <div className="text-center">
             <div className="mb-6 flex justify-center">
               <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
-                <LayoutDashboard className="h-8 w-8 text-primary" />
+                <Eye className="h-8 w-8 text-primary" />
               </div>
             </div>
 
             <Loader2 className="mx-auto mb-4 h-8 w-8 animate-spin text-primary" />
 
             <h1 className="mb-2 text-2xl font-bold text-foreground">
-              Fahndungs-Dashboard
+              Alle Fahndungen
             </h1>
 
             <p className="mb-6 text-muted-foreground">
@@ -53,23 +53,23 @@ export default function DashboardPage() {
     );
   }
 
-  // Wenn angemeldet, zeige Dashboard-Inhalt
+  // Wenn angemeldet, zeige Fahndungen-Übersicht
   return (
     <div className="min-h-screen bg-background">
       <div className="mx-auto max-w-7xl px-4 py-8">
         {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-foreground">
-            Fahndungs-Dashboard
+            Alle Fahndungen
           </h1>
           <p className="mt-2 text-muted-foreground">
-            Übersicht über alle Fahndungen und Statistiken
+            Übersicht aller aktiven Fahndungen
           </p>
         </div>
 
-        {/* Dashboard-Inhalt */}
+        {/* Fahndungen-Übersicht */}
         <div className="grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {/* Statistik-Karten */}
+          {/* Platzhalter für Fahndungen */}
           <div className="rounded-lg border border-border bg-card p-6">
             <div className="flex items-center gap-3">
               <div className="flex h-10 w-10 items-center justify-center rounded-full bg-primary/10">
@@ -77,37 +77,11 @@ export default function DashboardPage() {
               </div>
               <div>
                 <p className="text-sm font-medium text-muted-foreground">
-                  Aktive Fahndungen
+                  Keine Fahndungen verfügbar
                 </p>
-                <p className="text-2xl font-bold text-foreground">0</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="rounded-lg border border-border bg-card p-6">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-green-500/10">
-                <LayoutDashboard className="h-5 w-5 text-green-500" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">
-                  Erfolgreich gelöst
+                <p className="text-sm text-muted-foreground">
+                  Erstellen Sie Ihre erste Fahndung
                 </p>
-                <p className="text-2xl font-bold text-foreground">0</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="rounded-lg border border-border bg-card p-6">
-            <div className="flex items-center gap-3">
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-orange-500/10">
-                <Shield className="h-5 w-5 text-orange-500" />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">
-                  In Bearbeitung
-                </p>
-                <p className="text-2xl font-bold text-foreground">0</p>
               </div>
             </div>
           </div>
@@ -127,11 +101,11 @@ export default function DashboardPage() {
               Neue Fahndung erstellen
             </button>
             <button
-              onClick={() => router.push("/fahndungen/alle")}
+              onClick={() => router.push("/dashboard")}
               className="flex items-center gap-2 rounded-lg border border-border bg-background px-4 py-2 text-sm font-medium text-foreground hover:bg-accent"
             >
-              <LayoutDashboard className="h-4 w-4" />
-              Alle Fahndungen anzeigen
+              <Eye className="h-4 w-4" />
+              Dashboard anzeigen
             </button>
           </div>
         </div>
