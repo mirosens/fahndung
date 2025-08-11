@@ -8,15 +8,12 @@ import {
   Info,
   Loader2,
 } from "lucide-react";
-import { createClient } from "@supabase/supabase-js";
+import { getGlobalSupabaseClient } from "~/lib/supabase/supabase-global";
 import type { Session } from "@supabase/supabase-js";
 import Image from "next/image";
 
 // Supabase Client initialisieren
-const supabase = createClient(
-  process.env["NEXT_PUBLIC_SUPABASE_URL"] ?? "",
-  process.env["NEXT_PUBLIC_SUPABASE_ANON_KEY"] ?? "",
-);
+const supabase = getGlobalSupabaseClient();
 
 interface UploadResult {
   path: string;

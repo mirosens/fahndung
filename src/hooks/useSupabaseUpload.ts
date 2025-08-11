@@ -1,10 +1,7 @@
 import { useState } from "react";
-import { createClient } from "@supabase/supabase-js";
+import { getGlobalSupabaseClient } from "~/lib/supabase/supabase-global";
 
-const supabase = createClient(
-  process.env["NEXT_PUBLIC_SUPABASE_URL"]!,
-  process.env["NEXT_PUBLIC_SUPABASE_ANON_KEY"]!,
-);
+const supabase = getGlobalSupabaseClient();
 
 export interface UploadResult {
   path: string;

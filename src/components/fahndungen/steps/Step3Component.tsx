@@ -17,14 +17,11 @@ import {
   Loader2,
 } from "lucide-react";
 import Image from "next/image";
-import { createClient } from "@supabase/supabase-js";
+import { getGlobalSupabaseClient } from "~/lib/supabase/supabase-global";
 import type { Step3Data } from "../types/WizardTypes";
 
 // Supabase Client initialisieren
-const supabase = createClient(
-  process.env["NEXT_PUBLIC_SUPABASE_URL"] ?? "",
-  process.env["NEXT_PUBLIC_SUPABASE_ANON_KEY"] ?? "",
-);
+const supabase = getGlobalSupabaseClient();
 
 interface Step3ComponentProps {
   data: Step3Data;
