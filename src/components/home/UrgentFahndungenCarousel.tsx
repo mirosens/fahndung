@@ -67,6 +67,13 @@ export default function UrgentFahndungenCarousel({
   const [isAutoPlaying, setIsAutoPlaying] = useState(false); // Standardmäßig pausiert
   const [isCurrentCardFlipped, setIsCurrentCardFlipped] = useState(false);
 
+  // Touch-Gesten für Mobile
+  const [touchStart, setTouchStart] = useState<number | null>(null);
+  const [touchEnd, setTouchEnd] = useState<number | null>(null);
+
+  // Reduced Motion Support
+  const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
+
   const carouselRef = useRef<HTMLDivElement>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -237,6 +244,33 @@ export default function UrgentFahndungenCarousel({
     return () => document.removeEventListener("keydown", handleKeyDown);
   }, [handleKeyDown]);
 
+  // Touch-Gesten für Mobile
+  const minSwipeDistance = 50;
+
+  const onTouchStart = useCallback((e: React.TouchEvent) => {
+    setTouchEnd(null);
+    if (e.targetTouches[0]) {
+      setTouchStart(e.targetTouches[0].clientX);
+    }
+  }, []);
+
+  const onTouchMove = useCallback((e: React.TouchEvent) => {
+    if (e.targetTouches[0]) {
+      setTouchEnd(e.targetTouches[0].clientX);
+    }
+  }, []);
+
+  const onTouchEnd = useCallback(() => {
+    if (!touchStart || !touchEnd) return;
+
+    const distance = touchStart - touchEnd;
+    const isLeftSwipe = distance > minSwipeDistance;
+    const isRightSwipe = distance < -minSwipeDistance;
+
+    if (isLeftSwipe) goToNext();
+    if (isRightSwipe) goToPrevious();
+  }, [touchStart, touchEnd, goToNext, goToPrevious]);
+
   // Cleanup bei Unmount
   useEffect(() => {
     return () => {
@@ -244,6 +278,48 @@ export default function UrgentFahndungenCarousel({
         clearInterval(intervalRef.current);
       }
     };
+  }, []);
+
+  // Keyboard-Trap vermeiden - Fokus-Management
+  useEffect(() => {
+    const handleTabKey = (e: KeyboardEvent) => {
+      if (e.key === "Tab" && carouselRef.current) {
+        const focusableElements = carouselRef.current.querySelectorAll(
+          'button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])',
+        );
+
+        const firstElement = focusableElements[0] as HTMLElement;
+        const lastElement = focusableElements[
+          focusableElements.length - 1
+        ] as HTMLElement;
+
+        if (e.shiftKey && document.activeElement === firstElement) {
+          // Lasse den Fokus das Carousel verlassen
+          return;
+        }
+
+        if (!e.shiftKey && document.activeElement === lastElement) {
+          // Lasse den Fokus das Carousel verlassen
+          return;
+        }
+      }
+    };
+
+    document.addEventListener("keydown", handleTabKey);
+    return () => document.removeEventListener("keydown", handleTabKey);
+  }, []);
+
+  // Reduced Motion Support
+  useEffect(() => {
+    const mediaQuery = window.matchMedia("(prefers-reduced-motion: reduce)");
+    setPrefersReducedMotion(mediaQuery.matches);
+
+    const handleChange = (e: MediaQueryListEvent) => {
+      setPrefersReducedMotion(e.matches);
+    };
+
+    mediaQuery.addEventListener("change", handleChange);
+    return () => mediaQuery.removeEventListener("change", handleChange);
   }, []);
 
   if (!investigations || investigations.length === 0) {
@@ -267,17 +343,35 @@ export default function UrgentFahndungenCarousel({
       aria-label="Dringende Fahndungen Karussell"
       tabIndex={0}
     >
+      {/* Skip-Link für Screen Reader */}
+      <a
+        href="#after-carousel"
+        className="sr-only z-50 rounded bg-white px-4 py-2 focus:not-sr-only focus:absolute focus:left-0 focus:top-0"
+      >
+        Karussell überspringen
+      </a>
+
+      {/* Live-Region für Änderungen */}
+      <div className="sr-only" aria-live="polite" aria-atomic="true">
+        Fahndung {currentIndex + 1} von {investigations.length}:
+        {investigations[currentIndex]?.title}
+      </div>
       {/* Carousel Container */}
-      <div className="relative overflow-hidden rounded-lg shadow-sm">
-        <div className="flex transition-transform duration-700 ease-out">
+      <div
+        className="relative overflow-hidden rounded-lg shadow-sm"
+        onTouchStart={onTouchStart}
+        onTouchMove={onTouchMove}
+        onTouchEnd={onTouchEnd}
+      >
+        <div
+          className="flex"
+          style={{
+            transform: `translateX(-${currentIndex * 100}%)`,
+            transition: `transform ${prefersReducedMotion ? "0ms" : "700ms"} ease-out`,
+          }}
+        >
           {investigations.map((investigation, index) => (
-            <div
-              key={investigation.id}
-              className="w-full flex-shrink-0"
-              style={{
-                transform: `translateX(-${currentIndex * 100}%)`,
-              }}
-            >
+            <div key={investigation.id} className="w-full flex-shrink-0">
               <Fahndungskarte
                 data={convertInvestigationToFahndungsData(investigation)}
                 investigationId={investigation.id}
@@ -290,7 +384,7 @@ export default function UrgentFahndungenCarousel({
           ))}
         </div>
 
-        {/* Professionelle Navigation-Pfeile - nur auf Vorderseite sichtbar */}
+        {/* Ultra-moderne Navigation-Pfeile mit Frosted Glass Effekt */}
         {showNavigation &&
           investigations.length > 1 &&
           !isCurrentCardFlipped && (
@@ -298,38 +392,76 @@ export default function UrgentFahndungenCarousel({
               <button
                 onClick={goToPrevious}
                 className="
-                absolute left-3 top-1/2 z-20
-                flex h-10 w-10
-                -translate-y-1/2 items-center
-                justify-center rounded-full
-                border
-                border-white/20
-                bg-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.12)]
-                backdrop-blur-md
-                transition-all duration-300 hover:bg-white/20
-                hover:shadow-[0_8px_40px_rgba(0,0,0,0.2)]
-              "
+                  /* Glassmorphism */ /*
+                  Professioneller Schatten */
+                  
+                  /* Hover-Effekt */
+                  /*
+                  Smooth
+                  Transitions */
+                  
+                  /* Focus für Barrierefreiheit
+                  */
+                  
+                  absolute top-1/2 z-30
+                  flex
+                  h-11
+                  w-11
+                  -translate-y-1/2 items-center justify-center
+                  
+                  rounded-full border border-black/20 bg-white/20
+                  shadow-[0_4px_24px_-2px_rgba(0,0,0,0.12)] transition-all
+                  
+                  duration-300 ease-out hover:border-black/30 hover:bg-white/30 hover:shadow-[0_4px_32px_-2px_rgba(0,0,0,0.20)]
+                  focus-visible:outline-none
+                  focus-visible:ring-2
+                  focus-visible:ring-white/50
+                  focus-visible:ring-offset-2
+                  focus-visible:ring-offset-transparent
+                "
+                style={{
+                  left: "-20px",
+                }}
                 aria-label="Vorherige Fahndung"
               >
-                <ChevronLeft className="h-5 w-5 text-white" />
+                <ChevronLeft className="h-5 w-5 text-black/80 hover:text-black" />
               </button>
               <button
                 onClick={goToNext}
                 className="
-                absolute right-3 top-1/2 z-20
-                flex h-10 w-10
-                -translate-y-1/2 items-center
-                justify-center rounded-full
-                border
-                border-white/20
-                bg-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.12)]
-                backdrop-blur-md
-                transition-all duration-300 hover:bg-white/20
-                hover:shadow-[0_8px_40px_rgba(0,0,0,0.2)]
-              "
+                  /* Glassmorphism */ /*
+                  Professioneller Schatten */
+                  
+                  /* Hover-Effekt */
+                  /*
+                  Smooth
+                  Transitions */
+                  
+                  /* Focus für Barrierefreiheit
+                  */
+                  
+                  absolute top-1/2 z-30
+                  flex
+                  h-11
+                  w-11
+                  -translate-y-1/2 items-center justify-center
+                  
+                  rounded-full border border-black/20 bg-white/20
+                  shadow-[0_4px_24px_-2px_rgba(0,0,0,0.12)] transition-all
+                  
+                  duration-300 ease-out hover:border-black/30 hover:bg-white/30 hover:shadow-[0_4px_32px_-2px_rgba(0,0,0,0.20)]
+                  focus-visible:outline-none
+                  focus-visible:ring-2
+                  focus-visible:ring-white/50
+                  focus-visible:ring-offset-2
+                  focus-visible:ring-offset-transparent
+                "
+                style={{
+                  right: "-20px",
+                }}
                 aria-label="Nächste Fahndung"
               >
-                <ChevronRight className="h-5 w-5 text-white" />
+                <ChevronRight className="h-5 w-5 text-black/80 hover:text-black" />
               </button>
             </>
           )}
@@ -338,22 +470,32 @@ export default function UrgentFahndungenCarousel({
       {/* Kontrollleiste */}
       {showControls && investigations.length > 1 && (
         <div className="mt-6 flex flex-col items-center gap-4">
-          {/* Dots Navigation - Zentriert */}
+          {/* Moderne Zahlendarstellung mit Progress-Indikatoren */}
           {showDots && (
-            <div className="flex justify-center space-x-2">
-              {investigations.map((_, index) => (
-                <button
-                  key={index}
-                  onClick={() => goToSlide(index)}
-                  className={`h-3 w-3 rounded-full transition-all duration-200 hover:scale-125 ${
-                    index === currentIndex
-                      ? "scale-125 bg-blue-600 dark:bg-blue-400"
-                      : "bg-muted hover:bg-muted dark:bg-muted dark:hover:bg-muted"
-                  }`}
-                  aria-label={`Gehe zu Fahndung ${index + 1} von ${investigations.length}`}
-                  aria-current={index === currentIndex ? "true" : "false"}
-                />
-              ))}
+            <div className="mt-6 flex items-center justify-center gap-3">
+              <span className="text-sm font-light text-gray-500/60">
+                {String(currentIndex + 1).padStart(2, "0")}
+              </span>
+
+              <div className="flex gap-1">
+                {investigations.map((_, index) => (
+                  <div
+                    key={index}
+                    className={`
+                      transition-all duration-500
+                      ${
+                        index === currentIndex
+                          ? "h-px w-6 bg-gray-800/80"
+                          : "h-px w-2 bg-gray-300/30"
+                      }
+                    `}
+                  />
+                ))}
+              </div>
+
+              <span className="text-sm font-light text-gray-400/40">
+                {String(investigations.length).padStart(2, "0")}
+              </span>
             </div>
           )}
 

@@ -6,18 +6,33 @@ const withBundleAnalyzer = bundleAnalyzer({
 });
 
 const nextConfig = {
-  // TEMP: nur für die Bundle-Analyse – danach wieder entfernen!
   eslint: { ignoreDuringBuilds: true },
   typescript: { ignoreBuildErrors: true },
 
   experimental: {
-    optimizeCss: true,
-    // Deaktivieren:
-    optimizePackageImports: undefined, // oder entfernen
+    // Deaktiviere optimizeCss da es critters verwendet
+    // optimizeCss: true,
   },
+
   compiler: {
-    removeConsole: true,
+    removeConsole: process.env.NODE_ENV === "production",
   },
+
+  // Vereinfachte Webpack-Konfiguration
+  webpack: (config, { isServer }) => {
+    // Behebe Server-seitige Probleme
+    if (isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        net: false,
+        tls: false,
+      };
+    }
+
+    return config;
+  },
+
   images: {
     deviceSizes: [640, 828],
     imageSizes: [64, 128],
@@ -30,16 +45,16 @@ const nextConfig = {
     ],
     formats: ["image/avif", "image/webp"],
   },
-  // 🚀 VERBESSERTE PORT-UND HOST-KONFIGURATION
+
   serverRuntimeConfig: {
     // Server-seitige Konfiguration
   },
+
   publicRuntimeConfig: {
     // Client-seitige Konfiguration
     appUrl: process.env.NEXT_PUBLIC_APP_URL,
     port: process.env.PORT || "3000",
   },
-  // ❌ no fallbacks/polyfills here
 };
 
 export default withBundleAnalyzer(nextConfig);
