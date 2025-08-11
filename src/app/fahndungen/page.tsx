@@ -33,6 +33,22 @@ const FahndungskarteGrid = dynamic(
     ),
   },
 );
+
+// Dynamischer Import der FahndungskarteGridWithPagination mit SSR deaktiviert
+const FahndungskarteGridWithPagination = dynamic(
+  () =>
+    import(
+      "~/components/fahndungskarte/ansichten/FahndungskarteGridWithPagination"
+    ),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="animate-pulse">
+        <div className="h-64 rounded-lg bg-muted dark:bg-muted"></div>
+      </div>
+    ),
+  },
+);
 import { getRolePermissions } from "~/lib/auth";
 import { useAuth } from "~/hooks/useAuth";
 
@@ -339,12 +355,16 @@ export default function FahndungenPage() {
             userPermissions={userPermissions ?? undefined}
           />
         ) : (
-          <FahndungskarteGrid
+          <FahndungskarteGridWithPagination
             investigations={filteredInvestigations}
             viewMode={displayView}
             onAction={handleRefreshClick}
             userRole={userProfile?.role}
             userPermissions={userPermissions ?? undefined}
+            itemsPerPage={6}
+            showPagination={true}
+            showItemsInfo={true}
+            showQuickJump={true}
           />
         )}
       </div>

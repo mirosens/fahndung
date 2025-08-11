@@ -7,6 +7,7 @@ import { MapPin, Eye, Edit3 } from "lucide-react";
 import { type Fahndungskarte } from "~/types/fahndungskarte";
 import { CaseNumberBadge } from "~/components/ui/CaseNumberDisplay";
 import { getFahndungUrl } from "~/lib/seo";
+import { shortenAddress } from "~/lib/utils/locationUtils";
 
 interface FahndungskarteListProps {
   investigations: Fahndungskarte[];
@@ -84,7 +85,8 @@ export default function FahndungskarteList({
       UNKNOWN_DEAD: "Unbekannte Tote",
       STOLEN_GOODS: "Sachen",
     } as const;
-    const catLabel = labels[(category as keyof typeof labels)] ?? labels.MISSING_PERSON;
+    const catLabel =
+      labels[category as keyof typeof labels] ?? labels.MISSING_PERSON;
     if (variant && variant.trim().length > 0) {
       return `${catLabel} · ${variant}`;
     }

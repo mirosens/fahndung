@@ -4,6 +4,7 @@ import React, { useState, useCallback } from "react";
 import { MapPin, Search, AlertCircle, Trash2 } from "lucide-react";
 import dynamic from "next/dynamic";
 import { NominatimService } from "~/services/geocoding";
+
 import type { Step4Data } from "../types/WizardTypes";
 
 // Dynamic import für Leaflet (SSR-safe)
@@ -106,7 +107,7 @@ const Step4Component: React.FC<Step4ComponentProps> = ({
   ) => {
     const newLocation: MapLocation = {
       id: generateId(),
-      address,
+      address, // Behalte vollständige Adresse für Karte
       lat,
       lng,
       type,

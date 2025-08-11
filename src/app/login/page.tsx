@@ -52,7 +52,7 @@ export default function Login() {
           if (redirectUrl && redirectUrl !== "/login") {
             router.push(redirectUrl);
           } else {
-            router.push("/dashboard");
+            router.push("/");
           }
         } else {
           setIsAuthenticated(false);
@@ -99,7 +99,7 @@ export default function Login() {
           if (redirectUrl && redirectUrl !== "/login") {
             router.push(redirectUrl);
           } else {
-            router.push("/dashboard");
+            router.push("/");
           }
         } else {
           setError("Session konnte nicht erstellt werden");
@@ -144,7 +144,7 @@ export default function Login() {
         if (redirectUrl && redirectUrl !== "/login") {
           router.push(redirectUrl);
         } else {
-          router.push("/dashboard");
+          router.push("/");
         }
       }
     } catch {

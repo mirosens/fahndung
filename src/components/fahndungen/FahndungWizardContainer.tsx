@@ -509,7 +509,7 @@ const FahndungWizardContainer = ({
     } else if (backUrl) {
       router.push(backUrl);
     } else {
-      router.push("/fahndungen");
+      router.push("/");
     }
   };
 
@@ -524,7 +524,7 @@ const FahndungWizardContainer = ({
               className="flex items-center gap-2 text-muted-foreground hover:text-muted-foreground dark:text-muted-foreground dark:hover:text-white"
             >
               <ArrowLeft className="h-5 w-5" />
-              <span>Zurück zur Übersicht</span>
+              <span>Zurück zur Startseite</span>
             </button>
           </div>
 

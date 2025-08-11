@@ -1,5 +1,13 @@
 import React, { useState, useRef, useEffect } from "react";
-import { ChevronDown, Search, Menu, X, User, Settings } from "lucide-react";
+import {
+  ChevronDown,
+  Search,
+  Menu,
+  X,
+  User,
+  Settings,
+  LogOut,
+} from "lucide-react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { Logo } from "../ui/Logo";
@@ -30,7 +38,7 @@ export default function ModernHeader() {
   const [activeDropdown, setActiveDropdown] = useState<string | null>(null);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const dropdownTimeoutRef = useRef<NodeJS.Timeout | null>(null);
-  const { session, isAuthenticated } = useAuth();
+  const { session, isAuthenticated, logout } = useAuth();
 
   // Escape key handler
   useEffect(() => {
@@ -266,21 +274,42 @@ export default function ModernHeader() {
 
                                 {/* Auth-Items */}
                                 {isAuthenticated ? (
-                                  // Angemeldeter Benutzer - zeige Benutzer-Info
-                                  <div className="rounded-lg bg-accent/50 px-3 py-2">
-                                    <div className="flex items-center gap-2">
-                                      <User className="h-4 w-4 text-muted-foreground" />
-                                      <div className="flex-1">
-                                        <div className="text-sm font-medium text-foreground">
-                                          {session?.user?.email?.split(
-                                            "@",
-                                          )[0] ?? "Benutzer"}
-                                        </div>
-                                        <div className="text-xs text-muted-foreground">
-                                          Angemeldet
+                                  // Angemeldeter Benutzer - zeige Benutzer-Info und Logout
+                                  <div className="space-y-2">
+                                    <div className="rounded-lg bg-accent/50 px-3 py-2">
+                                      <div className="flex items-center gap-2">
+                                        <User className="h-4 w-4 text-muted-foreground" />
+                                        <div className="flex-1">
+                                          <div className="text-sm font-medium text-foreground">
+                                            {session?.user?.email?.split(
+                                              "@",
+                                            )[0] ?? "Benutzer"}
+                                          </div>
+                                          <div className="text-xs text-muted-foreground">
+                                            Angemeldet
+                                          </div>
                                         </div>
                                       </div>
                                     </div>
+
+                                    {/* Logout Button */}
+                                    <button
+                                      onClick={logout}
+                                      className="group flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-colors duration-200 hover:bg-red-50 hover:text-red-600 focus:bg-red-50 focus:outline-none dark:hover:bg-red-950/50"
+                                      title="Abmelden"
+                                    >
+                                      <LogOut className="h-5 w-5 flex-shrink-0 text-muted-foreground transition-all duration-200 group-hover:text-red-600" />
+                                      <div className="flex-1">
+                                        <div className="flex items-center gap-2">
+                                          <span className="text-sm font-medium">
+                                            Abmelden
+                                          </span>
+                                        </div>
+                                        <div className="text-xs text-muted-foreground">
+                                          Aus dem System abmelden
+                                        </div>
+                                      </div>
+                                    </button>
                                   </div>
                                 ) : (
                                   // Nicht angemeldet - zeige Anmelden/Registrieren

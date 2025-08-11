@@ -175,10 +175,10 @@ export default function FahndungCategoriesContainer({
                 {investigationId}
               </p>
               <Link
-                href="/fahndungen"
+                href="/"
                 className="mt-4 rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
               >
-                Zurück zur Übersicht
+                Zurück zur Startseite
               </Link>
             </div>
           </div>
@@ -202,10 +202,10 @@ export default function FahndungCategoriesContainer({
                 {investigationId}
               </p>
               <Link
-                href="/fahndungen"
+                href="/"
                 className="mt-4 rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700"
               >
-                Zurück zur Übersicht
+                Zurück zur Startseite
               </Link>
             </div>
           </div>

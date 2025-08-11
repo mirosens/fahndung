@@ -8,6 +8,7 @@ import type {
   PriorityType,
 } from "~/components/fahndungskarte/types";
 import dynamic from "next/dynamic";
+import { getShortLocationDisplay } from "~/lib/utils/locationUtils";
 
 const Fahndungskarte = dynamic(
   () => import("~/components/fahndungskarte/Fahndungskarte"),
@@ -67,7 +68,9 @@ const LivePreviewCard = memo<LivePreviewCardProps>(
           category: toValidCategory(data.step1?.category),
           caseNumber: data.step1?.caseNumber ?? "",
           caseDate: data.step1?.caseDate,
-          department: data.step1?.department ?? data.step5?.department,
+          department: getShortLocationDisplay(
+            data.step1?.department ?? data.step5?.department ?? "",
+          ),
           variant: data.step1?.variant,
         },
         step2: {
@@ -96,7 +99,7 @@ const LivePreviewCard = memo<LivePreviewCardProps>(
           contactPerson: data.step5?.contactPerson ?? "",
           contactPhone: data.step5?.contactPhone ?? "",
           contactEmail: data.step5?.contactEmail,
-          department: data.step5?.department ?? "",
+          department: getShortLocationDisplay(data.step5?.department ?? ""),
           availableHours: data.step5?.availableHours ?? "",
         },
       }),

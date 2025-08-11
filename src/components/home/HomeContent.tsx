@@ -25,6 +25,22 @@ const FahndungskarteGrid = dynamic(
   },
 );
 
+// Dynamischer Import der FahndungskarteGridWithPagination mit SSR deaktiviert
+const FahndungskarteGridWithPagination = dynamic(
+  () =>
+    import(
+      "~/components/fahndungskarte/ansichten/FahndungskarteGridWithPagination"
+    ),
+  {
+    ssr: false,
+    loading: () => (
+      <div className="animate-pulse">
+        <div className="h-64 rounded-lg bg-muted dark:bg-muted"></div>
+      </div>
+    ),
+  },
+);
+
 // Typen für Fahndungen
 interface Investigation {
   id: string;
@@ -228,9 +244,13 @@ export default function HomeContent() {
             viewMode === "list-flat" ? (
               <FahndungskarteListFlat investigations={filteredInvestigations} />
             ) : (
-              <FahndungskarteGrid
+              <FahndungskarteGridWithPagination
                 investigations={filteredInvestigations}
                 viewMode={viewMode}
+                itemsPerPage={6}
+                showPagination={true}
+                showItemsInfo={true}
+                showQuickJump={false}
               />
             )
           ) : (
