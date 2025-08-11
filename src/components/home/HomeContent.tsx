@@ -97,64 +97,71 @@ export default function HomeContent() {
   const filteredInvestigations = useMemo((): Fahndungskarte[] => {
     if (!investigations || !Array.isArray(investigations)) return [];
 
-    return investigations.filter((investigation): investigation is Fahndungskarte => {
-      const inv = investigation as Fahndungskarte;
+    return investigations.filter(
+      (investigation): investigation is Fahndungskarte => {
+        const inv = investigation as Fahndungskarte;
 
-      // Suchbegriff Filter
-      if (activeFilters.searchTerm) {
-        const searchLower = activeFilters.searchTerm.toLowerCase();
-        const matchesSearch =
-          inv.title.toLowerCase().includes(searchLower) ||
-          inv.description?.toLowerCase().includes(searchLower) ||
-          inv.location?.toLowerCase().includes(searchLower) ||
-          inv.tags?.some((tag) => tag.toLowerCase().includes(searchLower));
-        if (!matchesSearch) return false;
-      }
+        // Suchbegriff Filter
+        if (activeFilters.searchTerm) {
+          const searchLower = activeFilters.searchTerm.toLowerCase();
+          const matchesSearch =
+            inv.title.toLowerCase().includes(searchLower) ||
+            inv.description?.toLowerCase().includes(searchLower) ||
+            inv.location?.toLowerCase().includes(searchLower) ||
+            inv.tags?.some((tag) => tag.toLowerCase().includes(searchLower));
+          if (!matchesSearch) return false;
+        }
 
-      // Status Filter
-      if (
-        activeFilters.status.length > 0 &&
-        !activeFilters.status.includes(inv.status)
-      ) {
-        return false;
-      }
+        // Status Filter
+        if (
+          activeFilters.status.length > 0 &&
+          !activeFilters.status.includes(inv.status)
+        ) {
+          return false;
+        }
 
-      // Prioritäts Filter
-      if (
-        activeFilters.priority.length > 0 &&
-        !activeFilters.priority.includes(inv.priority)
-      ) {
-        return false;
-      }
+        // Prioritäts Filter
+        if (
+          activeFilters.priority.length > 0 &&
+          !activeFilters.priority.includes(inv.priority)
+        ) {
+          return false;
+        }
 
-      // Kategorie Filter (über Tags)
-      if (activeFilters.category.length > 0) {
-        const hasMatchingCategory = activeFilters.category.some((category) => {
-          const categoryLower = category.toLowerCase();
-          return inv.tags?.some((tag) =>
-            tag.toLowerCase().includes(categoryLower),
+        // Kategorie Filter (über Tags)
+        if (activeFilters.category.length > 0) {
+          const hasMatchingCategory = activeFilters.category.some(
+            (category) => {
+              const categoryLower = category.toLowerCase();
+              return inv.tags?.some((tag) =>
+                tag.toLowerCase().includes(categoryLower),
+              );
+            },
           );
-        });
-        if (!hasMatchingCategory) return false;
-      }
+          if (!hasMatchingCategory) return false;
+        }
 
-      // Zeit Filter - nur auf Client-Seite ausführen
-      if (activeFilters.timeRange !== "all" && typeof window !== "undefined") {
-        const now = new Date();
-        const timeRanges = {
-          "24h": 24 * 60 * 60 * 1000,
-          "7d": 7 * 24 * 60 * 60 * 1000,
-          "30d": 30 * 24 * 60 * 60 * 1000,
-        };
-        const cutoff = new Date(
-          now.getTime() - timeRanges[activeFilters.timeRange],
-        );
-        const investigationDate = new Date(inv.created_at);
-        if (investigationDate < cutoff) return false;
-      }
+        // Zeit Filter - nur auf Client-Seite ausführen
+        if (
+          activeFilters.timeRange !== "all" &&
+          typeof window !== "undefined"
+        ) {
+          const now = new Date();
+          const timeRanges = {
+            "24h": 24 * 60 * 60 * 1000,
+            "7d": 7 * 24 * 60 * 60 * 1000,
+            "30d": 30 * 24 * 60 * 60 * 1000,
+          };
+          const cutoff = new Date(
+            now.getTime() - timeRanges[activeFilters.timeRange],
+          );
+          const investigationDate = new Date(inv.created_at);
+          if (investigationDate < cutoff) return false;
+        }
 
-      return true;
-    });
+        return true;
+      },
+    );
   }, [investigations, activeFilters]);
 
   // Filter-Handler
@@ -186,7 +193,7 @@ export default function HomeContent() {
       {/* Hero Section */}
       <HeroSection
         showAlert={true}
-        alertText="EILMELDUNG! Polizei sucht Zeugen zu aktuellem Fall"
+        alertText="EILMELDUNG! Polizei sucht Zeugen"
         title="Hinweise helfen"
         subtitle="Unterstützen Sie die Polizei bei Ermittlungen!"
         primaryButtonText="Fahndungen ansehen"
