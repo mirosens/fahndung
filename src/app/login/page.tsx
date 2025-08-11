@@ -9,7 +9,6 @@ import {
   EyeOff,
   AlertCircle,
   CheckCircle,
-  RefreshCw,
 } from "lucide-react";
 import { getBrowserClient } from "~/lib/supabase/supabase-browser";
 import AuthPageLayout from "~/components/layout/AuthPageLayout";
@@ -25,48 +24,83 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
-  const [debugInfo, setDebugInfo] = useState("");
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [userEmail, setUserEmail] = useState("");
+  const [sessionCheckComplete, setSessionCheckComplete] = useState(false);
   const router = useRouter();
 
-  // Prüfe aktuelle Session beim Laden
+  // 🔥 ROBUSTE SESSION-PRÜFUNG BEIM LADEN
   useEffect(() => {
     const checkSession = async () => {
       try {
+        console.log("🔍 Prüfe bestehende Session...");
         const supabase = getBrowserClient();
+
+        // Prüfe Session mit Timeout
+        const sessionPromise = supabase.auth.getSession();
+        const timeoutPromise = new Promise<{ data: { session: null } }>(
+          (resolve) =>
+            setTimeout(() => resolve({ data: { session: null } }), 3000),
+        );
+
+        const result = await Promise.race([sessionPromise, timeoutPromise]);
         const {
           data: { session },
           error,
-        } = await supabase.auth.getSession();
+        } = result as any;
 
         if (session && !error) {
+          console.log("✅ Bestehende Session gefunden:", session.user.email);
           setIsAuthenticated(true);
           setUserEmail(session.user.email ?? "");
-          setDebugInfo(`✅ Bereits angemeldet als: ${session.user.email}`);
 
-          // Sofortige Weiterleitung ohne Verzögerung
+          // 🔥 INTELLIGENTE WEITERLEITUNG
           const urlParams = new URLSearchParams(window.location.search);
           const redirectUrl = urlParams.get("redirect");
+          const savedRedirect = sessionStorage.getItem("redirectAfterLogin");
 
-          if (redirectUrl && redirectUrl !== "/login") {
-            router.push(redirectUrl);
-          } else {
-            router.push("/");
+          let targetUrl = "/";
+
+          if (
+            redirectUrl &&
+            redirectUrl !== "/login" &&
+            !redirectUrl.includes("/login")
+          ) {
+            targetUrl = redirectUrl;
+            // Cleanup URL Parameter
+            window.history.replaceState(
+              {},
+              document.title,
+              window.location.pathname,
+            );
+          } else if (savedRedirect && savedRedirect !== "/login") {
+            targetUrl = savedRedirect;
+            sessionStorage.removeItem("redirectAfterLogin");
           }
+
+          console.log("🔄 Weiterleitung zu:", targetUrl);
+
+          // Verzögerte Weiterleitung für bessere UX
+          setTimeout(() => {
+            router.push(targetUrl);
+          }, 500);
         } else {
+          console.log("ℹ️ Keine bestehende Session gefunden");
           setIsAuthenticated(false);
           setUserEmail("");
-          setDebugInfo("ℹ️ Keine aktive Session gefunden");
         }
-      } catch {
-        setDebugInfo("⚠️ Fehler beim Prüfen der Session");
+      } catch (err) {
+        console.error("❌ Session-Check Fehler:", err);
+        setIsAuthenticated(false);
+      } finally {
+        setSessionCheckComplete(true);
       }
     };
 
     void checkSession();
   }, [router]);
 
+  // 🔥 VERBESSERTE LOGIN-FUNKTION
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
@@ -74,354 +108,273 @@ export default function Login() {
     setSuccess("");
 
     try {
+      console.log("🔐 Starte Login-Prozess...");
       const supabase = getBrowserClient();
+
       const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
 
       if (error) {
-        console.error("Login-Fehler:", error);
-        setError(error.message ?? "Login fehlgeschlagen");
-      } else if (data.user) {
-        setSuccess(`Willkommen zurück, ${data.user.email}!`);
+        console.error("❌ Login-Fehler:", error.message);
 
-        const { data: sessionData } = await supabase.auth.getSession();
-        if (sessionData.session) {
-          console.log("✅ Session erstellt:", sessionData.session);
-          setIsAuthenticated(true);
-          setUserEmail(data.user.email ?? "");
-
-          // Sofortige Weiterleitung ohne Verzögerung
-          const urlParams = new URLSearchParams(window.location.search);
-          const redirectUrl = urlParams.get("redirect");
-
-          if (redirectUrl && redirectUrl !== "/login") {
-            router.push(redirectUrl);
-          } else {
-            router.push("/");
-          }
+        // Benutzerfreundliche Fehlermeldungen
+        if (error.message.includes("Invalid login credentials")) {
+          setError(
+            "E-Mail oder Passwort ist falsch. Bitte versuchen Sie es erneut.",
+          );
+        } else if (error.message.includes("Email not confirmed")) {
+          setError(
+            "Bitte bestätigen Sie Ihre E-Mail-Adresse bevor Sie sich anmelden.",
+          );
+        } else if (error.message.includes("Too many requests")) {
+          setError("Zu viele Anmeldeversuche. Bitte warten Sie einen Moment.");
         } else {
-          setError("Session konnte nicht erstellt werden");
+          setError(`Anmeldung fehlgeschlagen: ${error.message}`);
         }
-      }
-    } catch (err) {
-      console.error("Unerwarteter Login-Fehler:", err);
-      setError("Ein unerwarteter Fehler ist aufgetreten");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Schnell-Login für Test-Zwecke (nur in Development)
-  const handleQuickLogin = async (testEmail: string, testPassword: string) => {
-    setEmail(testEmail);
-    setPassword(testPassword);
-    setDebugInfo("🚀 Schnell-Login für Test-Benutzer...");
-
-    setLoading(true);
-    setError("");
-    setSuccess("");
-
-    try {
-      const supabase = getBrowserClient();
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: testEmail,
-        password: testPassword,
-      });
-
-      if (error) {
-        setError(`Login-Fehler: ${error.message}`);
-        setDebugInfo("❌ Schnell-Login fehlgeschlagen");
       } else if (data.user) {
+        console.log("✅ Login erfolgreich:", data.user.email);
         setSuccess(`Willkommen zurück, ${data.user.email}!`);
-        setDebugInfo("✅ Schnell-Login erfolgreich!");
+        setIsAuthenticated(true);
+        setUserEmail(data.user.email ?? "");
 
-        // Sofortige Weiterleitung ohne Verzögerung
+        // 🔥 INTELLIGENTE WEITERLEITUNG NACH LOGIN
         const urlParams = new URLSearchParams(window.location.search);
         const redirectUrl = urlParams.get("redirect");
+        const savedRedirect = sessionStorage.getItem("redirectAfterLogin");
 
-        if (redirectUrl && redirectUrl !== "/login") {
-          router.push(redirectUrl);
-        } else {
-          router.push("/");
+        let targetUrl = "/";
+
+        if (
+          redirectUrl &&
+          redirectUrl !== "/login" &&
+          !redirectUrl.includes("/login")
+        ) {
+          targetUrl = redirectUrl;
+          // Cleanup URL Parameter
+          window.history.replaceState(
+            {},
+            document.title,
+            window.location.pathname,
+          );
+        } else if (savedRedirect && savedRedirect !== "/login") {
+          targetUrl = savedRedirect;
+          sessionStorage.removeItem("redirectAfterLogin");
         }
+
+        console.log("🔄 Weiterleitung nach Login zu:", targetUrl);
+
+        // Verzögerte Weiterleitung für bessere UX
+        setTimeout(() => {
+          router.push(targetUrl);
+        }, 1000);
       }
-    } catch {
-      setError("Ein unerwarteter Fehler ist aufgetreten");
-      setDebugInfo("❌ Unerwarteter Fehler beim Schnell-Login");
+    } catch (err) {
+      console.error("❌ Unerwarteter Login-Fehler:", err);
+      setError(
+        "Ein unerwarteter Fehler ist aufgetreten. Bitte versuchen Sie es erneut.",
+      );
     } finally {
       setLoading(false);
     }
   };
 
-  // Logout-Funktion
+  // 🔥 VERBESSERTE LOGOUT-FUNKTION
   const handleLogout = async () => {
     try {
+      console.log("🚪 Starte Logout-Prozess...");
       const supabase = getBrowserClient();
+
+      // Session bereinigen
       await supabase.auth.signOut();
+
+      // Lokale Session-Daten bereinigen
+      sessionStorage.removeItem("redirectAfterLogin");
+      sessionStorage.removeItem("sessionActive");
+      sessionStorage.removeItem("sessionTimestamp");
+
       setIsAuthenticated(false);
       setUserEmail("");
-      setDebugInfo("✅ Erfolgreich abgemeldet");
-      router.push("/");
-    } catch {
-      setDebugInfo("❌ Fehler beim Abmelden");
-    }
-  };
+      setSuccess("Sie wurden erfolgreich abgemeldet.");
 
-  // Debug-Funktion für Session-Status
-  const debugSession = async () => {
-    try {
-      const supabase = getBrowserClient();
-      const {
-        data: { session },
-        error,
-      } = await supabase.auth.getSession();
+      console.log("✅ Logout erfolgreich");
 
-      if (error) {
-        setDebugInfo(`❌ Session-Debug-Fehler: ${error.message}`);
-      } else if (session) {
-        setDebugInfo(
-          `✅ Session gefunden: ${session.user.email} (Token: ${session.access_token ? "Ja" : "Nein"})`,
-        );
-      } else {
-        setDebugInfo("ℹ️ Keine Session gefunden");
-      }
+      // Verzögerte Weiterleitung
+      setTimeout(() => {
+        router.push("/login");
+      }, 1000);
     } catch (err) {
-      setDebugInfo(
-        `❌ Debug-Fehler: ${err instanceof Error ? err.message : "Unbekannter Fehler"}`,
-      );
+      console.error("❌ Logout-Fehler:", err);
+      setError("Fehler beim Abmelden. Bitte versuchen Sie es erneut.");
     }
   };
 
-  return (
-    <AuthPageLayout variant="login">
-      <AutoSetup />
-      <div className="flex items-center justify-center p-4">
+  // Zeige Loading während Session-Check
+  if (!sessionCheckComplete) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <div className="text-center">
+          <div className="mb-4 text-2xl">🔍</div>
+          <p className="text-muted-foreground">Prüfe Anmeldestatus...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Zeige Dashboard wenn bereits angemeldet
+  if (isAuthenticated) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background p-4">
         <div className="w-full max-w-md">
           <div className="rounded-lg border border-border bg-white p-8 shadow-sm dark:border-border dark:bg-muted">
             <div className="mb-8 text-center">
               <h1 className="mb-2 text-3xl font-bold text-muted-foreground dark:text-white">
-                Fahndung
+                Bereits angemeldet
               </h1>
-              {isAuthenticated ? (
-                <div className="space-y-4">
-                  <div className="rounded-lg border border-green-500/20 bg-green-500/10 p-4">
-                    <p className="font-medium text-green-600 dark:text-green-400">
-                      ✅ Angemeldet als: {userEmail}
-                    </p>
-                    <p className="mt-1 text-sm text-muted-foreground">
-                      Sie werden automatisch weitergeleitet...
-                    </p>
-                  </div>
-                  <div className="flex justify-center gap-2">
-                    <button
-                      onClick={handleLogout}
-                      className="rounded-lg bg-red-600 px-4 py-2 text-sm text-white transition-colors hover:bg-red-700"
-                    >
-                      Abmelden
-                    </button>
-                    <button
-                      onClick={() => router.push("/dashboard")}
-                      className="rounded-lg bg-blue-600 px-4 py-2 text-sm text-white transition-colors hover:bg-blue-700"
-                    >
-                      Zum Dashboard
-                    </button>
-                    <button
-                      onClick={() => router.push("/fahndungen")}
-                      className="rounded-lg bg-green-600 px-4 py-2 text-sm text-white transition-colors hover:bg-green-700"
-                    >
-                      Zu Fahndungen
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <p className="text-muted-foreground dark:text-muted-foreground">
-                  Anmelden oder Registrieren
-                </p>
-              )}
+              <p className="text-muted-foreground dark:text-muted-foreground">
+                Sie sind als {userEmail} angemeldet
+              </p>
             </div>
 
-            {/* Debug-Informationen */}
-            {debugInfo && (
-              <div className="mb-4 rounded-lg border border-blue-500/30 bg-blue-500/20 p-3">
-                <div className="flex items-center space-x-2">
-                  <div className="text-sm text-blue-400">{debugInfo}</div>
-                </div>
+            {success && (
+              <div className="mb-6 flex items-center space-x-2 rounded-lg border border-green-500/30 bg-green-500/20 p-3">
+                <CheckCircle className="h-5 w-5 text-green-400" />
+                <span className="text-sm text-green-400">{success}</span>
               </div>
             )}
 
-            {!isAuthenticated && (
-              <form onSubmit={handleLogin} className="space-y-6">
-                {error && (
-                  <div className="flex items-center space-x-2 rounded-lg border border-red-500/30 bg-red-500/20 p-3">
-                    <AlertCircle className="h-5 w-5 text-red-400" />
-                    <span className="text-sm text-red-400">{error}</span>
-                  </div>
-                )}
+            <div className="space-y-4">
+              <button
+                onClick={() => router.push("/")}
+                className="w-full rounded-lg bg-blue-600 px-4 py-3 font-medium text-white transition-colors hover:bg-blue-700"
+              >
+                Zum Dashboard
+              </button>
 
-                {success && (
-                  <div className="flex items-center space-x-2 rounded-lg border border-green-500/30 bg-green-500/20 p-3">
-                    <CheckCircle className="h-5 w-5 text-green-400" />
-                    <span className="text-sm text-green-400">{success}</span>
-                  </div>
-                )}
+              <button
+                onClick={handleLogout}
+                className="w-full rounded-lg border border-border bg-transparent px-4 py-3 font-medium text-muted-foreground transition-colors hover:bg-muted"
+              >
+                Abmelden
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
-                <div>
-                  <div className="mb-2 flex items-center space-x-2">
-                    <Mail className="h-5 w-5 text-muted-foreground" />
-                    <label
-                      htmlFor="email"
-                      className="block text-sm font-medium text-muted-foreground dark:text-muted-foreground"
-                    >
-                      E-Mail
-                    </label>
-                  </div>
-                  <div className="relative">
-                    <input
-                      id="email"
-                      type="email"
-                      value={email}
-                      onChange={(e) => setEmail(e.target.value)}
-                      required
-                      className="input-dark-mode px-4 py-3"
-                      placeholder="ihre@email.com"
-                      disabled={loading}
-                    />
-                  </div>
+  // Normales Login-Formular
+  return (
+    <AuthPageLayout variant="login">
+      <div className="flex min-h-screen items-center justify-center bg-background p-4">
+        <div className="w-full max-w-md">
+          <div className="rounded-lg border border-border bg-white p-8 shadow-sm dark:border-border dark:bg-muted">
+            <div className="mb-8 text-center">
+              <h1 className="mb-2 text-3xl font-bold text-muted-foreground dark:text-white">
+                Anmeldung
+              </h1>
+              <p className="text-muted-foreground dark:text-muted-foreground">
+                Melden Sie sich in Ihrem Konto an
+              </p>
+            </div>
+
+            <form onSubmit={handleLogin} className="space-y-6">
+              {error && (
+                <div className="flex items-center space-x-2 rounded-lg border border-red-500/30 bg-red-500/20 p-3">
+                  <AlertCircle className="h-5 w-5 text-red-400" />
+                  <span className="text-sm text-red-400">{error}</span>
                 </div>
+              )}
 
-                <div>
-                  <div className="mb-2 flex items-center space-x-2">
-                    <Lock className="h-5 w-5 text-muted-foreground" />
-                    <label
-                      htmlFor="password"
-                      className="block text-sm font-medium text-muted-foreground dark:text-muted-foreground"
-                    >
-                      Passwort
-                    </label>
-                  </div>
-                  <div className="relative">
-                    <input
-                      id="password"
-                      type={showPassword ? "text" : "password"}
-                      value={password}
-                      onChange={(e) => setPassword(e.target.value)}
-                      required
-                      className="input-dark-mode px-4 py-3 pr-12"
-                      placeholder="••••••••"
-                      disabled={loading}
-                    />
-                    <button
-                      type="button"
-                      onClick={() => setShowPassword(!showPassword)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground transition-colors hover:text-muted-foreground dark:hover:text-muted-foreground"
-                      disabled={loading}
-                    >
-                      {showPassword ? (
-                        <EyeOff className="h-5 w-5" />
-                      ) : (
-                        <Eye className="h-5 w-5" />
-                      )}
-                    </button>
-                  </div>
+              {success && (
+                <div className="flex items-center space-x-2 rounded-lg border border-green-500/30 bg-green-500/20 p-3">
+                  <CheckCircle className="h-5 w-5 text-green-400" />
+                  <span className="text-sm text-green-400">{success}</span>
                 </div>
+              )}
 
-                <div className="flex space-x-4">
-                  <button
-                    type="submit"
+              {/* E-Mail */}
+              <div>
+                <label
+                  htmlFor="email"
+                  className="mb-2 block text-sm font-medium text-muted-foreground dark:text-muted-foreground"
+                >
+                  E-Mail-Adresse
+                </label>
+                <div className="relative">
+                  <Mail className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+                  <input
+                    id="email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required
+                    className="input-dark-mode py-3 pl-10 pr-4"
+                    placeholder="ihre@email.com"
                     disabled={loading}
-                    className="flex-1 rounded-lg bg-blue-600 px-4 py-3 font-medium text-white transition-colors hover:bg-blue-700 disabled:bg-blue-600/50"
-                  >
-                    {loading ? "Anmelden..." : "Anmelden"}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => router.push("/register")}
-                    disabled={loading}
-                    className="flex-1 rounded-lg bg-green-600 px-4 py-3 font-medium text-white transition-colors hover:bg-green-700 disabled:bg-green-600/50"
-                  >
-                    Registrieren
-                  </button>
+                  />
                 </div>
-              </form>
-            )}
+              </div>
 
-            {/* Debug-Buttons für Development */}
-            {!isAuthenticated && process.env.NODE_ENV === "development" && (
-              <div className="mt-6 space-y-2">
-                <div className="text-xs text-muted-foreground">
-                  Debug-Tools (Development):
-                </div>
-                <div className="grid grid-cols-1 gap-2">
+              {/* Passwort */}
+              <div>
+                <label
+                  htmlFor="password"
+                  className="mb-2 block text-sm font-medium text-muted-foreground dark:text-muted-foreground"
+                >
+                  Passwort
+                </label>
+                <div className="relative">
+                  <Lock className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground" />
+                  <input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    className="input-dark-mode py-3 pl-10 pr-10"
+                    placeholder="Ihr Passwort"
+                    disabled={loading}
+                  />
                   <button
                     type="button"
-                    onClick={debugSession}
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-muted-foreground"
                     disabled={loading}
-                    className="rounded bg-gray-600 px-3 py-2 text-xs text-white hover:bg-gray-700 disabled:bg-gray-600/50"
                   >
-                    <RefreshCw className="mr-1 inline h-3 w-3" />
-                    Session-Status prüfen
+                    {showPassword ? (
+                      <EyeOff className="h-5 w-5" />
+                    ) : (
+                      <Eye className="h-5 w-5" />
+                    )}
                   </button>
                 </div>
               </div>
-            )}
 
-            {/* Schnell-Login Buttons für Development */}
-            {!isAuthenticated && process.env.NODE_ENV === "development" && (
-              <div className="mt-6 space-y-2">
-                <div className="text-xs text-muted-foreground">
-                  Schnell-Login (Development):
-                </div>
-                <div className="grid grid-cols-1 gap-2">
-                  <button
-                    type="button"
-                    onClick={() =>
-                      handleQuickLogin("ptlsweb@gmail.com", "Heute-2025!sp")
-                    }
-                    disabled={loading}
-                    className="rounded bg-purple-600 px-3 py-2 text-xs text-white hover:bg-purple-700 disabled:bg-purple-600/50"
-                  >
-                    PTLS Web (Super Admin)
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      handleQuickLogin("admin@fahndung.local", "admin123")
-                    }
-                    disabled={loading}
-                    className="rounded bg-blue-600 px-3 py-2 text-xs text-white hover:bg-blue-700 disabled:bg-blue-600/50"
-                  >
-                    Admin
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() =>
-                      handleQuickLogin("editor@fahndung.local", "editor123")
-                    }
-                    disabled={loading}
-                    className="rounded bg-green-600 px-3 py-2 text-xs text-white hover:bg-green-700 disabled:bg-green-600/50"
-                  >
-                    Editor
-                  </button>
-                </div>
-              </div>
-            )}
+              {/* Anmelden Button */}
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full rounded-lg bg-blue-600 px-4 py-3 font-medium text-white transition-colors hover:bg-blue-700 disabled:bg-blue-600/50"
+              >
+                {loading ? "Anmeldung läuft..." : "Anmelden"}
+              </button>
+            </form>
 
-            {!isAuthenticated && (
-              <div className="mt-6 text-center">
-                <p className="text-sm text-muted-foreground">
-                  Durch die Anmeldung stimmen Sie unseren{" "}
-                  <a
-                    href="#"
-                    className="text-blue-400 transition-colors hover:text-blue-300"
-                  >
-                    Nutzungsbedingungen
-                  </a>{" "}
-                  zu.
-                </p>
-              </div>
-            )}
+            {/* Registrierung Link */}
+            <div className="mt-6 text-center">
+              <p className="text-sm text-muted-foreground">
+                Noch kein Konto?{" "}
+                <button
+                  onClick={() => router.push("/register")}
+                  className="text-blue-400 hover:text-blue-300"
+                >
+                  Jetzt registrieren
+                </button>
+              </p>
+            </div>
           </div>
         </div>
       </div>

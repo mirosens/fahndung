@@ -5,11 +5,29 @@ import { createClient } from "@supabase/supabase-js";
 const supabaseUrl = process.env["NEXT_PUBLIC_SUPABASE_URL"]!;
 const supabaseAnonKey = process.env["NEXT_PUBLIC_SUPABASE_ANON_KEY"]!;
 
-// Singleton - KEINE custom storage config!
+// Singleton mit robuster Session-Konfiguration
 let _client: ReturnType<typeof createClient> | null = null;
 
 export function getBrowserClient() {
-  _client ??= createClient(supabaseUrl, supabaseAnonKey);
+  _client ??= createClient(supabaseUrl, supabaseAnonKey, {
+    auth: {
+      // 🔥 ROBUSTE SESSION-PERSISTIERUNG
+      persistSession: true,
+      autoRefreshToken: true,
+      detectSessionInUrl: true,
+      flowType: "pkce",
+      storage: typeof window !== "undefined" ? window.localStorage : undefined,
+      storageKey: "supabase-auth-token",
+      // Erhöhte Timeouts für bessere Stabilität
+      debug: process.env.NODE_ENV === "development",
+    },
+    // Globale Konfiguration für bessere Performance
+    global: {
+      headers: {
+        "X-Client-Info": "fahndung-web",
+      },
+    },
+  });
   return _client;
 }
 

@@ -275,16 +275,13 @@ const AdaptiveDesktopHeader = ({
             !pathname?.startsWith("/fahndungen/neu") && (
               <button
                 onClick={() => {
-                  // 🚀 PREFETCH FÜR SCHNELLERE NAVIGATION
-                  router.prefetch("/fahndungen/neu/enhanced");
-
-                  // 🚀 SOFORTIGE NAVIGATION
+                  // 🚀 SOFORTIGE NAVIGATION ZUM WIZARD
                   router.push("/fahndungen/neu/enhanced");
                 }}
-                className="flex items-center gap-1 px-3 py-2 text-sm font-medium text-foreground transition-colors hover:text-primary"
+                className="flex items-center gap-1 rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
               >
                 <Plus className="h-4 w-4" />
-                <span>Fahndung</span>
+                <span>Neue Fahndung</span>
               </button>
             )}
 

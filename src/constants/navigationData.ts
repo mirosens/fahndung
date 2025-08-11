@@ -132,7 +132,7 @@ export const navigationData: Record<NavSection, NavItem[]> = {
     },
     {
       label: "Neue Fahndung",
-      href: "/fahndungen/neu",
+      href: "/fahndungen/neu/enhanced",
       description: "Neue Fahndung erstellen",
       icon: Plus,
       urgent: true,

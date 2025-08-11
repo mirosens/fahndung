@@ -4,7 +4,8 @@ import "~/styles/globals.css";
 import "~/styles/fonts.css";
 import { TRPCReactProvider } from "~/trpc/react";
 import { ThemeProvider } from "@/components/theme-provider";
-// Der Import von GlobalErrorHandler wurde entfernt, da das Modul nicht gefunden werden kann.
+import { SessionManager } from "@/components/SessionManager";
+import { AuthProvider } from "@/components/AuthProvider";
 
 export const metadata: Metadata = {
   title: "Fahndung - PTLS",
@@ -56,7 +57,10 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
-            {children}
+            <AuthProvider>
+              <SessionManager />
+              {children}
+            </AuthProvider>
           </ThemeProvider>
         </TRPCReactProvider>
       </body>

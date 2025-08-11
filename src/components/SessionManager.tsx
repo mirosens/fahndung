@@ -6,13 +6,60 @@ import { clearAuthSession } from "~/lib/auth";
 import { getBrowserClient } from "~/lib/supabase/supabase-browser";
 
 export function SessionManager() {
-  const { session, loading, error, initialized } = useAuth();
+  const { session, error, initialized } = useAuth();
   const hasHandledError = useRef(false);
   const lastError = useRef<string | null>(null);
   const errorCount = useRef(0);
-  const maxErrorCount = 3; // Erlaubt bis zu 3 Fehler bevor abgemeldet wird
+  const maxErrorCount = 5; // Erhöht auf 5 Fehler bevor abgemeldet wird
+  const sessionCheckInterval = useRef<NodeJS.Timeout | null>(null);
 
-  // Verbesserte automatische Session-Bereinigung bei Fehlern
+  // 🔥 ROBUSTE SESSION-WIEDERHERSTELLUNG
+  useEffect(() => {
+    if (!initialized) return;
+
+    const supabase = getBrowserClient();
+
+    // Regelmäßige Session-Validierung (alle 2 Minuten)
+    sessionCheckInterval.current = setInterval(
+      () => {
+        void (async () => {
+          try {
+            const {
+              data: { session: currentSession },
+              error: sessionError,
+            } = await supabase.auth.getSession();
+
+            if (sessionError) {
+              console.log(
+                "⚠️ Session-Validierung fehlgeschlagen:",
+                sessionError.message,
+              );
+              errorCount.current++;
+            } else if (!currentSession && session) {
+              console.log("⚠️ Session verloren, versuche Wiederherstellung...");
+              errorCount.current++;
+            } else if (currentSession) {
+              // Session ist gültig, reset error count
+              errorCount.current = 0;
+              hasHandledError.current = false;
+            }
+          } catch (err) {
+            console.error("❌ Session-Validierung Exception:", err);
+            errorCount.current++;
+          }
+        })();
+      },
+      2 * 60 * 1000,
+    ); // 2 Minuten
+
+    return () => {
+      if (sessionCheckInterval.current) {
+        clearInterval(sessionCheckInterval.current);
+      }
+    };
+  }, [initialized, session]);
+
+  // 🔥 VERBESSERTE FEHLERBEHANDLUNG
   useEffect(() => {
     if (error && !hasHandledError.current && error !== lastError.current) {
       errorCount.current++;
@@ -56,32 +103,82 @@ export function SessionManager() {
     }
   }, [session]);
 
-  // Reset error count wenn keine Fehler mehr auftreten
+  // 🔥 AUTOMATISCHE SESSION-WIEDERHERSTELLUNG BEI SEITENRELOAD
   useEffect(() => {
-    if (!error && errorCount.current > 0) {
-      console.log("🔐 SessionManager: Keine Fehler mehr, reset error count");
-      errorCount.current = 0;
-      lastError.current = null;
-    }
-  }, [error]);
+    const handleBeforeUnload = () => {
+      // Speichere Session-Status vor dem Reload
+      if (session) {
+        sessionStorage.setItem("sessionActive", "true");
+        sessionStorage.setItem("sessionTimestamp", Date.now().toString());
+      }
+    };
 
-  // Automatische Session-Überprüfung alle 5 Minuten
-  useEffect(() => {
-    if (!initialized || loading) return;
+    const handleLoad = () => {
+      // Prüfe ob Session vor Reload aktiv war
+      const wasActive = sessionStorage.getItem("sessionActive");
+      const timestamp = sessionStorage.getItem("sessionTimestamp");
 
-    const interval = setInterval(
-      () => {
-        if (session) {
-          console.log("🔐 SessionManager: Überprüfe Session-Gültigkeit...");
-          // Session wird automatisch durch useAuth überwacht
+      if (wasActive === "true" && timestamp) {
+        const timeDiff = Date.now() - parseInt(timestamp);
+        // Nur wenn weniger als 5 Minuten vergangen sind
+        if (timeDiff < 5 * 60 * 1000) {
+          console.log("🔄 Session-Wiederherstellung nach Reload...");
+          // Session wird automatisch durch Supabase wiederhergestellt
         }
-      },
-      5 * 60 * 1000,
-    ); // 5 Minuten
+      }
 
-    return () => clearInterval(interval);
-  }, [session, initialized, loading]);
+      // Cleanup
+      sessionStorage.removeItem("sessionActive");
+      sessionStorage.removeItem("sessionTimestamp");
+    };
 
-  // Kein UI-Rendering
-  return null;
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    window.addEventListener("load", handleLoad);
+
+    return () => {
+      window.removeEventListener("beforeunload", handleBeforeUnload);
+      window.removeEventListener("load", handleLoad);
+    };
+  }, [session]);
+
+  // 🔥 VISIBILITY CHANGE HANDLER FÜR TAB-WECHSEL
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (!document.hidden && session) {
+        // Tab wurde wieder aktiv, prüfe Session
+        console.log("🔄 Tab aktiviert, prüfe Session...");
+        const supabase = getBrowserClient();
+
+        void (async () => {
+          try {
+            const {
+              data: { session: currentSession },
+              error,
+            } = await supabase.auth.getSession();
+
+            if (error || !currentSession) {
+              console.log("⚠️ Session nach Tab-Wechsel ungültig");
+              errorCount.current++;
+            } else {
+              console.log("✅ Session nach Tab-Wechsel gültig");
+              errorCount.current = 0;
+            }
+          } catch (err) {
+            console.error(
+              "❌ Session-Check nach Tab-Wechsel fehlgeschlagen:",
+              err,
+            );
+          }
+        })();
+      }
+    };
+
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [session]);
+
+  return null; // SessionManager rendert nichts
 }
