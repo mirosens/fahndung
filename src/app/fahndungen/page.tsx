@@ -21,19 +21,6 @@ import { useFahndungenOptimized } from "~/hooks/useFahndungenOptimized";
 
 import dynamic from "next/dynamic";
 
-// Dynamischer Import der FahndungskarteGrid mit SSR deaktiviert
-const FahndungskarteGrid = dynamic(
-  () => import("~/components/fahndungskarte/ansichten/FahndungskarteGrid"),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="animate-pulse">
-        <div className="h-64 rounded-lg bg-muted dark:bg-muted"></div>
-      </div>
-    ),
-  },
-);
-
 // Dynamischer Import der FahndungskarteGridWithPagination mit SSR deaktiviert
 const FahndungskarteGridWithPagination = dynamic(
   () =>

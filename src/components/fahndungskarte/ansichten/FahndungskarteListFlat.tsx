@@ -7,7 +7,6 @@ import { MapPin, Eye, Clock, Edit3 } from "lucide-react";
 import { type Fahndungskarte } from "~/types/fahndungskarte";
 import { CaseNumberBadge } from "~/components/ui/CaseNumberDisplay";
 import { getFahndungUrl } from "~/lib/seo";
-import { shortenAddress } from "~/lib/utils/locationUtils";
 
 interface FahndungskarteListFlatProps {
   investigations: Fahndungskarte[];

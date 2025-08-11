@@ -100,12 +100,12 @@ export const postRouter = createTRPCRouter({
         category: z.string().optional(),
       }),
     )
-    .query(async ({ ctx }) => {
+    .query(async ({ ctx }): Promise<Investigation[]> => {
       try {
         const { data, error } = await ctx.db.from("investigations").select("*");
 
         if (error) throw error;
-        return data ?? [];
+        return (data ?? []) as Investigation[];
       } catch (err) {
         console.error("Supabase timeout:", err);
         return []; // Fallback statt crash
@@ -918,7 +918,7 @@ export const postRouter = createTRPCRouter({
         offset: z.number().min(0).default(0),
       }),
     )
-    .query(async ({ ctx, input }) => {
+    .query(async ({ ctx, input }): Promise<Investigation[]> => {
       try {
         // Zeige alle Fahndungen vom ptlsweb User (da alle neuen Fahndungen diesem User zugeordnet werden)
         const response = (await ctx.db
@@ -940,7 +940,7 @@ export const postRouter = createTRPCRouter({
           );
         }
 
-        return data ?? [];
+        return (data ?? []) as Investigation[];
       } catch (error) {
         console.error("❌ Fehler beim Abrufen eigener Fahndungen:", error);
         throw new Error(`Fehler beim Abrufen der Fahndungen: ${String(error)}`);

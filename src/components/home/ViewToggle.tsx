@@ -39,7 +39,7 @@ export default function ViewToggle({
     <div
       className={`flex items-center gap-0.5 rounded-lg border border-border bg-white p-1.5 dark:border-border dark:bg-muted ${className}`}
     >
-      {viewOptions.map(({ mode, icon: Icon, label, description }) => (
+      {viewOptions.map(({ mode, icon: Icon, description }) => (
         <button
           key={mode}
           onClick={() => onViewChange(mode)}

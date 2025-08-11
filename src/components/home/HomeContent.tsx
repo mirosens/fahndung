@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/prefer-nullish-coalescing */
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
@@ -8,7 +7,7 @@ import { api } from "~/trpc/react";
 import FahndungFilter, { type FilterState } from "./FahndungFilter";
 import ViewToggle from "./ViewToggle";
 import FahndungskarteListFlat from "~/components/fahndungskarte/ansichten/FahndungskarteListFlat";
-import { type ViewMode } from "~/types/fahndungskarte";
+import { type ViewMode, type Fahndungskarte } from "~/types/fahndungskarte";
 import dynamic from "next/dynamic";
 import HeroSection from "./HeroSection";
 
@@ -24,43 +23,6 @@ const FahndungskarteGrid = dynamic(
     ),
   },
 );
-
-// Import Investigation Typ aus dem tRPC Router
-interface Investigation {
-  id: string;
-  title: string;
-  case_number: string;
-  description: string;
-  short_description: string;
-  status: string;
-  priority: "normal" | "urgent" | "new";
-  category: string;
-  location: string;
-  station: string;
-  features: string;
-  date: string;
-  created_at: string;
-  updated_at: string;
-  created_by: string;
-  assigned_to?: string;
-  tags: string[];
-  metadata: Record<string, unknown>;
-  contact_info?: Record<string, unknown>;
-  created_by_user?: {
-    name: string;
-    email: string;
-  };
-  assigned_to_user?: {
-    name: string;
-    email: string;
-  };
-  images?: Array<{
-    id: string;
-    url: string;
-    alt_text?: string;
-    caption?: string;
-  }>;
-}
 
 export default function HomeContent() {
   const [mounted, setMounted] = useState(false);
@@ -79,7 +41,7 @@ export default function HomeContent() {
   }, []);
 
   // tRPC Queries und Mutations
-  const { data: investigations, isLoading } =
+  const { data: investigations = [], isLoading } =
     api.post.getInvestigations.useQuery(
       {
         limit: 50,
@@ -99,6 +61,9 @@ export default function HomeContent() {
 
     return investigations.filter(
       (investigation): investigation is Fahndungskarte => {
+        // Type guard für Fahndungskarte
+        if (!investigation || typeof investigation !== "object") return false;
+
         const inv = investigation as Fahndungskarte;
 
         // Suchbegriff Filter
@@ -108,7 +73,9 @@ export default function HomeContent() {
             inv.title.toLowerCase().includes(searchLower) ||
             inv.description?.toLowerCase().includes(searchLower) ||
             inv.location?.toLowerCase().includes(searchLower) ||
-            inv.tags?.some((tag) => tag.toLowerCase().includes(searchLower));
+            inv.tags?.some((tag: string) =>
+              tag.toLowerCase().includes(searchLower),
+            );
           if (!matchesSearch) return false;
         }
 
@@ -133,7 +100,7 @@ export default function HomeContent() {
           const hasMatchingCategory = activeFilters.category.some(
             (category) => {
               const categoryLower = category.toLowerCase();
-              return inv.tags?.some((tag) =>
+              return inv.tags?.some((tag: string) =>
                 tag.toLowerCase().includes(categoryLower),
               );
             },
@@ -200,13 +167,16 @@ export default function HomeContent() {
         secondaryButtonText="Hinweis abgeben"
         showUrgentFahndungen={true}
         urgentInvestigations={
-          investigations
-            ?.filter(
-              (investigation) =>
-                investigation.priority === "urgent" ||
-                investigation.status === "urgent",
-            )
-            .slice(0, 3) || []
+          Array.isArray(investigations)
+            ? investigations
+                .filter((investigation): investigation is Fahndungskarte => {
+                  if (!investigation || typeof investigation !== "object")
+                    return false;
+                  const inv = investigation as Fahndungskarte;
+                  return inv.priority === "urgent" || inv.status === "urgent";
+                })
+                .slice(0, 3)
+            : []
         }
         onPrimaryClick={() => {
           // Scroll to main content
@@ -242,10 +212,8 @@ export default function HomeContent() {
               <div className="flex items-center space-x-2 text-sm text-muted-foreground dark:text-muted-foreground">
                 <Eye className="h-4 w-4" />
                 <span>
-                  {investigations ? filteredInvestigations.length : 0}/
-                  {investigations && Array.isArray(investigations)
-                    ? investigations.length
-                    : 0}
+                  {filteredInvestigations.length}/
+                  {Array.isArray(investigations) ? investigations.length : 0}
                 </span>
               </div>
               <ViewToggle currentView={viewMode} onViewChange={setViewMode} />
@@ -255,9 +223,7 @@ export default function HomeContent() {
 
         {/* Investigations List */}
         <div className="space-y-4">
-          {investigations &&
-          filteredInvestigations &&
-          filteredInvestigations.length > 0 ? (
+          {filteredInvestigations && filteredInvestigations.length > 0 ? (
             viewMode === "list-flat" ? (
               <FahndungskarteListFlat investigations={filteredInvestigations} />
             ) : (
@@ -270,16 +236,12 @@ export default function HomeContent() {
             <div className="rounded-lg border border-border bg-white p-8 text-center shadow-xs dark:border-border dark:bg-muted">
               <AlertTriangle className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
               <h3 className="mb-2 text-lg font-semibold text-muted-foreground dark:text-white">
-                {investigations &&
-                Array.isArray(investigations) &&
-                investigations.length > 0
+                {Array.isArray(investigations) && investigations.length > 0
                   ? "Keine Fahndungen mit den aktuellen Filtern gefunden"
                   : "Keine Fahndungen gefunden"}
               </h3>
               <p className="text-muted-foreground dark:text-muted-foreground">
-                {investigations &&
-                Array.isArray(investigations) &&
-                investigations.length > 0
+                {Array.isArray(investigations) && investigations.length > 0
                   ? "Versuchen Sie andere Filter-Einstellungen oder löschen Sie die Filter."
                   : "Es sind noch keine Fahndungen in der Datenbank vorhanden."}
               </p>
