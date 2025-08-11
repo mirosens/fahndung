@@ -421,24 +421,24 @@ const AdaptiveDesktopHeader = ({
               <div className="ml-6 flex items-center gap-3">
                 {/* Navigation Links - konsistent mit Modern Header */}
                 <div className="hidden items-center space-x-4 lg:flex">
-                  <a
+                  <Link
                     href="/dashboard"
                     className="text-sm font-medium text-foreground/90 transition-colors hover:text-primary"
                   >
                     Dashboard
-                  </a>
-                  <a
+                  </Link>
+                  <Link
                     href="/fahndungen"
                     className="text-sm font-medium text-foreground/90 transition-colors hover:text-primary"
                   >
                     Fahndungen
-                  </a>
-                  <a
+                  </Link>
+                  <Link
                     href="/polizei"
                     className="text-sm font-medium text-foreground/90 transition-colors hover:text-primary"
                   >
                     Polizei
-                  </a>
+                  </Link>
                 </div>
 
                 {/* Compact Meta Menu - für alle Benutzer sichtbar */}
@@ -580,18 +580,18 @@ const ResponsiveMobileHeader = ({
 
         {/* Mobile Navigation Links */}
         <div className="flex items-center space-x-3">
-          <a
+          <Link
             href="/dashboard"
             className="text-sm font-medium text-foreground/90 transition-colors hover:text-primary"
           >
             Dashboard
-          </a>
-          <a
+          </Link>
+          <Link
             href="/fahndungen"
             className="text-sm font-medium text-foreground/90 transition-colors hover:text-primary"
           >
             Fahndungen
-          </a>
+          </Link>
         </div>
 
         <div className="flex items-center gap-2">

@@ -1,13 +1,18 @@
 "use client";
-import { createContext, useContext, useEffect, useState } from "react";
-import { createClientComponentClient } from "@supabase/auth-helpers-nextjs";
-import type { User, Session } from "@supabase/supabase-js";
+import { createContext, useContext } from "react";
+import { useAuth as useAuthHook } from "~/hooks/useAuth";
+import type { Session } from "~/lib/auth";
 
 interface AuthContextType {
-  user: User | null;
+  user: Session["user"] | null;
   session: Session | null;
   loading: boolean;
   initialized: boolean;
+  isAuthenticated: boolean;
+  logout: () => Promise<void>;
+  checkSession: (force?: boolean) => Promise<void>;
+  error: string | null;
+  timeoutReached: boolean;
 }
 
 const AuthContext = createContext<AuthContextType>({
@@ -15,42 +20,17 @@ const AuthContext = createContext<AuthContextType>({
   session: null,
   loading: true,
   initialized: false,
+  isAuthenticated: false,
+  logout: async () => {},
+  checkSession: async () => {},
+  error: null,
+  timeoutReached: false,
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null);
-  const [session, setSession] = useState<Session | null>(null);
-  const [loading, setLoading] = useState(true);
-  const [initialized, setInitialized] = useState(false);
-  const supabase = createClientComponentClient();
+  const auth = useAuthHook();
 
-  useEffect(() => {
-    // Check session
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      setSession(session);
-      setLoading(false);
-      setInitialized(true);
-    });
-
-    // Listen for changes
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
-      setUser(session?.user ?? null);
-      setSession(session);
-      setLoading(false);
-      setInitialized(true);
-    });
-
-    return () => subscription.unsubscribe();
-  }, [supabase.auth]);
-
-  return (
-    <AuthContext.Provider value={{ user, session, loading, initialized }}>
-      {children}
-    </AuthContext.Provider>
-  );
+  return <AuthContext.Provider value={auth}>{children}</AuthContext.Provider>;
 }
 
 export const useAuth = () => useContext(AuthContext);

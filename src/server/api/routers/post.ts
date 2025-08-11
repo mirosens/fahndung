@@ -66,8 +66,7 @@ interface Investigation {
 }
 
 interface UserProfile {
-  id: string;
-  user_id: string;
+  id: string; // Primary Key, verweist auf auth.users(id)
   email: string;
   name?: string;
   role: string;
@@ -994,7 +993,7 @@ export const postRouter = createTRPCRouter({
         const response = (await ctx.db
           .from("user_profiles")
           .update({ status: "approved" })
-          .eq("user_id", input.userId)
+          .eq("id", input.userId)
           .select()
           .single()) as SupabaseResponse<UserProfile>;
 

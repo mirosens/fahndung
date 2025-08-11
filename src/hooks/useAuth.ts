@@ -86,7 +86,7 @@ export const useAuth = () => {
         const { data: profile, error: profileError } = await supabase
           .from("user_profiles")
           .select("*")
-          .eq("user_id", user.id)
+          .eq("id", user.id)
           .single();
 
         if (profileError) {
@@ -258,5 +258,6 @@ export const useAuth = () => {
     isAuthenticated: !!session,
     initialized,
     timeoutReached,
+    user: session?.user ?? null,
   };
 };

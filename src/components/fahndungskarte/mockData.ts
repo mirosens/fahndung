@@ -18,11 +18,8 @@ export const mockData: FahndungsData = {
       "Auffälliges Tattoo am rechten Unterarm (Adler), trägt meist eine schwarze Armbanduhr",
   },
   step3: {
-    mainImage: "/images/torben_seiler.png",
-    additionalImages: [
-      "/images/platzhalterbild.png",
-      "/images/unbekannt_mann.png",
-    ],
+    mainImage: "/images/placeholders/fotos/platzhalterbild.svg",
+    additionalImages: ["/images/placeholders/fotos/platzhalterbild.svg"],
   },
   step4: {
     mainLocation: { address: "Marienplatz 1, 80331 München" },

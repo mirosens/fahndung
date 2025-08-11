@@ -1,7 +1,7 @@
 "use client";
 
 import React, { memo, useMemo } from "react";
-import { useAuth } from "~/hooks/useAuth";
+import { useAuth } from "~/app/providers";
 import { useStableSession } from "~/hooks/useStableSession";
 import AdaptiveHeaderOptimized from "./archive/AdaptiveHeaderOptimized";
 import ModernHeader from "./ModernHeader";

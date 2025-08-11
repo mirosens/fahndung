@@ -75,7 +75,7 @@ export const authRouter = createTRPCRouter({
     // Wähle nur die benötigten Felder aus der Tabelle, um die Datenmenge zu minimieren.
     const usersResult = await _ctx.db
       .from("user_profiles")
-      .select("user_id, email, role, name, created_at, updated_at")
+      .select("id, email, role, name, created_at, updated_at")
       .order("created_at", { ascending: false });
 
     const { data: users, error } = usersResult as {
@@ -112,7 +112,7 @@ export const authRouter = createTRPCRouter({
       const updateResult = await ctx.db
         .from("user_profiles")
         .update({ role: input.role })
-        .eq("user_id", input.userId)
+        .eq("id", input.userId)
         .select()
         .single();
 
@@ -151,7 +151,7 @@ export const authRouter = createTRPCRouter({
       const { error } = await ctx.db
         .from("user_profiles")
         .delete()
-        .eq("user_id", input.userId);
+        .eq("id", input.userId);
 
       if (error) {
         throw new Error(`Fehler beim Löschen des Benutzers: ${error.message}`);

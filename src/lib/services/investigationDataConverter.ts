@@ -52,7 +52,7 @@ export class InvestigationDataConverter {
         step1: {
           title: (dbData["title"] as string) ?? "",
           category: this.validateCategory(dbData["category"] as string),
-          caseNumber: dbData["case_number"] as string,
+          caseNumber: (dbData["case_number"] as string) ?? null,
           // Zusätzliche Felder
           caseDate: ((): string | undefined => {
             const raw = dbData["date"] as string | undefined;

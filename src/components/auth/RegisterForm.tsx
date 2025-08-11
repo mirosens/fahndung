@@ -136,7 +136,7 @@ export default function RegisterForm() {
           const { error: profileError } = await supabase
             .from("user_profiles")
             .insert({
-              user_id: data.user.id,
+              id: data.user.id, // Primary Key, verweist auf auth.users(id)
               name: formData.name,
               email: formData.email,
               department: formData.department ?? "Allgemein",

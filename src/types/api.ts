@@ -22,8 +22,7 @@ export interface AuthError {
 }
 
 export interface UserProfile {
-  id: string;
-  user_id: string;
+  id: string; // Primary Key, verweist auf auth.users(id)
   email: string;
   role: string;
   name: string;

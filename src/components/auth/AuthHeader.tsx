@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
+import Link from "next/link";
 // import { useRouter } from "next/navigation";
 import { LogIn, UserPlus, User, LogOut, ChevronDown } from "lucide-react";
 import { useAuth } from "~/hooks/useAuth";
@@ -103,7 +104,7 @@ export default function AuthHeader({
                   {authItems.map((item: NavItem) => {
                     const IconComponent = item.icon;
                     return (
-                      <a
+                      <Link
                         key={item.href}
                         href={item.href}
                         className="flex items-start gap-3 rounded-lg px-3 py-2.5 transition-colors duration-200 hover:bg-accent focus:bg-accent focus:outline-none"
@@ -127,7 +128,7 @@ export default function AuthHeader({
                             </div>
                           )}
                         </div>
-                      </a>
+                      </Link>
                     );
                   })}
 

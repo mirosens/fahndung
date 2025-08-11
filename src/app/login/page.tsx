@@ -40,12 +40,27 @@ export default function Login() {
   const [sessionCheckComplete, setSessionCheckComplete] = useState(false);
   const router = useRouter();
 
-  // 🔥 ROBUSTE SESSION-PRÜFUNG BEIM LADEN
+  // 🔥 VERBESSERTE SESSION-PRÜFUNG MIT TOKEN-VALIDIERUNG
   useEffect(() => {
     const checkSession = async () => {
       try {
         console.log("🔍 Prüfe bestehende Session...");
         const supabase = getBrowserClient();
+
+        // 🔥 ZUSÄTZLICHE SICHERHEIT: Prüfe URL-Parameter für Session-Reset
+        const urlParams = new URLSearchParams(window.location.search);
+        const forceLogout = urlParams.get("logout");
+        
+        if (forceLogout === "true") {
+          console.log("🔄 Erzwungener Logout über URL-Parameter...");
+          await supabase.auth.signOut();
+          // Cleanup URL Parameter
+          window.history.replaceState({}, document.title, window.location.pathname);
+          setIsAuthenticated(false);
+          setUserEmail("");
+          setSessionCheckComplete(true);
+          return;
+        }
 
         // 🔥 VERBESSERTE SESSION-PRÜFUNG FÜR FIREFOX
         // Verwende einen längeren Timeout für Firefox-Kompatibilität
@@ -54,8 +69,8 @@ export default function Login() {
           (resolve) =>
             setTimeout(
               () => resolve({ data: { session: null }, error: null }),
-              5000,
-            ), // Erhöht auf 5 Sekunden für Firefox
+              3000, // Reduziert auf 3 Sekunden
+            ),
         );
 
         const result = await Promise.race([sessionPromise, timeoutPromise]);
@@ -66,7 +81,64 @@ export default function Login() {
           const error = "error" in result ? result.error : null;
 
           if (session && !error) {
-            console.log("✅ Bestehende Session gefunden:", session.user?.email);
+            // 🔥 ZUSÄTZLICHE TOKEN-VALIDIERUNG
+            const now = Math.floor(Date.now() / 1000);
+            const expiresAt = session.expires_at;
+            
+            // Prüfe ob Token abgelaufen ist
+            if (expiresAt && now >= expiresAt) {
+              console.log("❌ Session abgelaufen - bereinige...");
+              await supabase.auth.signOut();
+              setIsAuthenticated(false);
+              setUserEmail("");
+              setSessionCheckComplete(true);
+              return;
+            }
+
+            // Prüfe ob Token in den nächsten 5 Minuten abläuft
+            if (expiresAt && (expiresAt - now) < 300) {
+              console.log("⚠️ Session läuft bald ab - versuche Refresh...");
+              try {
+                const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
+                if (refreshError || !refreshData.session) {
+                  console.log("❌ Session-Refresh fehlgeschlagen - bereinige...");
+                  await supabase.auth.signOut();
+                  setIsAuthenticated(false);
+                  setUserEmail("");
+                  setSessionCheckComplete(true);
+                  return;
+                }
+              } catch (refreshErr) {
+                console.log("❌ Session-Refresh Exception - bereinige...");
+                await supabase.auth.signOut();
+                setIsAuthenticated(false);
+                setUserEmail("");
+                setSessionCheckComplete(true);
+                return;
+              }
+            }
+
+            // 🔥 ZUSÄTZLICHE VALIDIERUNG: Teste Session mit API-Call
+            try {
+              const { data: testData, error: testError } = await supabase.auth.getUser();
+              if (testError || !testData.user) {
+                console.log("❌ Session-Validierung fehlgeschlagen - bereinige...");
+                await supabase.auth.signOut();
+                setIsAuthenticated(false);
+                setUserEmail("");
+                setSessionCheckComplete(true);
+                return;
+              }
+            } catch (testErr) {
+              console.log("❌ Session-Validierung Exception - bereinige...");
+              await supabase.auth.signOut();
+              setIsAuthenticated(false);
+              setUserEmail("");
+              setSessionCheckComplete(true);
+              return;
+            }
+
+            console.log("✅ Gültige Session gefunden:", session.user?.email);
             setIsAuthenticated(true);
             setUserEmail(session.user?.email ?? "");
 
@@ -75,7 +147,7 @@ export default function Login() {
             const redirectUrl = urlParams.get("redirect");
             const savedRedirect = sessionStorage.getItem("redirectAfterLogin");
 
-            let targetUrl = "/";
+            let targetUrl = "/dashboard"; // Standardmäßig zum Dashboard
 
             if (
               redirectUrl &&
@@ -155,7 +227,7 @@ export default function Login() {
         console.log("✅ Login erfolgreich:", data.user.email);
 
         // 🔥 HARD REDIRECT - GARANTIERT FUNKTIONIERT
-        window.location.href = "/"; // Nach Homepage!
+        window.location.href = "/dashboard"; // Nach Dashboard!
       }
     } catch (err) {
       console.error("❌ Unerwarteter Login-Fehler:", err);
@@ -233,7 +305,7 @@ export default function Login() {
 
             <div className="space-y-4">
               <button
-                onClick={() => router.push("/")}
+                onClick={() => router.push("/dashboard")}
                 className="w-full rounded-lg bg-blue-600 px-4 py-3 font-medium text-white transition-colors hover:bg-blue-700"
               >
                 Zum Dashboard
@@ -244,6 +316,37 @@ export default function Login() {
                 className="w-full rounded-lg border border-border bg-transparent px-4 py-3 font-medium text-muted-foreground transition-colors hover:bg-muted"
               >
                 Abmelden
+              </button>
+
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t border-border" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-white px-2 text-muted-foreground dark:bg-muted">
+                    Oder
+                  </span>
+                </div>
+              </div>
+
+              <button
+                onClick={async () => {
+                  try {
+                    console.log("🔄 Bereinige bestehende Session...");
+                    const supabase = getBrowserClient();
+                    await supabase.auth.signOut();
+                    setIsAuthenticated(false);
+                    setUserEmail("");
+                    setSessionCheckComplete(false);
+                    setSuccess("Bestehende Session wurde bereinigt. Sie können sich jetzt neu anmelden.");
+                  } catch (err) {
+                    console.error("❌ Fehler beim Bereinigen der Session:", err);
+                    setError("Fehler beim Bereinigen der Session. Bitte versuchen Sie es erneut.");
+                  }
+                }}
+                className="w-full rounded-lg border border-orange-500 bg-orange-50 px-4 py-3 font-medium text-orange-700 transition-colors hover:bg-orange-100 dark:border-orange-400 dark:bg-orange-900/20 dark:text-orange-400 dark:hover:bg-orange-900/30"
+              >
+                Mit anderem Konto anmelden
               </button>
             </div>
           </div>

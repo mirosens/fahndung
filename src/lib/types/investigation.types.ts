@@ -208,7 +208,7 @@ export const UIInvestigationDBSchema = z.object({
       .enum(["WANTED_PERSON", "MISSING_PERSON", "UNKNOWN_DEAD", "STOLEN_GOODS"])
       .optional()
       .default("MISSING_PERSON"),
-    caseNumber: z.string().optional(),
+    caseNumber: z.string().nullable().optional(),
     caseDate: z.string().optional(),
     variant: z.string().optional(),
     priority: z.enum(["normal", "urgent", "new"]).optional().default("new"),

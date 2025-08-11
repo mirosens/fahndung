@@ -8,8 +8,7 @@ const PROTOTYPE_MODE = process.env.NODE_ENV === "development";
 // const supabase = getServerClient();
 
 export interface UserProfile {
-  id: string;
-  user_id: string;
+  id: string; // Primary Key, verweist auf auth.users(id)
   email: string;
   name?: string;
   role: "admin" | "editor" | "user" | "super_admin";
@@ -340,7 +339,7 @@ export const getCurrentSession = async (
       const { data: profile, error: profileError } = await supabase
         .from("user_profiles")
         .select("*")
-        .eq("user_id", user.id)
+        .eq("id", user.id)
         .single();
 
       if (profileError) {
@@ -403,7 +402,7 @@ export const createOrUpdateProfile = async (
     });
 
     const upsertData = {
-      user_id: userId,
+      id: userId, // Primary Key, verweist auf auth.users(id)
       email,
       status: "approved", // Automatisch genehmigt für bestehende User
       ...profileData,
@@ -565,7 +564,7 @@ export const createDemoUsers = async (
       console.log("📝 Erstelle Demo-Profile...");
 
       const profiles = createdUsers.map((user) => ({
-        user_id: user.user_id,
+        id: user.user_id, // Primary Key, verweist auf auth.users(id)
         email: user.email,
         role: user.role,
         name: user.name,
@@ -575,7 +574,7 @@ export const createDemoUsers = async (
       const { data: profileData, error: profileError } = await supabase
         .from("user_profiles")
         .upsert(profiles, {
-          onConflict: "user_id",
+          onConflict: "id",
           ignoreDuplicates: false,
         })
         .select();
@@ -765,7 +764,7 @@ export const setupAllUsers = async (
         console.log("📝 Erstelle Benutzer-Profile...");
 
         const profiles = createdUsers.map((user) => ({
-          user_id: user.user_id,
+          id: user.user_id, // Primary Key, verweist auf auth.users(id)
           email: user.email,
           role: user.role,
           name: user.name,
@@ -775,7 +774,7 @@ export const setupAllUsers = async (
         const { data: profileData, error: profileError } = await supabase
           .from("user_profiles")
           .upsert(profiles, {
-            onConflict: "user_id",
+            onConflict: "id",
             ignoreDuplicates: false,
           })
           .select();
@@ -1230,7 +1229,7 @@ export const blockUser = async (
     const { error } = await supabase
       .from("user_profiles")
       .update({ status: "blocked" })
-      .eq("user_id", userId);
+      .eq("id", userId);
 
     if (error) {
       console.error("❌ Fehler beim Blockieren des Benutzers:", error);
@@ -1258,7 +1257,7 @@ export const unblockUser = async (
     const { error } = await supabase
       .from("user_profiles")
       .update({ status: "approved" })
-      .eq("user_id", userId);
+      .eq("id", userId);
 
     if (error) {
       console.error("❌ Fehler beim Entsperren des Benutzers:", error);
@@ -1287,7 +1286,7 @@ export const changeUserRole = async (
     const { error } = await supabase
       .from("user_profiles")
       .update({ role: newRole })
-      .eq("user_id", userId);
+      .eq("id", userId);
 
     if (error) {
       console.error("❌ Fehler beim Ändern der Benutzerrolle:", error);
@@ -1315,7 +1314,7 @@ export const deleteUser = async (
     const { error } = await supabase
       .from("user_profiles")
       .delete()
-      .eq("user_id", userId);
+      .eq("id", userId);
 
     if (error) {
       console.error("❌ Fehler beim Löschen des Benutzers:", error);
