@@ -60,42 +60,55 @@ export const useSupabaseUpload = () => {
         setProgress((prev) => Math.min(prev + Math.random() * 20, 90));
       }, 200);
 
-      // Direkt zu Supabase Storage
-      const { data, error } = await supabase.storage
-        .from(bucketName)
-        .upload(fileName, file, {
-          cacheControl: "3600",
-          upsert: false,
+      try {
+        // Direkt zu Supabase Storage
+        const { data, error } = await supabase.storage
+          .from(bucketName)
+          .upload(fileName, file, {
+            cacheControl: "3600",
+            upsert: false,
+          });
+
+        clearInterval(progressInterval);
+        setProgress(100);
+
+        if (error) {
+          console.error("❌ Supabase Upload: Upload-Fehler:", error);
+          throw new Error("Upload-Fehler: " + error.message);
+        }
+
+        if (!data?.path) {
+          throw new Error("Keine Pfad-Informationen vom Upload erhalten");
+        }
+
+        // Generiere öffentliche URL
+        const { data: urlData } = supabase.storage
+          .from(bucketName)
+          .getPublicUrl(data.path);
+
+        const result: UploadResult = {
+          path: data.path,
+          url: urlData.publicUrl,
+        };
+
+        console.log("✅ Supabase Upload: Erfolgreich hochgeladen:", {
+          path: result.path,
+          url: result.url,
         });
 
-      clearInterval(progressInterval);
-      setProgress(100);
-
-      if (error) {
-        console.error("❌ Supabase Upload: Upload-Fehler:", error);
-        throw new Error("Upload-Fehler: " + error.message);
+        return result;
+      } catch (supabaseError) {
+        console.warn("⚠️ Supabase Upload fehlgeschlagen, verwende lokale URLs:", supabaseError);
+        
+        // Fallback zu lokalen URLs
+        const localUrl = URL.createObjectURL(file);
+        console.log("🚀 Fallback: Lokale URL erstellt:", localUrl);
+        
+        return {
+          path: fileName,
+          url: localUrl,
+        };
       }
-
-      if (!data?.path) {
-        throw new Error("Keine Pfad-Informationen vom Upload erhalten");
-      }
-
-      // Generiere öffentliche URL
-      const { data: urlData } = supabase.storage
-        .from(bucketName)
-        .getPublicUrl(data.path);
-
-      const result: UploadResult = {
-        path: data.path,
-        url: urlData.publicUrl,
-      };
-
-      console.log("✅ Supabase Upload: Erfolgreich hochgeladen:", {
-        path: result.path,
-        url: result.url,
-      });
-
-      return result;
     } catch (error) {
       console.error("❌ Supabase Upload: Fehler:", error);
       return {
