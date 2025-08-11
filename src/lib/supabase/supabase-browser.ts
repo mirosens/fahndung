@@ -9,7 +9,11 @@ const supabaseAnonKey = process.env["NEXT_PUBLIC_SUPABASE_ANON_KEY"]!;
 let _client: ReturnType<typeof createClient> | null = null;
 
 export function getBrowserClient() {
-  _client ??= createClient(supabaseUrl, supabaseAnonKey, {
+  if (_client) {
+    return _client;
+  }
+
+  _client = createClient(supabaseUrl, supabaseAnonKey, {
     auth: {
       // 🔥 ROBUSTE SESSION-PERSISTIERUNG
       persistSession: true,

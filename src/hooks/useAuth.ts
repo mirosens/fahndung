@@ -91,7 +91,22 @@ export const useAuth = () => {
 
         if (profileError) {
           console.error("❌ Profil-Fehler:", profileError);
-          // Bei Profil-Fehlern trotzdem Session zurückgeben, aber ohne Profil
+          
+          // Bei 406 Fehler (RLS Problem) - versuche ohne Profil weiterzumachen
+          if (profileError.code === '406' || profileError.message?.includes('406')) {
+            console.log("⚠️ RLS Problem erkannt - fahre ohne Profil fort");
+            setSession({
+              user: {
+                id: user.id,
+                email: user.email ?? "",
+              },
+              profile: null,
+            });
+            retryCount.current = 0;
+            return;
+          }
+          
+          // Bei anderen Fehlern - Session trotzdem setzen
           setSession({
             user: {
               id: user.id,
