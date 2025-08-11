@@ -118,6 +118,9 @@ export const useAuth = () => {
           retryCount.current = 0; // Reset retry count on success
           return;
         }
+        
+        // Erfolgreich - Session mit Profil setzen
+        console.log("✅ Profil erfolgreich geladen");
 
         setSession({
           user: {
