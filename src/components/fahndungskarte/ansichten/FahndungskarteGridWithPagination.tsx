@@ -188,12 +188,13 @@ const FahndungskarteGridWithPagination: React.FC<
       <div
         className={`grid ${getGridClasses()} ${getGapClasses()} ${getPaddingClasses()} w-full`}
       >
-        {paginatedInvestigations.map((investigation) => (
+        {paginatedInvestigations.map((investigation, index) => (
           <Fahndungskarte
             key={investigation.id}
             data={convertInvestigationToFahndungsData(investigation)}
             investigationId={investigation.id}
             userPermissions={userPermissions}
+            imagePriority={index < 3} // Erste 3 Bilder als priorisiert markieren
           />
         ))}
       </div>

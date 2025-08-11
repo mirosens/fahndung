@@ -44,6 +44,8 @@ const nextConfig = {
       { protocol: "https", hostname: "**.githubusercontent.com" },
       { protocol: "https", hostname: "staticmap.openstreetmap.de" },
       { protocol: "https", hostname: "maps.googleapis.com" },
+      { protocol: "https", hostname: "res.cloudinary.com" },
+      { protocol: "https", hostname: "via.placeholder.com" },
     ],
     formats: ["image/avif", "image/webp"],
   },

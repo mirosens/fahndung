@@ -62,76 +62,38 @@ const Step3Component: React.FC<Step3ComponentProps> = ({
     try {
       console.log("🚀 Starte Bild-Upload für:", file.name);
 
-      // 🚀 PROTOYP-MODUS: Überspringe Authentifizierung im Development
-      const PROTOTYPE_MODE = process.env.NODE_ENV === "development" || process.env.NEXT_PUBLIC_USE_LOCAL_STORAGE === "true";
+      // Lokale Entwicklung: Verwende Supabase Storage direkt
+      const timestamp = Date.now();
+      const randomString = Math.random().toString(36).substring(2, 8);
+      const fileExtension = file.name.split(".").pop();
+      const fileName = `fahndungen/${timestamp}_${randomString}.${fileExtension}`;
 
-      // Versuche zuerst Supabase Upload, falls das fehlschlägt, verwende lokale URLs
-      if (!PROTOTYPE_MODE) {
-        try {
-          // Session prüfen (nur in Production)
-          const {
-            data: { session },
-            error: sessionError,
-          } = await supabase.auth.getSession();
+      console.log("📁 Upload-Pfad:", fileName);
 
-          if (sessionError) {
-            console.error("❌ Session-Fehler:", sessionError);
-            throw new Error(
-              "Authentifizierungsfehler - Bitte melden Sie sich an",
-            );
-          }
+      // Upload zu Supabase Storage
+      const { data: uploadData, error: uploadError } = await supabase.storage
+        .from("media-gallery")
+        .upload(fileName, file, {
+          cacheControl: "3600",
+          upsert: false,
+        });
 
-          if (!session?.user) {
-            console.error("❌ Keine aktive Session");
-            throw new Error("Nicht authentifiziert - Bitte melden Sie sich an");
-          }
-
-          console.log("✅ Authentifiziert für User:", session.user.email);
-
-          // Production: Upload zu Supabase Storage
-          const timestamp = Date.now();
-          const randomString = Math.random().toString(36).substring(2, 8);
-          const fileExtension = file.name.split(".").pop();
-          const fileName = `fahndungen/${timestamp}_${randomString}.${fileExtension}`;
-
-          // Upload zu Supabase Storage
-          const { data: uploadData, error: uploadError } = await supabase.storage
-            .from("media-gallery")
-            .upload(fileName, file, {
-              cacheControl: "3600",
-              upsert: false,
-            });
-
-          if (uploadError) {
-            console.error("❌ Upload-Fehler:", uploadError);
-            throw new Error(`Upload-Fehler: ${uploadError.message}`);
-          }
-
-          if (!uploadData?.path) {
-            throw new Error("Keine Pfad-Information vom Upload erhalten");
-          }
-
-          // Öffentliche URL generieren
-          const { data: urlData } = supabase.storage
-            .from("media-gallery")
-            .getPublicUrl(uploadData.path);
-
-          console.log("✅ Bild erfolgreich hochgeladen:", urlData.publicUrl);
-          return urlData.publicUrl;
-        } catch (supabaseError) {
-          console.warn("⚠️ Supabase Upload fehlgeschlagen, verwende lokale URLs:", supabaseError);
-          // Fallback zu lokalen URLs
-          const localUrl = URL.createObjectURL(file);
-          console.log("🚀 Fallback: Lokale URL erstellt:", localUrl);
-          return localUrl;
-        }
-      } else {
-        console.log("🚀 Prototyp-Modus: Authentifizierung übersprungen");
-        // Erstelle eine lokale URL für das File
-        const localUrl = URL.createObjectURL(file);
-        console.log("🚀 Prototyp-Modus: Lokale URL erstellt:", localUrl);
-        return localUrl;
+      if (uploadError) {
+        console.error("❌ Upload-Fehler:", uploadError);
+        throw new Error(`Upload-Fehler: ${uploadError.message}`);
       }
+
+      if (!uploadData?.path) {
+        throw new Error("Keine Pfad-Information vom Upload erhalten");
+      }
+
+      // Öffentliche URL generieren
+      const { data: urlData } = supabase.storage
+        .from("media-gallery")
+        .getPublicUrl(uploadData.path);
+
+      console.log("✅ Bild erfolgreich hochgeladen:", urlData.publicUrl);
+      return urlData.publicUrl;
     } catch (error: unknown) {
       console.error("❌ Bild-Upload fehlgeschlagen:", error);
       throw error;

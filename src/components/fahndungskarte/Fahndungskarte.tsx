@@ -44,6 +44,11 @@ interface ModernFahndungskarteProps {
    * Wird hauptsächlich für Carousel-Navigation verwendet.
    */
   onFlipStatusChange?: (isFlipped: boolean) => void;
+  /**
+   * Markiert das Bild als priorisiert für LCP (Largest Contentful Paint) Optimierung.
+   * Sollte für die ersten sichtbaren Bilder gesetzt werden.
+   */
+  imagePriority?: boolean;
 }
 
 const Fahndungskarte: React.FC<ModernFahndungskarteProps> = ({
@@ -54,6 +59,7 @@ const Fahndungskarte: React.FC<ModernFahndungskarteProps> = ({
   disableNavigation,
   disableEdit,
   onFlipStatusChange,
+  imagePriority = false,
 }) => {
   const router = useRouter();
   const [state, setState] = useState({
@@ -353,7 +359,7 @@ const Fahndungskarte: React.FC<ModernFahndungskarteProps> = ({
               className="object-cover transition-transform duration-500 group-hover:scale-105"
               fallbackSrc="/images/placeholder-image.jpg"
               showPlaceholder={true}
-              priority={false}
+              priority={imagePriority}
             />
 
             {safeData.step2.priority !== "normal" && !state.isFlipped && (

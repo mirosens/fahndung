@@ -47,11 +47,41 @@ export default function FahndungskarteImage({
     if (src) {
       // Validiere Blob-URLs
       if (src.startsWith("blob:")) {
-        // Für Blob-URLs verwenden wir einen speziellen Ansatz
-        setImageSrc(src);
-        setIsLoading(true);
-        setHasError(false);
-        setIsImageLoaded(false);
+        // Für Blob-URLs prüfen wir, ob sie noch gültig sind
+        try {
+          // Teste ob die Blob-URL noch existiert
+          fetch(src, { method: 'HEAD' })
+            .then(response => {
+              if (response.ok) {
+                setImageSrc(src);
+                setIsLoading(true);
+                setHasError(false);
+                setIsImageLoaded(false);
+              } else {
+                // Blob-URL ist ungültig, verwende Fallback
+                console.warn("⚠️ Ungültige Blob-URL:", src);
+                setImageSrc(fallbackSrc);
+                setIsLoading(true);
+                setHasError(false);
+                setIsImageLoaded(false);
+              }
+            })
+            .catch(() => {
+              // Blob-URL ist ungültig, verwende Fallback
+              console.warn("⚠️ Ungültige Blob-URL:", src);
+              setImageSrc(fallbackSrc);
+              setIsLoading(true);
+              setHasError(false);
+              setIsImageLoaded(false);
+            });
+        } catch (error) {
+          // Bei Fehlern verwende Fallback
+          console.warn("⚠️ Fehler bei Blob-URL Validierung:", error);
+          setImageSrc(fallbackSrc);
+          setIsLoading(true);
+          setHasError(false);
+          setIsImageLoaded(false);
+        }
       } else {
         setImageSrc(src);
         setIsLoading(true);
@@ -59,7 +89,7 @@ export default function FahndungskarteImage({
         setIsImageLoaded(false);
       }
     }
-  }, [src]);
+  }, [src, fallbackSrc]);
 
   const handleImageLoad = () => {
     setIsLoading(false);
@@ -73,8 +103,8 @@ export default function FahndungskarteImage({
     setIsLoading(false);
     setHasError(true);
 
-    // Versuche Fallback-Bild nur wenn es sich um eine externe URL handelt
-    if (imageSrc && imageSrc !== fallbackSrc && !imageSrc.startsWith("blob:")) {
+    // Versuche Fallback-Bild für alle ungültigen URLs (inkl. Blob-URLs)
+    if (imageSrc && imageSrc !== fallbackSrc) {
       console.log("🔄 Versuche Fallback-Bild:", fallbackSrc);
       setImageSrc(fallbackSrc);
       setIsLoading(true);

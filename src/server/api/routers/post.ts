@@ -446,9 +446,11 @@ export const postRouter = createTRPCRouter({
       console.log("👤 Benutzer:", ctx.user?.email, "Rolle:", ctx.user?.role);
 
       try {
-        // Verwende die aktuelle Session oder Fallback auf Standard-User
+        // Verwende die aktuelle Session oder Fallback auf Standard-User für lokale Entwicklung
         const createdBy =
           ctx.user?.id ?? "305f1ebf-01ed-4007-8cd7-951f6105b8c1";
+
+        console.log("👤 Verwende User ID für Erstellung:", createdBy);
 
         // Generiere eine eindeutige Aktennummer
         let caseNumber = input.case_number;

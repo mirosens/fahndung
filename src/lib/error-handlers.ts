@@ -45,9 +45,11 @@ export function handleFilesystemError(error: unknown): boolean {
     error instanceof Error &&
     (error.message.includes("filesystem") ||
       error.message.includes("storage") ||
-      error.message.includes("localStorage"))
+      error.message.includes("localStorage") ||
+      error.message.includes("illegal path") ||
+      error.message.includes("Unable to add filesystem"))
   ) {
-    console.log("ℹ️ Filesystem Error (normal):", error.message);
+    console.log("ℹ️ Filesystem/Storage Error (normal):", error.message);
     return true; // Fehler behandelt
   }
   return false; // Fehler nicht behandelt
@@ -68,9 +70,26 @@ export function handle403AuthError(error: unknown): boolean {
   return false; // Fehler nicht behandelt
 }
 
-// Kombinierter Error Handler für alle drei Fehler
+// 4. Supabase Storage Error Handler
+export function handleSupabaseStorageError(error: unknown): boolean {
+  if (
+    error instanceof Error &&
+    (error.message.includes("storage") ||
+      error.message.includes("bucket") ||
+      error.message.includes("illegal path") ||
+      error.message.includes("Unable to add filesystem") ||
+      error.message.includes("Forbidden") ||
+      error.message.includes("403"))
+  ) {
+    console.log("ℹ️ Supabase Storage Error (normal):", error.message);
+    return true; // Fehler behandelt
+  }
+  return false; // Fehler nicht behandelt
+}
+
+// Kombinierter Error Handler für alle Fehler
 export function handleCommonErrors(error: unknown, context?: string): boolean {
-  // Prüfe alle drei spezifischen Fehler
+  // Prüfe alle spezifischen Fehler
   if (handleMessagePortError(error)) {
     return true;
   }
@@ -80,6 +99,10 @@ export function handleCommonErrors(error: unknown, context?: string): boolean {
   }
 
   if (handle403AuthError(error)) {
+    return true;
+  }
+
+  if (handleSupabaseStorageError(error)) {
     return true;
   }
 
@@ -300,7 +323,8 @@ export function handleGlobalError(error: unknown, context?: string): void {
   if (
     !handleMessagePortError(error) &&
     !handleFilesystemError(error) &&
-    !handle403AuthError(error)
+    !handle403AuthError(error) &&
+    !handleSupabaseStorageError(error)
   ) {
     toast.error(message);
   }

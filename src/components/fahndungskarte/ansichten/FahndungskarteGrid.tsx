@@ -159,12 +159,13 @@ const FahndungskarteGrid: React.FC<FahndungskarteGridProps> = ({
     <div
       className={`grid ${getGridClasses()} ${getGapClasses()} ${getPaddingClasses()} ${className} w-full`}
     >
-      {investigations.map((investigation) => (
+      {investigations.map((investigation, index) => (
         <Fahndungskarte
           key={investigation.id}
           data={convertInvestigationToFahndungsData(investigation)}
           investigationId={investigation.id}
           userPermissions={userPermissions}
+          imagePriority={index < 3} // Erste 3 Bilder als priorisiert markieren
         />
       ))}
     </div>

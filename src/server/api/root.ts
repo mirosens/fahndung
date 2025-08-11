@@ -3,6 +3,7 @@ import { postRouter } from "~/server/api/routers/post";
 import { authRouter } from "~/server/api/routers/auth";
 import { mediaRouter } from "~/server/api/routers/media";
 import { localMediaRouter } from "~/server/api/routers/local-media";
+import { cloudinaryRouter } from "~/server/api/routers/cloudinary";
 
 /**
  * This is the primary router for your server.
@@ -14,6 +15,7 @@ export const appRouter = createTRPCRouter({
   auth: authRouter,
   media: mediaRouter,
   localMedia: localMediaRouter,
+  cloudinary: cloudinaryRouter,
 });
 
 // export type definition of API

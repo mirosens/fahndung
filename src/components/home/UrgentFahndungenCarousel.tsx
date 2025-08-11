@@ -383,6 +383,7 @@ export default function UrgentFahndungenCarousel({
                 data={convertInvestigationToFahndungsData(investigation)}
                 investigationId={investigation.id}
                 className="w-full"
+                imagePriority={index === 0} // Nur das erste Bild als priorisiert markieren
                 onFlipStatusChange={
                   index === currentIndex ? handleCardFlip : undefined
                 }

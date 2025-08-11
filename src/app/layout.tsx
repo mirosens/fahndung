@@ -6,6 +6,8 @@ import { TRPCReactProvider } from "~/trpc/react";
 import { ThemeProvider } from "@/components/theme-provider";
 
 import { AuthProvider } from "./providers";
+import { ErrorBoundary } from "~/components/ErrorBoundary";
+import { setupGlobalErrorHandlers } from "~/lib/global-error-handler";
 
 export const metadata: Metadata = {
   title: "Fahndung - PTLS",
@@ -28,6 +30,20 @@ export default function RootLayout({
             document.documentElement.classList.add(t==='system'?
               (matchMedia('(prefers-color-scheme:dark)').matches?'dark':'light'):t);
           })()`,
+          }}
+        />
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `
+              // Globaler Error Handler Setup
+              (function() {
+                try {
+                  ${setupGlobalErrorHandlers.toString()}();
+                } catch (e) {
+                  console.log('Error handler setup failed:', e);
+                }
+              })();
+            `,
           }}
         />
         {/* Preconnect & Prefetch Optimierungen */}
@@ -57,7 +73,9 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
-            <AuthProvider>{children}</AuthProvider>
+            <ErrorBoundary>
+              <AuthProvider>{children}</AuthProvider>
+            </ErrorBoundary>
           </ThemeProvider>
         </TRPCReactProvider>
       </body>
