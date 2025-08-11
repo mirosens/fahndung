@@ -5,6 +5,7 @@ import { ChevronLeft, ChevronRight, Pause, Play, Square } from "lucide-react";
 import { Button } from "~/components/ui/button";
 import { Card, CardContent } from "~/components/ui/card";
 import dynamic from "next/dynamic";
+import styles from "~/styles/fahndungskarte.module.css";
 
 // Dynamischer Import der Fahndungskarte
 const Fahndungskarte = dynamic(
@@ -359,6 +360,12 @@ export default function UrgentFahndungenCarousel({
       {/* Carousel Container */}
       <div
         className="relative overflow-hidden rounded-lg shadow-sm"
+        style={{
+          backdropFilter: "blur(5px)",
+          WebkitBackdropFilter: "blur(5px)",
+          backgroundColor: "rgba(255, 255, 255, 0.05)",
+          border: "1px solid rgba(255, 255, 255, 0.1)",
+        }}
         onTouchStart={onTouchStart}
         onTouchMove={onTouchMove}
         onTouchEnd={onTouchEnd}
@@ -391,34 +398,7 @@ export default function UrgentFahndungenCarousel({
             <>
               <button
                 onClick={goToPrevious}
-                className="
-                  /* Glassmorphism */ /*
-                  Professioneller Schatten */
-                  
-                  /* Hover-Effekt */
-                  /*
-                  Smooth
-                  Transitions */
-                  
-                  /* Focus für Barrierefreiheit
-                  */
-                  
-                  absolute top-1/2 z-30
-                  flex
-                  h-11
-                  w-11
-                  -translate-y-1/2 items-center justify-center
-                  
-                  rounded-full border border-black/20 bg-white/20
-                  shadow-[0_4px_24px_-2px_rgba(0,0,0,0.12)] transition-all
-                  
-                  duration-300 ease-out hover:border-black/30 hover:bg-white/30 hover:shadow-[0_4px_32px_-2px_rgba(0,0,0,0.20)]
-                  focus-visible:outline-none
-                  focus-visible:ring-2
-                  focus-visible:ring-white/50
-                  focus-visible:ring-offset-2
-                  focus-visible:ring-offset-transparent
-                "
+                className={`absolute top-1/2 z-30 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full transition-all duration-300 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent ${styles["carousel-nav-glass"]}`}
                 style={{
                   left: "-20px",
                 }}
@@ -428,34 +408,7 @@ export default function UrgentFahndungenCarousel({
               </button>
               <button
                 onClick={goToNext}
-                className="
-                  /* Glassmorphism */ /*
-                  Professioneller Schatten */
-                  
-                  /* Hover-Effekt */
-                  /*
-                  Smooth
-                  Transitions */
-                  
-                  /* Focus für Barrierefreiheit
-                  */
-                  
-                  absolute top-1/2 z-30
-                  flex
-                  h-11
-                  w-11
-                  -translate-y-1/2 items-center justify-center
-                  
-                  rounded-full border border-black/20 bg-white/20
-                  shadow-[0_4px_24px_-2px_rgba(0,0,0,0.12)] transition-all
-                  
-                  duration-300 ease-out hover:border-black/30 hover:bg-white/30 hover:shadow-[0_4px_32px_-2px_rgba(0,0,0,0.20)]
-                  focus-visible:outline-none
-                  focus-visible:ring-2
-                  focus-visible:ring-white/50
-                  focus-visible:ring-offset-2
-                  focus-visible:ring-offset-transparent
-                "
+                className={`absolute top-1/2 z-30 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full transition-all duration-300 ease-out focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white/50 focus-visible:ring-offset-2 focus-visible:ring-offset-transparent ${styles["carousel-nav-glass"]}`}
                 style={{
                   right: "-20px",
                 }}

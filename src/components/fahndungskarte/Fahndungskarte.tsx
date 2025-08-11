@@ -295,8 +295,12 @@ const Fahndungskarte: React.FC<ModernFahndungskarteProps> = ({
         {/* FRONT SIDE */}
         <div
           ref={frontRef}
-          className="group absolute inset-0 flex h-full w-full cursor-pointer flex-col overflow-hidden rounded-lg border border-border bg-white shadow-sm transition-shadow duration-300 hover:shadow-sm focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:border-border dark:bg-muted"
-          style={{ backfaceVisibility: "hidden" }}
+          className="group absolute inset-0 flex h-full w-full cursor-pointer flex-col overflow-hidden rounded-lg border border-border/30 bg-white/20 shadow-[0_1px_8px_rgba(0,0,0,0.02)] transition-all duration-500 hover:shadow-[0_4px_24px_rgba(0,0,0,0.06)] focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:border-border/30 dark:bg-muted/20 dark:shadow-[0_1px_8px_rgba(255,255,255,0.01)] dark:hover:shadow-[0_4px_24px_rgba(255,255,255,0.03)]"
+          style={{
+            backfaceVisibility: "hidden",
+            backdropFilter: "blur(10px)",
+            WebkitBackdropFilter: "blur(10px)",
+          }}
           onClick={
             disableNavigation || !investigationId ? flipCard : navigateToDetail
           }
@@ -369,86 +373,88 @@ const Fahndungskarte: React.FC<ModernFahndungskarteProps> = ({
             )}
           </div>
 
-          {/* Info Section */}
+          {/* Info Section - Echter Glassmorphismus */}
           <div
-            className="flex flex-col justify-between p-4"
+            className={`absolute bottom-0 left-0 right-0 h-[40%] ${styles["glassmorphism-ultra"]} dark:${styles["glassmorphism-ultra-dark"]}`}
             style={{ height: "40%" }}
           >
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <div className="truncate text-xs text-muted-foreground dark:text-muted-foreground">
-                  {safeData.step1.department ??
-                    safeData.step5.department ??
-                    "Dienststelle"}
-                  {" | "}
-                  {safeData.step1.caseDate
-                    ? new Date(safeData.step1.caseDate).toLocaleDateString(
-                        "de-DE",
-                        { day: "2-digit", month: "2-digit", year: "2-digit" },
-                      )
-                    : "Datum unbekannt"}
-                  {" | "}
-                  {categoryCompactLabel}
-                  {safeData.step1?.variant &&
-                  safeData.step1.variant.trim().length > 0
-                    ? ` · ${safeData.step1.variant}`
-                    : ""}
+            <div className="relative z-10 flex h-full flex-col justify-between p-4">
+              <div className="space-y-2">
+                <div className="flex items-center justify-between">
+                  <div className="truncate text-xs text-muted-foreground dark:text-muted-foreground">
+                    {safeData.step1.department ??
+                      safeData.step5.department ??
+                      "Dienststelle"}
+                    {" | "}
+                    {safeData.step1.caseDate
+                      ? new Date(safeData.step1.caseDate).toLocaleDateString(
+                          "de-DE",
+                          { day: "2-digit", month: "2-digit", year: "2-digit" },
+                        )
+                      : "Datum unbekannt"}
+                    {" | "}
+                    {categoryCompactLabel}
+                    {safeData.step1?.variant &&
+                    safeData.step1.variant.trim().length > 0
+                      ? ` · ${safeData.step1.variant}`
+                      : ""}
+                  </div>
                 </div>
+
+                <h3 className="text-lg font-bold text-muted-foreground dark:text-white">
+                  {safeData.step1.title}
+                </h3>
+                <p className="line-clamp-2 text-sm leading-relaxed text-muted-foreground dark:text-muted-foreground">
+                  {safeData.step2.shortDescription}
+                </p>
               </div>
 
-              <h3 className="text-lg font-bold text-muted-foreground dark:text-white">
-                {safeData.step1.title}
-              </h3>
-              <p className="line-clamp-2 text-sm leading-relaxed text-muted-foreground dark:text-muted-foreground">
-                {safeData.step2.shortDescription}
-              </p>
-            </div>
-
-            <div className="mt-auto flex items-center justify-between">
-              <div className="flex-1">
-                {!disableNavigation && investigationId && (
-                  <button
-                    className="flex items-center gap-1 rounded-lg border border-border bg-white px-3 py-2 text-sm font-medium text-muted-foreground transition-all hover:bg-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:border-border dark:bg-muted dark:text-muted-foreground dark:hover:bg-muted"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      navigateToDetail();
-                    }}
-                    onKeyDown={(e) => {
-                      if (e.key === "Enter" || e.key === " ") {
-                        e.preventDefault();
+              <div className="mt-auto flex items-center justify-between">
+                <div className="flex-1">
+                  {!disableNavigation && investigationId && (
+                    <button
+                      className="flex items-center gap-1 rounded-lg border border-border bg-white px-3 py-2 text-sm font-medium text-muted-foreground transition-all hover:bg-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:border-border dark:bg-muted dark:text-muted-foreground dark:hover:bg-muted"
+                      onClick={(e) => {
                         e.stopPropagation();
                         navigateToDetail();
-                      }
-                    }}
-                    aria-label="Mehr erfahren"
-                    tabIndex={0}
-                  >
-                    <span>Mehr erfahren</span>
-                    <ArrowRight className="h-4 w-4" />
-                  </button>
-                )}
-              </div>
+                      }}
+                      onKeyDown={(e) => {
+                        if (e.key === "Enter" || e.key === " ") {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          navigateToDetail();
+                        }
+                      }}
+                      aria-label="Mehr erfahren"
+                      tabIndex={0}
+                    >
+                      <span>Mehr erfahren</span>
+                      <ArrowRight className="h-4 w-4" />
+                    </button>
+                  )}
+                </div>
 
-              {/* Details Button - immer sichtbar, auch im Preview-Modus */}
-              <button
-                ref={detailsButtonRef}
-                className="flex items-center gap-1 rounded-lg border border-border bg-white px-3 py-2 text-sm font-medium text-muted-foreground transition-all hover:bg-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:border-border dark:bg-muted dark:text-muted-foreground dark:hover:bg-muted"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  flipCard();
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" || e.key === " ") {
-                    e.preventDefault();
+                {/* Details Button - immer sichtbar, auch im Preview-Modus */}
+                <button
+                  ref={detailsButtonRef}
+                  className="flex items-center gap-1 rounded-lg border border-border bg-white px-3 py-2 text-sm font-medium text-muted-foreground transition-all hover:bg-muted focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:border-border dark:bg-muted dark:text-muted-foreground dark:hover:bg-muted"
+                  onClick={(e) => {
                     e.stopPropagation();
                     flipCard();
-                  }
-                }}
-                aria-label="Details anzeigen"
-                tabIndex={0}
-              >
-                <span>Details</span>
-              </button>
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      flipCard();
+                    }
+                  }}
+                  aria-label="Details anzeigen"
+                  tabIndex={0}
+                >
+                  <span>Details</span>
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -456,8 +462,13 @@ const Fahndungskarte: React.FC<ModernFahndungskarteProps> = ({
         {/* BACK SIDE */}
         <div
           ref={backRef}
-          className="absolute inset-0 flex h-full w-full flex-col overflow-hidden rounded-lg border border-border bg-white shadow-sm dark:border-border dark:bg-muted"
-          style={{ backfaceVisibility: "hidden", transform: "rotateY(180deg)" }}
+          className="absolute inset-0 flex h-full w-full flex-col overflow-hidden rounded-lg border border-border/30 bg-white/20 shadow-[0_1px_8px_rgba(0,0,0,0.02)] dark:border-border/30 dark:bg-muted/20 dark:shadow-[0_1px_8px_rgba(255,255,255,0.01)]"
+          style={{
+            backfaceVisibility: "hidden",
+            transform: "rotateY(180deg)",
+            backdropFilter: "blur(10px)",
+            WebkitBackdropFilter: "blur(10px)",
+          }}
         >
           <div className="flex items-center justify-between border-b border-border p-4 dark:border-border">
             <h3 className="text-lg font-semibold text-muted-foreground dark:text-white">
