@@ -92,6 +92,12 @@ export default function ModernHeader() {
     return navigationData.POLIZEI.filter((item) => item.isAuthSection);
   };
 
+  // Logout Handler
+  const handleLogout = async () => {
+    await logout();
+    setActiveDropdown(null);
+  };
+
   return (
     <>
       {/* Font-Loading Optimierung */}
@@ -275,7 +281,7 @@ export default function ModernHeader() {
 
                                     {/* Logout Button */}
                                     <button
-                                      onClick={logout}
+                                      onClick={handleLogout}
                                       className="group flex w-full items-center gap-3 rounded-lg px-3 py-2.5 text-left transition-colors duration-200 hover:bg-red-50 hover:text-red-600 focus:bg-red-50 focus:outline-none dark:hover:bg-red-950/50"
                                       title="Abmelden"
                                     >

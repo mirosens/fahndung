@@ -12,10 +12,21 @@ import {
 } from "lucide-react";
 import { getBrowserClient } from "~/lib/supabase/supabase-browser";
 import AuthPageLayout from "~/components/layout/AuthPageLayout";
-import AutoSetup from "~/components/AutoSetup";
 
 // Verhindere Pre-rendering für diese Seite
 export const dynamic = "force-dynamic";
+
+// Typen für bessere Type Safety
+interface SessionResult {
+  data: {
+    session: {
+      user: {
+        email: string | null;
+      };
+    } | null;
+  };
+  error: Error | null;
+}
 
 export default function Login() {
   const [email, setEmail] = useState("");
@@ -36,56 +47,65 @@ export default function Login() {
         console.log("🔍 Prüfe bestehende Session...");
         const supabase = getBrowserClient();
 
-        // Prüfe Session mit Timeout
+        // 🔥 VERBESSERTE SESSION-PRÜFUNG FÜR FIREFOX
+        // Verwende einen längeren Timeout für Firefox-Kompatibilität
         const sessionPromise = supabase.auth.getSession();
-        const timeoutPromise = new Promise<{ data: { session: null } }>(
+        const timeoutPromise = new Promise<SessionResult>(
           (resolve) =>
-            setTimeout(() => resolve({ data: { session: null } }), 3000),
+            setTimeout(
+              () => resolve({ data: { session: null }, error: null }),
+              5000,
+            ), // Erhöht auf 5 Sekunden für Firefox
         );
 
         const result = await Promise.race([sessionPromise, timeoutPromise]);
-        const {
-          data: { session },
-          error,
-        } = result as any;
 
-        if (session && !error) {
-          console.log("✅ Bestehende Session gefunden:", session.user.email);
-          setIsAuthenticated(true);
-          setUserEmail(session.user.email ?? "");
+        // Sichere Typisierung für das Ergebnis
+        if ("data" in result && result.data && "session" in result.data) {
+          const session = result.data.session;
+          const error = "error" in result ? result.error : null;
 
-          // 🔥 INTELLIGENTE WEITERLEITUNG
-          const urlParams = new URLSearchParams(window.location.search);
-          const redirectUrl = urlParams.get("redirect");
-          const savedRedirect = sessionStorage.getItem("redirectAfterLogin");
+          if (session && !error) {
+            console.log("✅ Bestehende Session gefunden:", session.user?.email);
+            setIsAuthenticated(true);
+            setUserEmail(session.user?.email ?? "");
 
-          let targetUrl = "/";
+            // 🔥 INTELLIGENTE WEITERLEITUNG
+            const urlParams = new URLSearchParams(window.location.search);
+            const redirectUrl = urlParams.get("redirect");
+            const savedRedirect = sessionStorage.getItem("redirectAfterLogin");
 
-          if (
-            redirectUrl &&
-            redirectUrl !== "/login" &&
-            !redirectUrl.includes("/login")
-          ) {
-            targetUrl = redirectUrl;
-            // Cleanup URL Parameter
-            window.history.replaceState(
-              {},
-              document.title,
-              window.location.pathname,
-            );
-          } else if (savedRedirect && savedRedirect !== "/login") {
-            targetUrl = savedRedirect;
-            sessionStorage.removeItem("redirectAfterLogin");
+            let targetUrl = "/";
+
+            if (
+              redirectUrl &&
+              redirectUrl !== "/login" &&
+              !redirectUrl.includes("/login")
+            ) {
+              targetUrl = redirectUrl;
+              // Cleanup URL Parameter
+              window.history.replaceState(
+                {},
+                document.title,
+                window.location.pathname,
+              );
+            } else if (savedRedirect && savedRedirect !== "/login") {
+              targetUrl = savedRedirect;
+              sessionStorage.removeItem("redirectAfterLogin");
+            }
+
+            console.log("🔄 SOFORTIGE Weiterleitung zu:", targetUrl);
+
+            // 🔥 VERBESSERTE WEITERLEITUNG FÜR FIREFOX
+            // Verwende setTimeout um sicherzustellen, dass der State aktualisiert wird
+            setTimeout(() => {
+              router.push(targetUrl);
+            }, 100);
+          } else {
+            console.log("ℹ️ Keine bestehende Session gefunden");
+            setIsAuthenticated(false);
+            setUserEmail("");
           }
-
-          console.log("🔄 SOFORTIGE Weiterleitung zu:", targetUrl);
-
-          // SOFORTIGE Weiterleitung ohne Verzögerung
-          router.push(targetUrl);
-        } else {
-          console.log("ℹ️ Keine bestehende Session gefunden");
-          setIsAuthenticated(false);
-          setUserEmail("");
         }
       } catch (err) {
         console.error("❌ Session-Check Fehler:", err);
@@ -133,38 +153,9 @@ export default function Login() {
         }
       } else if (data.user) {
         console.log("✅ Login erfolgreich:", data.user.email);
-        setSuccess(`Willkommen zurück, ${data.user.email}!`);
-        setIsAuthenticated(true);
-        setUserEmail(data.user.email ?? "");
 
-        // 🔥 SOFORTIGE WEITERLEITUNG NACH LOGIN
-        const urlParams = new URLSearchParams(window.location.search);
-        const redirectUrl = urlParams.get("redirect");
-        const savedRedirect = sessionStorage.getItem("redirectAfterLogin");
-
-        let targetUrl = "/";
-
-        if (
-          redirectUrl &&
-          redirectUrl !== "/login" &&
-          !redirectUrl.includes("/login")
-        ) {
-          targetUrl = redirectUrl;
-          // Cleanup URL Parameter
-          window.history.replaceState(
-            {},
-            document.title,
-            window.location.pathname,
-          );
-        } else if (savedRedirect && savedRedirect !== "/login") {
-          targetUrl = savedRedirect;
-          sessionStorage.removeItem("redirectAfterLogin");
-        }
-
-        console.log("🔄 SOFORTIGE Weiterleitung nach Login zu:", targetUrl);
-
-        // SOFORTIGE Weiterleitung ohne Verzögerung
-        router.push(targetUrl);
+        // 🔥 HARD REDIRECT - GARANTIERT FUNKTIONIERT
+        window.location.href = "/"; // Nach Homepage!
       }
     } catch (err) {
       console.error("❌ Unerwarteter Login-Fehler:", err);

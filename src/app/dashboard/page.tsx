@@ -2,8 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
-import { useAuth } from "~/hooks/useAuth";
-import { useSupabaseAuthActions } from "~/hooks/useSupabaseAuthActions";
+import { useAuth } from "../providers";
 import {
   Loader2,
   LayoutDashboard,
@@ -15,76 +14,45 @@ import {
 import { getBrowserClient } from "~/lib/supabase/supabase-browser";
 
 export default function DashboardPage() {
-  const { isAuthenticated, loading, initialized, session } = useAuth();
-  const { checkAuthStatus, debugInfo } = useSupabaseAuthActions();
+  const { user, session, loading, initialized } = useAuth();
   const router = useRouter();
-  const [authDebug, setAuthDebug] = useState("");
+  const [authDebug, setAuthDebug] = useState<string | null>(null);
+  const [debugInfo, setDebugInfo] = useState<string | null>(null);
   const [sessionInfo, setSessionInfo] = useState<any>(null);
 
-  // Erweiterte Authentifizierungsprüfung
+  // SCHUTZ FÜR GESCHÜTZTE SEITEN
   useEffect(() => {
-    const performAuthCheck = async () => {
-      if (initialized && !loading) {
-        setAuthDebug("🔍 Prüfe Authentifizierungsstatus...");
-
-        try {
-          // Prüfe Supabase Session direkt
-          const supabase = getBrowserClient();
-          const {
-            data: { session: supabaseSession },
-            error,
-          } = await supabase.auth.getSession();
-
-          if (error) {
-            setAuthDebug(`❌ Supabase Session-Fehler: ${error.message}`);
-            return;
-          }
-
-          if (supabaseSession) {
-            setSessionInfo({
-              userId: supabaseSession.user.id,
-              email: supabaseSession.user.email,
-              tokenLength: supabaseSession.access_token?.length ?? 0,
-              expiresAt: supabaseSession.expires_at
-                ? new Date(supabaseSession.expires_at * 1000).toISOString()
-                : "N/A",
-            });
-            setAuthDebug("✅ Supabase Session gefunden");
-          } else {
-            setAuthDebug("⚠️ Keine Supabase Session gefunden");
-          }
-
-          // Prüfe Auth Hook Status
-          const authStatus = await checkAuthStatus();
-          if (authStatus.isAuthenticated) {
-            setAuthDebug("✅ Auth Hook bestätigt Authentifizierung");
-          } else {
-            setAuthDebug("❌ Auth Hook: Nicht authentifiziert");
-          }
-        } catch (err) {
-          setAuthDebug(
-            `❌ Auth-Check Fehler: ${err instanceof Error ? err.message : "Unbekannter Fehler"}`,
-          );
-        }
-      }
-    };
-
-    performAuthCheck();
-  }, [initialized, loading, checkAuthStatus]);
-
-  // Weiterleitung zur Login-Seite wenn nicht authentifiziert
-  useEffect(() => {
-    if (initialized && !loading && !isAuthenticated) {
-      setAuthDebug("🔄 SOFORTIGE Weiterleitung zur Login-Seite...");
-      // Speichere die gewünschte URL für Redirect nach Login
-      sessionStorage.setItem("redirectAfterLogin", "/dashboard");
-      // SOFORTIGE Weiterleitung
+    if (!user && initialized && !loading) {
       router.push("/login");
     }
-  }, [isAuthenticated, loading, initialized, router]);
+  }, [user, initialized, loading, router]);
 
-  // Wenn nicht angemeldet, zeige Loading-Screen mit Debug-Informationen
-  if (!isAuthenticated) {
+  // Debug-Informationen sammeln
+  useEffect(() => {
+    if (process.env.NODE_ENV === "development") {
+      if (!user) {
+        setAuthDebug("Kein Benutzer gefunden");
+      } else {
+        setAuthDebug(`Benutzer: ${user.email}`);
+      }
+
+      if (session) {
+        setSessionInfo({
+          userId: session.user.id,
+          email: session.user.email,
+          tokenLength: session.access_token?.length || 0,
+          expiresAt: session.expires_at
+            ? new Date(session.expires_at * 1000).toLocaleString()
+            : "Unbekannt",
+        });
+      }
+
+      setDebugInfo(`Loading: ${loading}, Initialized: ${initialized}`);
+    }
+  }, [user, session, loading, initialized]);
+
+  // Loading-Zustand
+  if (loading || !initialized) {
     return (
       <div className="min-h-screen bg-background">
         <div className="flex h-screen items-center justify-center">
@@ -102,9 +70,7 @@ export default function DashboardPage() {
             </h1>
 
             <p className="mb-6 text-muted-foreground">
-              {!initialized || loading
-                ? "Prüfe Authentifizierung..."
-                : "Weiterleitung zur Anmeldung..."}
+              Prüfe Authentifizierung...
             </p>
 
             {/* Debug-Informationen */}
@@ -141,6 +107,38 @@ export default function DashboardPage() {
                 </button>
               </div>
             )}
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Wenn nicht angemeldet, zeige Weiterleitung
+  if (!user) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="flex h-screen items-center justify-center">
+          <div className="text-center">
+            <div className="mb-6 flex justify-center">
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
+                <LayoutDashboard className="h-8 w-8 text-primary" />
+              </div>
+            </div>
+
+            <Loader2 className="mx-auto mb-4 h-8 w-8 animate-spin text-primary" />
+
+            <h1 className="mb-2 text-2xl font-bold text-foreground">
+              Fahndungs-Dashboard
+            </h1>
+
+            <p className="mb-6 text-muted-foreground">
+              Weiterleitung zur Anmeldung...
+            </p>
+
+            <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+              <Shield className="h-4 w-4" />
+              <span>Nur für autorisierte Benutzer</span>
+            </div>
           </div>
         </div>
       </div>

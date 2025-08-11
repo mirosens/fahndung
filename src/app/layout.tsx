@@ -4,8 +4,8 @@ import "~/styles/globals.css";
 import "~/styles/fonts.css";
 import { TRPCReactProvider } from "~/trpc/react";
 import { ThemeProvider } from "@/components/theme-provider";
-import { SessionManager } from "@/components/SessionManager";
-import { AuthProvider } from "@/components/AuthProvider";
+
+import { AuthProvider } from "./providers";
 
 export const metadata: Metadata = {
   title: "Fahndung - PTLS",
@@ -57,10 +57,7 @@ export default function RootLayout({
             enableSystem
             disableTransitionOnChange
           >
-            <AuthProvider>
-              <SessionManager />
-              {children}
-            </AuthProvider>
+            <AuthProvider>{children}</AuthProvider>
           </ThemeProvider>
         </TRPCReactProvider>
       </body>
