@@ -1,7 +1,7 @@
 "use client";
 
-import { AlertTriangle, ArrowRight } from "lucide-react";
-import { Button } from "~/components/ui/button";
+import Link from "next/link";
+import { ArrowRight, Target } from "lucide-react";
 import UrgentFahndungenCarousel from "./UrgentFahndungenCarousel";
 
 interface HeroSectionProps {
@@ -52,15 +52,13 @@ interface HeroSectionProps {
 
 export default function HeroSection({
   showAlert = true,
-  alertText = "EILMELDUNG! Polizei sucht Zeugen zu aktuellem Fall",
+  alertText = "Polizei sucht Zeugen",
 
   title = "Hinweise helfen",
   subtitle = "Unterstützen Sie die Polizei bei Ermittlungen!",
 
-  primaryButtonText = "Fahndungen ansehen",
-  secondaryButtonText = "Hinweis abgeben",
-  onPrimaryClick,
-  onSecondaryClick,
+  primaryButtonText = "Hinweis abgeben",
+  secondaryButtonText = "Fahndungen ansehen",
 
   showUrgentFahndungen = true,
   urgentInvestigations = [],
@@ -96,42 +94,69 @@ export default function HeroSection({
           {/* Linker Container */}
           <div className="flex-1 space-y-6 lg:flex lg:items-center lg:justify-center">
             <div className="space-y-6 lg:max-w-md">
-              {/* Alert Banner - Kompakt im linken Container */}
+              {/* subtle backdrop lines */}
+              <svg
+                aria-hidden
+                className="pointer-events-none absolute inset-0 -z-10 text-slate-400 opacity-[0.12] dark:text-slate-600"
+                viewBox="0 0 1000 420"
+                preserveAspectRatio="none"
+              >
+                <g fill="none" stroke="currentColor" strokeWidth="1.2">
+                  <path d="M0,90 C220,30 520,150 1000,90" />
+                  <path d="M0,180 C240,120 540,240 1000,180" />
+                  <path d="M0,270 C260,210 560,330 1000,270" />
+                  <path d="M0,360 C280,300 580,420 1000,360" />
+                </g>
+              </svg>
+
+              {/* Eilmeldung */}
               {showAlert && (
-                <div className="flex items-center space-x-2 text-red-600 dark:text-red-400">
-                  <AlertTriangle className="h-4 w-4" />
-                  <span className="text-sm font-medium">{alertText}</span>
-                  <ArrowRight className="h-3 w-3" />
+                <div
+                  role="alert"
+                  aria-live="polite"
+                  className="mb-6 inline-flex items-center gap-3 rounded-lg border border-slate-200 bg-white/80 px-3.5 py-2.5 shadow-sm backdrop-blur dark:border-slate-700 dark:bg-slate-800/70"
+                >
+                  <span className="inline-flex size-5 items-center justify-center rounded-full border border-red-300 bg-white text-red-600">
+                    <Target className="size-3.5" aria-hidden />
+                  </span>
+                  <strong className="text-sm tracking-wide text-slate-900 dark:text-slate-100">
+                    EILMELDUNG!
+                  </strong>
+                  <span className="text-sm text-slate-700 dark:text-slate-300">
+                    {alertText}
+                  </span>
+                  <ArrowRight
+                    className="ml-1 size-4 text-slate-400"
+                    aria-hidden
+                  />
                 </div>
               )}
 
-              {/* Haupttitel */}
-              <div className="space-y-4">
-                <h1 className="text-4xl font-bold leading-tight text-muted-foreground dark:text-white lg:text-5xl">
-                  {title}
-                </h1>
-                <p className="text-lg text-muted-foreground dark:text-muted-foreground">
-                  {subtitle}
-                </p>
-              </div>
+              {/* Headline */}
+              <h1
+                className="text-4xl tracking-tight text-slate-900 dark:text-white md:text-5xl lg:text-6xl"
+                style={{ fontFamily: "'Inter-Black', Helvetica" }}
+              >
+                {title}
+              </h1>
+              <p className="mt-3 max-w-md text-lg text-slate-600 dark:text-slate-300 md:text-xl">
+                {subtitle}
+              </p>
 
-              {/* Buttons */}
-              <div className="flex flex-col gap-4 sm:flex-row">
-                <Button
-                  variant="outline"
-                  size="lg"
-                  onClick={onSecondaryClick}
-                  className="border-border text-muted-foreground hover:bg-muted dark:border-border dark:text-muted-foreground dark:hover:bg-muted"
+              {/* CTAs */}
+              <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+                <Link
+                  href="#fahndungen"
+                  className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-6 py-3.5 text-base font-semibold text-slate-800 shadow-sm hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700 dark:focus-visible:ring-offset-slate-900"
                 >
                   {secondaryButtonText}
-                </Button>
-                <Button
-                  size="lg"
-                  onClick={onPrimaryClick}
-                  className="bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600"
+                </Link>
+                <Link
+                  href="/hinweis"
+                  className="inline-flex items-center justify-center rounded-lg bg-slate-800 px-6 py-3.5 text-base font-semibold text-white shadow hover:bg-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900"
                 >
                   {primaryButtonText}
-                </Button>
+                </Link>
               </div>
             </div>
           </div>
