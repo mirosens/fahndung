@@ -1,13 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import {
-  ChevronDown,
-  Search,
-  Menu,
-  X,
-  User,
-  Settings,
-  LogOut,
-} from "lucide-react";
+import { ChevronDown, Search, Menu, X, User, LogOut } from "lucide-react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
 import { Logo } from "../ui/Logo";
@@ -54,18 +46,6 @@ export default function ModernHeader() {
 
   // CSS-only Scroll-Detection ohne Re-Renders
   const { headerRef, spacerRef, searchRef } = useScrollDetection();
-
-  // Hilfsfunktion für Header-Variant-Wechsel zum klassischen Menü
-  const switchToClassicHeader = () => {
-    if (typeof window !== "undefined") {
-      localStorage.setItem("header-variant", "classic");
-      window.dispatchEvent(
-        new CustomEvent<"modern" | "classic">("header-variant-change", {
-          detail: "classic",
-        }),
-      );
-    }
-  };
 
   // Navigation Sections
   const navSections: NavSection[] = ["SICHERHEIT", "SERVICE", "POLIZEI"];
@@ -354,34 +334,17 @@ export default function ModernHeader() {
                 <div className="hidden items-center md:flex">
                   <div
                     ref={searchRef}
-                    className="
-                    relative flex w-64 items-center
-                    rounded-lg border border-input/50
-                    bg-background/50 backdrop-blur-xl transition-all
-                    duration-200 focus-within:border-primary/50
-                    focus-within:bg-background/70 dark:bg-background/30
-                    [.scrolled_&]:w-48
-                  "
+                    className="relative flex w-64 items-center rounded-lg border border-input bg-card px-3 py-2 transition-colors duration-200 focus-within:bg-accent hover:bg-accent [.scrolled_&]:w-48"
                   >
                     <Search className="absolute left-3 h-4 w-4 text-muted-foreground" />
                     <input
                       type="search"
                       placeholder="Suche..."
-                      className="w-full bg-transparent py-2 pl-10 pr-4 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
+                      className="w-full bg-transparent pl-10 pr-2 text-sm text-foreground placeholder:text-muted-foreground focus:outline-none"
                       aria-label="Suche im Fahndungsportal"
                     />
                   </div>
                 </div>
-
-                {/* Classic Header Button - immer sichtbar */}
-                <button
-                  onClick={switchToClassicHeader}
-                  className="flex items-center justify-center rounded-lg p-3 text-muted-foreground transition-colors hover:bg-accent hover:text-foreground focus:outline-none focus:ring-2 focus:ring-primary/50"
-                  title="Zum klassischen Menü wechseln"
-                  aria-label="Zum klassischen Menü wechseln"
-                >
-                  <Settings className="h-6 w-6" />
-                </button>
 
                 {/* Enhanced A11y Dropdown - ALLE Meta-Nav Features */}
                 <A11navEnhanced />

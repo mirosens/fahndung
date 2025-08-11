@@ -108,11 +108,11 @@ export default function FahndungFilter({
 
   return (
     <div className={`fahndung-filter ${className}`}>
-      {/* Filter Button */}
-      <div className="flex items-center space-x-4">
+      {/* Filter Button und Suchfeld */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
         <button
           onClick={() => setShowFilterPanel(!showFilterPanel)}
-          className="flex items-center space-x-2 rounded-lg bg-white px-4 py-2 shadow-sm hover:bg-muted dark:bg-muted dark:hover:bg-muted"
+          className="flex items-center space-x-2 rounded-lg border border-border bg-white px-4 py-2 shadow-sm hover:bg-muted dark:border-border dark:bg-muted dark:hover:bg-muted"
         >
           <Filter className="h-4 w-4" />
           <span className="text-sm font-medium">Filter</span>
@@ -130,7 +130,7 @@ export default function FahndungFilter({
             placeholder="Fahndungen durchsuchen..."
             value={activeFilters.searchTerm}
             onChange={(e) => setSearchTerm(e.target.value)}
-            className="w-full rounded-lg border border-border px-4 py-2 pl-10 focus:border-blue-500 focus:outline-none dark:border-border dark:bg-muted dark:text-white"
+            className="w-full rounded-lg border-2 border-gray-400 px-4 py-2 pl-10 focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20 dark:border-gray-500 dark:bg-muted dark:text-white dark:focus:border-blue-400"
           />
           {activeFilters.searchTerm && (
             <button
@@ -146,7 +146,7 @@ export default function FahndungFilter({
         {activeFilterCount > 0 && (
           <button
             onClick={resetFilters}
-            className="text-sm text-blue-600 hover:text-blue-700"
+            className="text-sm text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300"
           >
             Zurücksetzen
           </button>

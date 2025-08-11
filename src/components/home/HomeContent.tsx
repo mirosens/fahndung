@@ -25,33 +25,41 @@ const FahndungskarteGrid = dynamic(
   },
 );
 
-// Dynamischer Import der FahndungskarteGridWithPagination mit SSR deaktiviert
-const FahndungskarteGridWithPagination = dynamic(
-  () =>
-    import(
-      "~/components/fahndungskarte/ansichten/FahndungskarteGridWithPagination"
-    ),
-  {
-    ssr: false,
-    loading: () => (
-      <div className="animate-pulse">
-        <div className="h-64 rounded-lg bg-muted dark:bg-muted"></div>
-      </div>
-    ),
-  },
-);
-
-// Typen für Fahndungen
+// Import Investigation Typ aus dem tRPC Router
 interface Investigation {
   id: string;
   title: string;
-  description?: string;
+  case_number: string;
+  description: string;
+  short_description: string;
   status: string;
-  priority: string;
-  tags?: string[];
-  location?: string;
+  priority: "normal" | "urgent" | "new";
+  category: string;
+  location: string;
+  station: string;
+  features: string;
+  date: string;
   created_at: string;
   updated_at: string;
+  created_by: string;
+  assigned_to?: string;
+  tags: string[];
+  metadata: Record<string, unknown>;
+  contact_info?: Record<string, unknown>;
+  created_by_user?: {
+    name: string;
+    email: string;
+  };
+  assigned_to_user?: {
+    name: string;
+    email: string;
+  };
+  images?: Array<{
+    id: string;
+    url: string;
+    alt_text?: string;
+    caption?: string;
+  }>;
 }
 
 export default function HomeContent() {
@@ -85,15 +93,12 @@ export default function HomeContent() {
       },
     );
 
-  // Explizite Typisierung für investigations
-  const typedInvestigations = investigations;
-
   // Gefilterte Fahndungen
-  const filteredInvestigations = useMemo(() => {
-    if (!typedInvestigations || !Array.isArray(typedInvestigations)) return [];
+  const filteredInvestigations = useMemo((): Fahndungskarte[] => {
+    if (!investigations || !Array.isArray(investigations)) return [];
 
-    return typedInvestigations.filter((investigation) => {
-      const inv = investigation as Investigation;
+    return investigations.filter((investigation): investigation is Fahndungskarte => {
+      const inv = investigation as Fahndungskarte;
 
       // Suchbegriff Filter
       if (activeFilters.searchTerm) {
@@ -150,7 +155,7 @@ export default function HomeContent() {
 
       return true;
     });
-  }, [typedInvestigations, activeFilters]);
+  }, [investigations, activeFilters]);
 
   // Filter-Handler
   const handleFilterChange = (filters: FilterState) => {
@@ -181,14 +186,14 @@ export default function HomeContent() {
       {/* Hero Section */}
       <HeroSection
         showAlert={true}
-        alertText="EILMELDUNG! Polizei sucht Zeugen"
+        alertText="EILMELDUNG! Polizei sucht Zeugen zu aktuellem Fall"
         title="Hinweise helfen"
         subtitle="Unterstützen Sie die Polizei bei Ermittlungen!"
         primaryButtonText="Fahndungen ansehen"
         secondaryButtonText="Hinweis abgeben"
         showUrgentFahndungen={true}
         urgentInvestigations={
-          typedInvestigations
+          investigations
             ?.filter(
               (investigation) =>
                 investigation.priority === "urgent" ||
@@ -212,61 +217,62 @@ export default function HomeContent() {
 
       {/* Main Content */}
       <div id="main-content" className="container mx-auto px-4 py-8">
-        {/* Filter und Suche */}
-        <div className="mb-8">
-          <FahndungFilter onFilterChange={handleFilterChange} />
+        {/* Aktuelle Fahndungen Titel */}
+        <div className="mb-6">
+          <h2 className="text-2xl font-bold text-foreground dark:text-white">
+            Aktuelle Fahndungen
+          </h2>
         </div>
 
-        {/* Investigations List */}
-        <div className="space-y-4">
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <h2 className="text-xl font-semibold text-muted-foreground dark:text-white">
-              Aktuelle Fahndungen
-            </h2>
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
+        {/* Kompakte Filter und Suche */}
+        <div className="mb-6">
+          <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+            {/* Linke Seite: Filter */}
+            <FahndungFilter onFilterChange={handleFilterChange} />
+
+            {/* Rechte Seite: Anzahl und View-Toggle */}
+            <div className="flex items-center gap-4">
               <div className="flex items-center space-x-2 text-sm text-muted-foreground dark:text-muted-foreground">
                 <Eye className="h-4 w-4" />
                 <span>
-                  {typedInvestigations ? filteredInvestigations.length : 0} von{" "}
-                  {typedInvestigations && Array.isArray(typedInvestigations)
-                    ? typedInvestigations.length
-                    : 0}{" "}
-                  Fahndungen
+                  {investigations ? filteredInvestigations.length : 0}/
+                  {investigations && Array.isArray(investigations)
+                    ? investigations.length
+                    : 0}
                 </span>
               </div>
               <ViewToggle currentView={viewMode} onViewChange={setViewMode} />
             </div>
           </div>
+        </div>
 
-          {typedInvestigations &&
+        {/* Investigations List */}
+        <div className="space-y-4">
+          {investigations &&
           filteredInvestigations &&
           filteredInvestigations.length > 0 ? (
             viewMode === "list-flat" ? (
               <FahndungskarteListFlat investigations={filteredInvestigations} />
             ) : (
-              <FahndungskarteGridWithPagination
+              <FahndungskarteGrid
                 investigations={filteredInvestigations}
                 viewMode={viewMode}
-                itemsPerPage={6}
-                showPagination={true}
-                showItemsInfo={true}
-                showQuickJump={false}
               />
             )
           ) : (
             <div className="rounded-lg border border-border bg-white p-8 text-center shadow-xs dark:border-border dark:bg-muted">
               <AlertTriangle className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
               <h3 className="mb-2 text-lg font-semibold text-muted-foreground dark:text-white">
-                {typedInvestigations &&
-                Array.isArray(typedInvestigations) &&
-                typedInvestigations.length > 0
+                {investigations &&
+                Array.isArray(investigations) &&
+                investigations.length > 0
                   ? "Keine Fahndungen mit den aktuellen Filtern gefunden"
                   : "Keine Fahndungen gefunden"}
               </h3>
               <p className="text-muted-foreground dark:text-muted-foreground">
-                {typedInvestigations &&
-                Array.isArray(typedInvestigations) &&
-                typedInvestigations.length > 0
+                {investigations &&
+                Array.isArray(investigations) &&
+                investigations.length > 0
                   ? "Versuchen Sie andere Filter-Einstellungen oder löschen Sie die Filter."
                   : "Es sind noch keine Fahndungen in der Datenbank vorhanden."}
               </p>
