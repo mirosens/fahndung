@@ -75,9 +75,10 @@ export default function DashboardPage() {
   // Weiterleitung zur Login-Seite wenn nicht authentifiziert
   useEffect(() => {
     if (initialized && !loading && !isAuthenticated) {
-      setAuthDebug("🔄 Weiterleitung zur Login-Seite...");
+      setAuthDebug("🔄 SOFORTIGE Weiterleitung zur Login-Seite...");
       // Speichere die gewünschte URL für Redirect nach Login
       sessionStorage.setItem("redirectAfterLogin", "/dashboard");
+      // SOFORTIGE Weiterleitung
       router.push("/login");
     }
   }, [isAuthenticated, loading, initialized, router]);

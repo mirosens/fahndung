@@ -79,7 +79,8 @@ export default function ModernHeader() {
           (item) => !item.requiresAuth && !item.isAuthSection,
         );
       }
-      // Wenn angemeldet: Zeige alle Items außer Anmelden/Registrieren
+      // 🔥 WENN ANGEMELDET: Zeige alle Items außer Anmelden/Registrieren
+      // Erlaube Zugriff auf "Neue Fahndung" für alle angemeldeten Benutzer
       return items.filter((item) => !item.authOnly && !item.isAuthSection);
     }
 

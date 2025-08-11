@@ -17,9 +17,11 @@ export default function NeueFahndungPage() {
           "redirectAfterLogin",
           "/fahndungen/neu/enhanced",
         );
+        // SOFORTIGE Weiterleitung zur Login-Seite
         router.push("/login");
       } else {
-        // Wenn angemeldet, direkt zum Wizard weiterleiten
+        // 🔥 SOFORTIGE Weiterleitung zum Wizard
+        console.log("🚀 SOFORTIGE Weiterleitung zum Wizard...");
         router.push("/fahndungen/neu/enhanced");
       }
     }

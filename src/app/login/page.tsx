@@ -78,12 +78,10 @@ export default function Login() {
             sessionStorage.removeItem("redirectAfterLogin");
           }
 
-          console.log("🔄 Weiterleitung zu:", targetUrl);
+          console.log("🔄 SOFORTIGE Weiterleitung zu:", targetUrl);
 
-          // Verzögerte Weiterleitung für bessere UX
-          setTimeout(() => {
-            router.push(targetUrl);
-          }, 500);
+          // SOFORTIGE Weiterleitung ohne Verzögerung
+          router.push(targetUrl);
         } else {
           console.log("ℹ️ Keine bestehende Session gefunden");
           setIsAuthenticated(false);
@@ -139,7 +137,7 @@ export default function Login() {
         setIsAuthenticated(true);
         setUserEmail(data.user.email ?? "");
 
-        // 🔥 INTELLIGENTE WEITERLEITUNG NACH LOGIN
+        // 🔥 SOFORTIGE WEITERLEITUNG NACH LOGIN
         const urlParams = new URLSearchParams(window.location.search);
         const redirectUrl = urlParams.get("redirect");
         const savedRedirect = sessionStorage.getItem("redirectAfterLogin");
@@ -163,12 +161,10 @@ export default function Login() {
           sessionStorage.removeItem("redirectAfterLogin");
         }
 
-        console.log("🔄 Weiterleitung nach Login zu:", targetUrl);
+        console.log("🔄 SOFORTIGE Weiterleitung nach Login zu:", targetUrl);
 
-        // Verzögerte Weiterleitung für bessere UX
-        setTimeout(() => {
-          router.push(targetUrl);
-        }, 1000);
+        // SOFORTIGE Weiterleitung ohne Verzögerung
+        router.push(targetUrl);
       }
     } catch (err) {
       console.error("❌ Unerwarteter Login-Fehler:", err);

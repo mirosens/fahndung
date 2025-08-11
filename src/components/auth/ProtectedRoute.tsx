@@ -43,46 +43,58 @@ export default function ProtectedRoute({
       currentPath: window.location.pathname,
     });
 
-    if (initialized && !loading) {
-      if (!isAuthenticated) {
-        console.log(
-          "❌ ProtectedRoute: Nicht authentifiziert - Weiterleitung zu Login",
-        );
+    // 🔥 ROBUSTERE AUTHENTIFIZIERUNG: Warte auf Initialisierung
+    if (!initialized || loading) {
+      console.log("⏳ ProtectedRoute: Warte auf Initialisierung...");
+      return;
+    }
 
-        // Speichere aktuelle URL für Redirect nach Login
-        const currentPath = window.location.pathname + window.location.search;
-        if (currentPath !== "/login" && currentPath !== "/register") {
-          sessionStorage.setItem("redirectAfterLogin", currentPath);
-        }
+    // 🔥 SOFORTIGE WEITERLEITUNG wenn nicht authentifiziert
+    if (!isAuthenticated) {
+      console.log(
+        "❌ ProtectedRoute: Nicht authentifiziert - SOFORTIGE Weiterleitung zu Login",
+      );
 
-        router.push(redirectTo);
+      // Speichere aktuelle URL für Redirect nach Login
+      const currentPath = window.location.pathname + window.location.search;
+      if (currentPath !== "/login" && currentPath !== "/register") {
+        sessionStorage.setItem("redirectAfterLogin", currentPath);
+      }
+
+      // SOFORTIGE Weiterleitung ohne Verzögerung
+      router.push(redirectTo);
+      return;
+    }
+
+    // 🔥 FLEXIBLERE ROLLENPRÜFUNG: Erlaube Zugriff auch ohne spezifische Rolle
+    if (requiredRoles && requiredRoles.length > 0) {
+      const userRole = session?.profile?.role as string;
+      const hasRequiredRole = requiredRoles.includes(
+        userRole as "user" | "admin" | "editor" | "super_admin",
+      );
+
+      console.log("🔐 ProtectedRoute: Rollenprüfung", {
+        userRole,
+        requiredRoles,
+        hasRequiredRole,
+      });
+
+      // 🔥 ERLAUBE ZUGRIFF auch ohne spezifische Rolle (nur für Wizard)
+      if (!hasRequiredRole && window.location.pathname.includes("/fahndungen/neu")) {
+        console.log("✅ ProtectedRoute: Zugriff auf Wizard erlaubt (flexible Rollenprüfung)");
         return;
       }
 
-      // Rollenprüfung nur wenn Session vorhanden und Rollen erforderlich
-      if (requiredRoles && requiredRoles.length > 0) {
-        const userRole = session?.profile?.role as string;
-        const hasRequiredRole = requiredRoles.includes(
-          userRole as "user" | "admin" | "editor" | "super_admin",
+      if (!hasRequiredRole) {
+        console.log(
+          "❌ ProtectedRoute: Unzureichende Berechtigung - Weiterleitung zu Dashboard",
         );
-
-        console.log("🔐 ProtectedRoute: Rollenprüfung", {
-          userRole,
-          requiredRoles,
-          hasRequiredRole,
-        });
-
-        if (!hasRequiredRole) {
-          console.log(
-            "❌ ProtectedRoute: Unzureichende Berechtigung - Weiterleitung zu Dashboard",
-          );
-          router.push("/dashboard");
-          return;
-        }
+        router.push("/dashboard");
+        return;
       }
-
-      console.log("✅ ProtectedRoute: Authentifizierung erfolgreich");
     }
+
+    console.log("✅ ProtectedRoute: Authentifizierung erfolgreich");
   }, [
     session,
     loading,

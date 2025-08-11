@@ -138,6 +138,8 @@ export const navigationData: Record<NavSection, NavItem[]> = {
       urgent: true,
       badge: "NEU",
       requiresAuth: true,
+      // 🔥 Erlaube Zugriff für alle angemeldeten Benutzer
+      allowAllAuthenticated: true,
     },
     // Authentifizierung - Separater Bereich unten
     {

@@ -61,7 +61,8 @@ export function middleware(request: NextRequest) {
     const hasValidSession = checkSession();
 
     if (hasValidSession) {
-      // Bereits angemeldet - zur Startseite weiterleiten
+      // 🔥 Bereits angemeldet - SOFORTIGE Weiterleitung zur Startseite
+      console.log("🔄 Middleware: Bereits angemeldet - Weiterleitung zu /");
       return NextResponse.redirect(new URL("/", request.url));
     }
   }

@@ -268,22 +268,20 @@ const AdaptiveDesktopHeader = ({
             <span>🚀 TEST</span>
           </button>
 
-          {/* Fahndung Button - für Editor, Admin und Super Admin */}
-          {(currentSession?.profile?.role === "editor" ||
-            currentSession?.profile?.role === "admin" ||
-            currentSession?.profile?.role === "super_admin") &&
-            !pathname?.startsWith("/fahndungen/neu") && (
-              <button
-                onClick={() => {
-                  // 🚀 SOFORTIGE NAVIGATION ZUM WIZARD
-                  router.push("/fahndungen/neu/enhanced");
-                }}
-                className="flex items-center gap-1 rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
-              >
-                <Plus className="h-4 w-4" />
-                <span>Neue Fahndung</span>
-              </button>
-            )}
+          {/* Fahndung Button - für ALLE angemeldeten Benutzer */}
+          {!pathname?.startsWith("/fahndungen/neu") && (
+            <button
+              onClick={() => {
+                // 🚀 SOFORTIGE NAVIGATION ZUM WIZARD
+                console.log("🚀 Navigation zum Wizard...");
+                router.push("/fahndungen/neu/enhanced");
+              }}
+              className="flex items-center gap-1 rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
+            >
+              <Plus className="h-4 w-4" />
+              <span>Neue Fahndung</span>
+            </button>
+          )}
 
           {/* Modern Header Button */}
           <button
