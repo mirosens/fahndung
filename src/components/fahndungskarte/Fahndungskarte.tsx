@@ -295,11 +295,9 @@ const Fahndungskarte: React.FC<ModernFahndungskarteProps> = ({
         {/* FRONT SIDE */}
         <div
           ref={frontRef}
-          className="group absolute inset-0 flex h-full w-full cursor-pointer flex-col overflow-hidden rounded-lg border border-border/30 bg-white/20 shadow-[0_1px_8px_rgba(0,0,0,0.02)] transition-all duration-500 hover:shadow-[0_4px_24px_rgba(0,0,0,0.06)] focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:border-border/30 dark:bg-muted/20 dark:shadow-[0_1px_8px_rgba(255,255,255,0.01)] dark:hover:shadow-[0_4px_24px_rgba(255,255,255,0.03)]"
+          className="group absolute inset-0 flex h-full w-full cursor-pointer flex-col overflow-hidden rounded-lg border border-gray-200 bg-white shadow-[0_2px_16px_rgba(0,0,0,0.10)] transition-all duration-300 hover:border-gray-300 hover:shadow-[0_8px_32px_rgba(0,0,0,0.15)] focus-visible:ring-2 focus-visible:ring-blue-500 focus-visible:ring-offset-2 dark:border-border/30 dark:bg-muted/20 dark:shadow-[0_1px_8px_rgba(255,255,255,0.01)] dark:hover:shadow-[0_4px_24px_rgba(255,255,255,0.03)]"
           style={{
             backfaceVisibility: "hidden",
-            backdropFilter: "blur(10px)",
-            WebkitBackdropFilter: "blur(10px)",
           }}
           onClick={
             disableNavigation || !investigationId ? flipCard : navigateToDetail
@@ -373,9 +371,9 @@ const Fahndungskarte: React.FC<ModernFahndungskarteProps> = ({
             )}
           </div>
 
-          {/* Info Section - Echter Glassmorphismus */}
+          {/* Info Section - Fester Hintergrund für bessere Sichtbarkeit */}
           <div
-            className={`absolute bottom-0 left-0 right-0 h-[40%] ${styles["glassmorphism-ultra"]} dark:${styles["glassmorphism-ultra-dark"]}`}
+            className="absolute bottom-0 left-0 right-0 h-[40%] bg-white/95 backdrop-blur-sm dark:bg-black/95"
             style={{ height: "40%" }}
           >
             <div className="relative z-10 flex h-full flex-col justify-between p-4">
@@ -462,12 +460,10 @@ const Fahndungskarte: React.FC<ModernFahndungskarteProps> = ({
         {/* BACK SIDE */}
         <div
           ref={backRef}
-          className="absolute inset-0 flex h-full w-full flex-col overflow-hidden rounded-lg border border-border/30 bg-white/20 shadow-[0_1px_8px_rgba(0,0,0,0.02)] dark:border-border/30 dark:bg-muted/20 dark:shadow-[0_1px_8px_rgba(255,255,255,0.01)]"
+          className="absolute inset-0 flex h-full w-full flex-col overflow-hidden rounded-lg border border-gray-200 bg-white shadow-[0_2px_16px_rgba(0,0,0,0.10)] dark:border-border/30 dark:bg-muted/20 dark:shadow-[0_1px_8px_rgba(255,255,255,0.01)]"
           style={{
             backfaceVisibility: "hidden",
             transform: "rotateY(180deg)",
-            backdropFilter: "blur(10px)",
-            WebkitBackdropFilter: "blur(10px)",
           }}
         >
           <div className="flex items-center justify-between border-b border-border p-4 dark:border-border">
