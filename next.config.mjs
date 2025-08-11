@@ -42,6 +42,8 @@ const nextConfig = {
       { protocol: "https", hostname: "**.supabase.co" },
       { protocol: "https", hostname: "images.unsplash.com" },
       { protocol: "https", hostname: "**.githubusercontent.com" },
+      { protocol: "https", hostname: "staticmap.openstreetmap.de" },
+      { protocol: "https", hostname: "maps.googleapis.com" },
     ],
     formats: ["image/avif", "image/webp"],
   },

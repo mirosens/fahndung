@@ -12,6 +12,14 @@ import {
   Copy,
   EyeOff,
   CheckCircle,
+  Archive,
+  FileCopy,
+  Printer,
+  Download,
+  Flag,
+  Star,
+  Clock,
+  AlertTriangle,
 } from "lucide-react";
 import { api } from "~/trpc/react";
 import { Button } from "~/components/ui/button";
@@ -21,6 +29,9 @@ import {
   DropdownMenuItem,
   DropdownMenuSeparator,
   DropdownMenuTrigger,
+  DropdownMenuSub,
+  DropdownMenuSubContent,
+  DropdownMenuSubTrigger,
 } from "~/components/ui/dropdown-menu";
 import {
   AlertDialog,
@@ -91,6 +102,7 @@ export default function InvestigationActions({
 }: InvestigationActionsProps) {
   const router = useRouter();
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [isDuplicateDialogOpen, setIsDuplicateDialogOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   // tRPC Mutations
@@ -112,6 +124,28 @@ export default function InvestigationActions({
     },
     onError: () => {
       toast.error("Fehler beim Veröffentlichen der Fahndung");
+    },
+  });
+
+  const duplicateMutation = api.post.duplicateInvestigation.useMutation({
+    onSuccess: (duplicatedInvestigation) => {
+      toast.success("Fahndung erfolgreich dupliziert");
+      onAction?.();
+      // Navigiere zur neuen Fahndung
+      router.push(`/fahndungen/${duplicatedInvestigation.id}?edit=true`);
+    },
+    onError: () => {
+      toast.error("Fehler beim Duplizieren der Fahndung");
+    },
+  });
+
+  const updatePriorityMutation = api.post.updateInvestigation.useMutation({
+    onSuccess: () => {
+      toast.success("Priorität erfolgreich geändert");
+      onAction?.();
+    },
+    onError: () => {
+      toast.error("Fehler beim Ändern der Priorität");
     },
   });
 
@@ -143,18 +177,24 @@ export default function InvestigationActions({
 
   const handleEdit = () => {
     // 🚀 PREFETCH FÜR SCHNELLERE NAVIGATION
-    const targetUrl = getFahndungEditUrl(investigation.title, investigation.case_number);
+    const targetUrl = getFahndungEditUrl(
+      investigation.title,
+      investigation.case_number,
+    );
     router.prefetch(targetUrl);
-    
+
     // 🚀 SOFORTIGE NAVIGATION
     router.push(targetUrl);
   };
 
   const handleView = () => {
     // 🚀 PREFETCH FÜR SCHNELLERE NAVIGATION
-    const targetUrl = getFahndungUrl(investigation.title, investigation.case_number);
+    const targetUrl = getFahndungUrl(
+      investigation.title,
+      investigation.case_number,
+    );
     router.prefetch(targetUrl);
-    
+
     // 🚀 SOFORTIGE NAVIGATION
     router.push(targetUrl);
   };
@@ -192,6 +232,72 @@ export default function InvestigationActions({
     }
   };
 
+  const handleDuplicate = async () => {
+    setIsLoading(true);
+    try {
+      await duplicateMutation.mutateAsync({ id: investigation.id });
+    } catch {
+      // Error wird bereits in onError behandelt
+    } finally {
+      setIsLoading(false);
+      setIsDuplicateDialogOpen(false);
+    }
+  };
+
+  const handlePriorityChange = async (
+    priority: "normal" | "urgent" | "new",
+  ) => {
+    setIsLoading(true);
+    try {
+      await updatePriorityMutation.mutateAsync({
+        id: investigation.id,
+        priority,
+      });
+    } catch {
+      // Error wird bereits in onError behandelt
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handlePrint = () => {
+    const printWindow = window.open(
+      `${window.location.origin}${getFahndungUrl(
+        investigation.title,
+        investigation.case_number,
+      )}?print=true`,
+      "_blank",
+    );
+    if (printWindow) {
+      printWindow.onload = () => {
+        printWindow.print();
+      };
+    }
+  };
+
+  const handleExport = async () => {
+    try {
+      const response = await fetch(`/api/export/fahndung/${investigation.id}`);
+      if (response.ok) {
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `fahndung-${investigation.case_number}.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        window.URL.revokeObjectURL(url);
+        document.body.removeChild(a);
+        toast.success("Fahndung erfolgreich exportiert");
+      } else {
+        toast.error("Fehler beim Exportieren");
+      }
+    } catch (error) {
+      console.error("Export failed:", error);
+      toast.error("Fehler beim Exportieren");
+    }
+  };
+
   const canEdit = userPermissions?.canEdit ?? true;
   const canDelete = userPermissions?.canDelete ?? true;
   const canPublish = userPermissions?.canPublish ?? true;
@@ -204,7 +310,7 @@ export default function InvestigationActions({
             <MoreVertical className="h-4 w-4" />
           </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-48">
+        <DropdownMenuContent align="end" className="w-56">
           <DropdownMenuItem onClick={handleView}>
             <Eye className="mr-2 h-4 w-4" />
             Anzeigen
@@ -217,6 +323,48 @@ export default function InvestigationActions({
             </DropdownMenuItem>
           )}
 
+          <DropdownMenuSeparator />
+
+          {/* Priorität ändern */}
+          <DropdownMenuSub>
+            <DropdownMenuSubTrigger>
+              <Flag className="mr-2 h-4 w-4" />
+              Priorität ändern
+            </DropdownMenuSubTrigger>
+            <DropdownMenuSubContent>
+              <DropdownMenuItem
+                onClick={() => handlePriorityChange("normal")}
+                className={
+                  investigation.priority === "normal" ? "bg-blue-50" : ""
+                }
+              >
+                <Star className="mr-2 h-4 w-4" />
+                Normal
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => handlePriorityChange("urgent")}
+                className={
+                  investigation.priority === "urgent" ? "bg-orange-50" : ""
+                }
+              >
+                <AlertTriangle className="mr-2 h-4 w-4" />
+                Dringend
+              </DropdownMenuItem>
+              <DropdownMenuItem
+                onClick={() => handlePriorityChange("new")}
+                className={
+                  investigation.priority === "new" ? "bg-green-50" : ""
+                }
+              >
+                <Clock className="mr-2 h-4 w-4" />
+                Neu
+              </DropdownMenuItem>
+            </DropdownMenuSubContent>
+          </DropdownMenuSub>
+
+          <DropdownMenuSeparator />
+
+          {/* Teilen & Export */}
           <DropdownMenuItem onClick={handleCopyLink}>
             <Copy className="mr-2 h-4 w-4" />
             Link kopieren
@@ -227,6 +375,27 @@ export default function InvestigationActions({
             Teilen
           </DropdownMenuItem>
 
+          <DropdownMenuItem onClick={handlePrint}>
+            <Printer className="mr-2 h-4 w-4" />
+            Drucken
+          </DropdownMenuItem>
+
+          <DropdownMenuItem onClick={handleExport}>
+            <Download className="mr-2 h-4 w-4" />
+            Als PDF exportieren
+          </DropdownMenuItem>
+
+          <DropdownMenuSeparator />
+
+          {/* Duplizieren */}
+          {canEdit && (
+            <DropdownMenuItem onClick={() => setIsDuplicateDialogOpen(true)}>
+              <FileCopy className="mr-2 h-4 w-4" />
+              Duplizieren
+            </DropdownMenuItem>
+          )}
+
+          {/* Status-spezifische Aktionen */}
           {investigation.status === "draft" && canPublish && (
             <DropdownMenuItem onClick={handlePublish}>
               <CheckCircle className="mr-2 h-4 w-4" />
@@ -262,6 +431,7 @@ export default function InvestigationActions({
         </DropdownMenuContent>
       </DropdownMenu>
 
+      {/* Lösch-Dialog */}
       <AlertDialog
         open={isDeleteDialogOpen}
         onOpenChange={setIsDeleteDialogOpen}
@@ -283,6 +453,33 @@ export default function InvestigationActions({
               className="bg-red-600 hover:bg-red-700"
             >
               {isLoading ? "Löscht..." : "Löschen"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Duplizieren-Dialog */}
+      <AlertDialog
+        open={isDuplicateDialogOpen}
+        onOpenChange={setIsDuplicateDialogOpen}
+      >
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Fahndung duplizieren</AlertDialogTitle>
+            <AlertDialogDescription>
+              Möchten Sie die Fahndung &quot;{investigation.title}&quot;
+              duplizieren? Eine neue Fahndung wird mit einer neuen Aktennummer
+              erstellt.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Abbrechen</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDuplicate}
+              disabled={isLoading}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              {isLoading ? "Dupliziert..." : "Duplizieren"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useState, useEffect } from "react";
+import Image from "next/image";
 import { Eye, Image as ImageIcon, AlertCircle } from "lucide-react";
 import { cn } from "~/lib/utils";
 
@@ -18,34 +19,45 @@ export default function FahndungskarteImage({
   src,
   alt = "Fahndungsbild",
   className = "",
-  fallbackSrc = "/images/placeholder-image.jpg",
+  fallbackSrc = "/images/placeholder-image.svg",
   showPlaceholder = true,
   onClick,
   priority = false,
 }: FahndungskarteImageProps) {
-  const [imageSrc, setImageSrc] = useState<string | null>(src || null);
+  const [imageSrc, setImageSrc] = useState<string | null>(src ?? null);
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
   const [isImageLoaded, setIsImageLoaded] = useState(false);
 
-  // Debug-Logging für Bildprobleme
+  // Debug-Logging für Bildprobleme (nur bei Fehlern)
   useEffect(() => {
-    console.log("🖼️ FahndungskarteImage Debug:", {
-      originalSrc: src,
-      imageSrc,
-      hasError,
-      isLoading,
-      isImageLoaded,
-    });
+    if (hasError) {
+      console.log("🖼️ FahndungskarteImage Debug:", {
+        originalSrc: src,
+        imageSrc,
+        hasError,
+        isLoading,
+        isImageLoaded,
+      });
+    }
   }, [src, imageSrc, hasError, isLoading, isImageLoaded]);
 
   // Aktualisiere Bildquelle wenn sich src ändert
   useEffect(() => {
     if (src) {
-      setImageSrc(src);
-      setIsLoading(true);
-      setHasError(false);
-      setIsImageLoaded(false);
+      // Validiere Blob-URLs
+      if (src.startsWith("blob:")) {
+        // Für Blob-URLs verwenden wir einen speziellen Ansatz
+        setImageSrc(src);
+        setIsLoading(true);
+        setHasError(false);
+        setIsImageLoaded(false);
+      } else {
+        setImageSrc(src);
+        setIsLoading(true);
+        setHasError(false);
+        setIsImageLoaded(false);
+      }
     }
   }, [src]);
 
@@ -60,9 +72,9 @@ export default function FahndungskarteImage({
     console.error("❌ Bildfehler für:", imageSrc);
     setIsLoading(false);
     setHasError(true);
-    
-    // Versuche Fallback-Bild
-    if (imageSrc !== fallbackSrc) {
+
+    // Versuche Fallback-Bild nur wenn es sich um eine externe URL handelt
+    if (imageSrc && imageSrc !== fallbackSrc && !imageSrc.startsWith("blob:")) {
       console.log("🔄 Versuche Fallback-Bild:", fallbackSrc);
       setImageSrc(fallbackSrc);
       setIsLoading(true);
@@ -77,7 +89,7 @@ export default function FahndungskarteImage({
         className={cn(
           "flex items-center justify-center bg-muted dark:bg-muted",
           "min-h-[200px] rounded-lg border-2 border-dashed border-muted-foreground/20",
-          className
+          className,
         )}
         onClick={onClick}
       >
@@ -98,7 +110,7 @@ export default function FahndungskarteImage({
         className={cn(
           "flex items-center justify-center bg-muted dark:bg-muted",
           "min-h-[200px] rounded-lg border-2 border-dashed border-red-200",
-          className
+          className,
         )}
         onClick={onClick}
       >
@@ -119,42 +131,43 @@ export default function FahndungskarteImage({
         <div
           className={cn(
             "absolute inset-0 flex items-center justify-center bg-muted dark:bg-muted",
-            "rounded-lg animate-pulse",
-            className
+            "animate-pulse rounded-lg",
+            className,
           )}
         >
           <div className="text-center">
             <div className="mx-auto h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-            <p className="mt-2 text-xs text-muted-foreground">
-              Lade Bild...
-            </p>
+            <p className="mt-2 text-xs text-muted-foreground">Lade Bild...</p>
           </div>
         </div>
       )}
 
       {/* Hauptbild */}
       {imageSrc && (
-        <img
+        <Image
           src={imageSrc}
           alt={alt}
+          width={0}
+          height={0}
+          sizes="100vw"
           className={cn(
-            "w-full h-auto object-cover rounded-lg transition-opacity duration-300",
+            "h-auto w-full rounded-lg object-cover transition-opacity duration-300",
             isLoading ? "opacity-0" : "opacity-100",
             onClick ? "cursor-pointer hover:opacity-90" : "",
-            className
+            className,
           )}
           onLoad={handleImageLoad}
           onError={handleImageError}
           onClick={onClick}
-          loading={priority ? "eager" : "lazy"}
-          decoding="async"
+          priority={priority}
+          unoptimized={imageSrc.startsWith("blob:")}
         />
       )}
 
       {/* Klick-Indikator */}
       {onClick && isImageLoaded && (
-        <div className="absolute inset-0 flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity duration-200">
-          <div className="bg-black/50 rounded-full p-2">
+        <div className="absolute inset-0 flex items-center justify-center opacity-0 transition-opacity duration-200 hover:opacity-100">
+          <div className="rounded-full bg-black/50 p-2">
             <Eye className="h-6 w-6 text-white" />
           </div>
         </div>

@@ -136,12 +136,14 @@ const FahndungWizardContainer = ({
     },
   });
 
-  // DEBUG: Render Counter
+  // DEBUG: Render Counter - nur client-seitig
   const renderCount = useRef(0);
-  renderCount.current += 1;
-  // Log render counts only in development to avoid spamming the
-  // production console. Use our logger instead of console.log.
-  log(`🔴 CONTAINER RENDER #${renderCount.current}`);
+  useEffect(() => {
+    renderCount.current += 1;
+    // Log render counts only in development to avoid spamming the
+    // production console. Use our logger instead of console.log.
+    log(`🔴 CONTAINER RENDER #${renderCount.current}`);
+  });
 
   // DEBUG: State Changes
   useEffect(() => {
@@ -490,7 +492,7 @@ const FahndungWizardContainer = ({
         );
       default:
         return (
-          <div className="text-center p-8">
+          <div className="p-8 text-center">
             <p className="text-muted-foreground">Unbekannter Schritt</p>
           </div>
         );
@@ -513,10 +515,11 @@ const FahndungWizardContainer = ({
         {/* Debug Info - nur in Development */}
         {process.env.NODE_ENV === "development" && (
           <div className="mb-4 rounded-lg bg-blue-50 p-4 text-sm text-blue-800 dark:bg-blue-900 dark:text-blue-200">
-            <p><strong>Debug Info:</strong></p>
+            <p>
+              <strong>Debug Info:</strong>
+            </p>
             <p>Current Step: {currentStep}</p>
             <p>Is Initialized: {isInitialized ? "Yes" : "No"}</p>
-            <p>Render Count: {renderCount.current}</p>
             <p>Step1 Data: {wizardData.step1 ? "Exists" : "Missing"}</p>
           </div>
         )}
@@ -615,11 +618,13 @@ const FahndungWizardContainer = ({
                   </div>
                 )}
                 {renderCurrentStep()}
-                
+
                 {/* Fallback falls renderCurrentStep nichts zurückgibt */}
                 {!renderCurrentStep() && (
-                  <div className="text-center p-8">
-                    <p className="text-muted-foreground">Lade Schritt {currentStep}...</p>
+                  <div className="p-8 text-center">
+                    <p className="text-muted-foreground">
+                      Lade Schritt {currentStep}...
+                    </p>
                   </div>
                 )}
 

@@ -1,8 +1,43 @@
 "use client";
 
-import React from "react";
-import Image from "next/image";
-import { MapPin } from "lucide-react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
+import { AlertCircle, RefreshCw } from "lucide-react";
+
+// Leaflet Typen definieren
+interface LeafletMap {
+  remove(): void;
+  setView(center: [number, number], zoom: number): LeafletMap;
+}
+
+interface LeafletStatic {
+  map(element: HTMLElement): LeafletMap;
+  tileLayer(
+    url: string,
+    options: Record<string, unknown>,
+  ): {
+    addTo(map: LeafletMap): void;
+  };
+  circleMarker(
+    latlng: [number, number],
+    options: Record<string, unknown>,
+  ): {
+    addTo(map: LeafletMap): void;
+    bindPopup(content: string): void;
+    on(event: string, handler: () => void): void;
+  };
+  circle(
+    latlng: [number, number],
+    options: Record<string, unknown>,
+  ): {
+    addTo(map: LeafletMap): void;
+  };
+}
+
+declare global {
+  interface Window {
+    L: LeafletStatic;
+  }
+}
 
 export interface MapLocation {
   id: string;
@@ -35,6 +70,7 @@ interface SimpleMapProps {
 const SimpleMap: React.FC<SimpleMapProps> = ({
   locations,
   center,
+  zoom = 13,
   height,
   searchRadius = 5,
   showRadius = true,
@@ -42,6 +78,11 @@ const SimpleMap: React.FC<SimpleMapProps> = ({
   onLocationClick,
   onLocationRemove,
 }) => {
+  const [mapError, setMapError] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const mapRef = useRef<HTMLDivElement>(null);
+  const mapInstanceRef = useRef<LeafletMap | null>(null);
+
   const getLocationTypeLabel = (type: MapLocation["type"]) => {
     const labels = {
       main: "Hauptort",
@@ -56,71 +97,190 @@ const SimpleMap: React.FC<SimpleMapProps> = ({
 
   const getLocationTypeColor = (type: MapLocation["type"]) => {
     const colors = {
-      main: "bg-blue-500",
-      tatort: "bg-red-500",
-      wohnort: "bg-green-500",
-      arbeitsplatz: "bg-yellow-500",
-      sichtung: "bg-orange-500",
-      sonstiges: "bg-muted",
+      main: "#3b82f6", // blue-500
+      tatort: "#ef4444", // red-500
+      wohnort: "#22c55e", // green-500
+      arbeitsplatz: "#eab308", // yellow-500
+      sichtung: "#f97316", // orange-500
+      sonstiges: "#6b7280", // gray-500
     };
-    return colors[type] ?? "bg-muted";
+    return colors[type] ?? "#6b7280";
   };
 
   const mainLocation = locations.find((loc) => loc.type === "main");
 
-  // Erstelle OpenStreetMap URL für statische Karte
-  const createMapUrl = () => {
-    const [lat, lng] = center;
-    const zoom = 13;
-    const width = 800;
-    const height = 600;
+  // Lade Leaflet dynamisch
+  const loadLeaflet = useCallback(async () => {
+    if (typeof window === "undefined") return;
 
-    return `https://staticmap.openstreetmap.de/staticmap.php?center=${lat},${lng}&zoom=${zoom}&size=${width}x${height}&maptype=mapnik&markers=${lat},${lng},red`;
+    try {
+      // Lade Leaflet CSS
+      if (!document.querySelector('link[href*="leaflet.css"]')) {
+        const link = document.createElement("link");
+        link.rel = "stylesheet";
+        link.href = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.css";
+        link.integrity = "sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=";
+        link.crossOrigin = "";
+        document.head.appendChild(link);
+      }
+
+      // Lade Leaflet JS
+      if (!window.L) {
+        const script = document.createElement("script");
+        script.src = "https://unpkg.com/leaflet@1.9.4/dist/leaflet.js";
+        script.integrity =
+          "sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=";
+        script.crossOrigin = "";
+        document.head.appendChild(script);
+
+        await new Promise((resolve) => {
+          script.onload = resolve;
+        });
+      }
+    } catch (error) {
+      console.error("Fehler beim Laden von Leaflet:", error);
+      setMapError(true);
+    }
+  }, []);
+
+  // Initialisiere Karte
+  const initMap = useCallback(async () => {
+    if (!mapRef.current || typeof window === "undefined") return;
+
+    try {
+      await loadLeaflet();
+      const L = window.L;
+
+      if (!L) {
+        throw new Error("Leaflet nicht verfügbar");
+      }
+
+      // Zerstöre alte Karte falls vorhanden
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+      }
+
+      // Erstelle neue Karte
+      const map = L.map(mapRef.current).setView(center, zoom);
+      mapInstanceRef.current = map;
+
+      // Füge OpenStreetMap Tile Layer hinzu
+      L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        attribution:
+          '© <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors',
+        maxZoom: 19,
+      }).addTo(map);
+
+      // Füge Markierungen hinzu
+      locations.forEach((location) => {
+        const marker = L.circleMarker([location.lat, location.lng], {
+          radius: 8,
+          fillColor: getLocationTypeColor(location.type),
+          color: "#ffffff",
+          weight: 2,
+          opacity: 1,
+          fillOpacity: 0.8,
+        });
+
+        marker.addTo(map);
+
+        // Popup mit Informationen
+        const popupContent = `
+          <div class="p-2">
+            <h3 class="font-semibold">${getLocationTypeLabel(location.type)}</h3>
+            <p class="text-sm">${location.address}</p>
+            ${location.description ? `<p class="text-xs text-gray-600">${location.description}</p>` : ""}
+            <p class="text-xs text-gray-500">${location.lat.toFixed(4)}, ${location.lng.toFixed(4)}</p>
+          </div>
+        `;
+        marker.bindPopup(popupContent);
+
+        // Click Handler
+        marker.on("click", () => {
+          onLocationClick?.(location);
+        });
+      });
+
+      // Füge Suchradius hinzu
+      if (showRadius && mainLocation) {
+        const circle = L.circle([mainLocation.lat, mainLocation.lng], {
+          color: "#3b82f6",
+          fillColor: "#3b82f6",
+          fillOpacity: 0.1,
+          radius: searchRadius * 1000, // Konvertiere km zu Metern
+        });
+        circle.addTo(map);
+      }
+
+      setIsLoading(false);
+      setMapError(false);
+    } catch (error) {
+      console.error("Fehler beim Initialisieren der Karte:", error);
+      setMapError(true);
+      setIsLoading(false);
+    }
+  }, [
+    locations,
+    center,
+    zoom,
+    searchRadius,
+    showRadius,
+    onLocationClick,
+    loadLeaflet,
+    mainLocation,
+  ]);
+
+  useEffect(() => {
+    void initMap();
+  }, [initMap]);
+
+  // Cleanup beim Unmount
+  useEffect(() => {
+    return () => {
+      if (mapInstanceRef.current) {
+        mapInstanceRef.current.remove();
+      }
+    };
+  }, []);
+
+  const retryLoadMap = () => {
+    setIsLoading(true);
+    setMapError(false);
+    void initMap();
   };
 
   return (
     <div className="relative" style={{ height }}>
-      {/* Statische Karte */}
+      {/* Karte Container */}
       <div className="relative h-full w-full overflow-hidden rounded-lg border border-border bg-muted dark:border-border dark:bg-muted">
-        <Image src={createMapUrl()} alt="Karte" fill className="object-cover" />
-
-        {/* Overlay für Markierungen */}
-        <div className="absolute inset-0">
-          {locations.map((location, index) => (
-            <div
-              key={location.id}
-              className="absolute -translate-x-1/2 -translate-y-full transform cursor-pointer"
-              style={{
-                left: `${50 + index * 10}%`,
-                top: `${30 + index * 15}%`,
-              }}
-              onClick={() => onLocationClick?.(location)}
-            >
-              <div
-                className={`relative ${getLocationTypeColor(location.type)} rounded-full p-2 text-white shadow-sm`}
-              >
-                <MapPin className="h-4 w-4" />
-                <div className="absolute bottom-full left-1/2 mb-1 -translate-x-1/2 transform rounded bg-black px-2 py-1 text-xs text-white opacity-0 transition-opacity group-hover:opacity-100">
-                  {getLocationTypeLabel(location.type)}
-                </div>
-              </div>
+        {isLoading && (
+          <div className="absolute inset-0 z-10 flex items-center justify-center bg-muted">
+            <div className="flex items-center gap-2 text-muted-foreground">
+              <RefreshCw className="h-4 w-4 animate-spin" />
+              <span className="text-sm">Lade Karte...</span>
             </div>
-          ))}
-        </div>
-
-        {/* Suchradius-Indikator */}
-        {showRadius && mainLocation && (
-          <div
-            className="absolute rounded-full border-2 border-blue-500 border-opacity-50 bg-blue-500 bg-opacity-10"
-            style={{
-              left: "50%",
-              top: "50%",
-              width: `${searchRadius * 20}px`,
-              height: `${searchRadius * 20}px`,
-              transform: "translate(-50%, -50%)",
-            }}
-          />
+          </div>
         )}
+
+        {mapError && !isLoading && (
+          <div className="absolute inset-0 z-10 flex items-center justify-center bg-muted">
+            <div className="text-center">
+              <AlertCircle className="mx-auto h-8 w-8 text-muted-foreground" />
+              <p className="mt-2 text-sm text-muted-foreground">
+                Karte konnte nicht geladen werden
+              </p>
+              <button
+                onClick={retryLoadMap}
+                className="mt-2 rounded bg-blue-500 px-3 py-1 text-xs text-white hover:bg-blue-600"
+              >
+                Erneut versuchen
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Leaflet Karte */}
+        <div ref={mapRef} className="h-full w-full" />
       </div>
 
       {/* Legende */}
@@ -130,7 +290,8 @@ const SimpleMap: React.FC<SimpleMapProps> = ({
           {locations.map((location) => (
             <div key={location.id} className="flex items-center space-x-2">
               <div
-                className={`h-3 w-3 rounded-full ${getLocationTypeColor(location.type)}`}
+                className="h-3 w-3 rounded-full"
+                style={{ backgroundColor: getLocationTypeColor(location.type) }}
               />
               <span>{getLocationTypeLabel(location.type)}</span>
               {editable && onLocationRemove && (
@@ -143,6 +304,19 @@ const SimpleMap: React.FC<SimpleMapProps> = ({
               )}
             </div>
           ))}
+        </div>
+
+        {/* Koordinaten-Info */}
+        <div className="mt-2 border-t border-border pt-2 dark:border-border">
+          <p className="text-xs text-muted-foreground">
+            Zentrum: {center[0].toFixed(4)}, {center[1].toFixed(4)}
+          </p>
+          {mainLocation && (
+            <p className="text-xs text-muted-foreground">
+              Hauptort: {mainLocation.lat.toFixed(4)},{" "}
+              {mainLocation.lng.toFixed(4)}
+            </p>
+          )}
         </div>
       </div>
     </div>

@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useCallback } from "react";
-import { MapPin, Search, AlertCircle, Trash2 } from "lucide-react";
+import { MapPin, Search, AlertCircle, Trash2, Plus, Info } from "lucide-react";
 import dynamic from "next/dynamic";
 import { NominatimService } from "~/services/geocoding";
 
@@ -49,6 +49,7 @@ const Step4Component: React.FC<Step4ComponentProps> = ({
 }) => {
   const [searchQuery, setSearchQuery] = useState("");
   const [isSearching, setIsSearching] = useState(false);
+  const [searchError, setSearchError] = useState("");
   const [searchResults, setSearchResults] = useState<
     Array<{
       address: string;
@@ -69,11 +70,17 @@ const Step4Component: React.FC<Step4ComponentProps> = ({
   const generateId = () =>
     `location-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`;
 
-  // Echtes Geocoding mit Nominatim
+  // Verbessertes Geocoding mit Fehlerbehandlung
   const searchLocation = useCallback(async (query: string) => {
-    if (!query.trim()) return;
+    if (!query.trim()) {
+      setSearchError("Bitte geben Sie einen Suchbegriff ein");
+      return;
+    }
 
     setIsSearching(true);
+    setSearchError("");
+    setSearchResults([]);
+
     try {
       const results = await NominatimService.search(query, {
         limit: 5,
@@ -81,6 +88,13 @@ const Step4Component: React.FC<Step4ComponentProps> = ({
         viewbox: [5.8, 47.2, 15.0, 55.1], // Deutschland Bounding Box
         bounded: true,
       });
+
+      if (results.length === 0) {
+        setSearchError(
+          "Keine Ergebnisse gefunden. Versuchen Sie eine andere Suche.",
+        );
+        return;
+      }
 
       setSearchResults(
         results.map((result) => ({
@@ -91,8 +105,7 @@ const Step4Component: React.FC<Step4ComponentProps> = ({
       );
     } catch (error) {
       console.error("Fehler bei der Standortsuche:", error);
-      // Fallback auf lokale Suche oder Fehlermeldung
-      setSearchResults([]);
+      setSearchError("Fehler bei der Suche. Bitte versuchen Sie es erneut.");
     } finally {
       setIsSearching(false);
     }
@@ -107,7 +120,7 @@ const Step4Component: React.FC<Step4ComponentProps> = ({
   ) => {
     const newLocation: MapLocation = {
       id: generateId(),
-      address, // Behalte vollständige Adresse für Karte
+      address,
       lat,
       lng,
       type,
@@ -151,6 +164,11 @@ const Step4Component: React.FC<Step4ComponentProps> = ({
     return locationTypes.find((t) => t.value === type)?.label ?? "Sonstiges";
   };
 
+  const handleSearchSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    void searchLocation(searchQuery);
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -168,24 +186,22 @@ const Step4Component: React.FC<Step4ComponentProps> = ({
           <label className="mb-2 block text-sm font-medium text-muted-foreground dark:text-muted-foreground">
             Standort suchen
           </label>
-          <div className="flex gap-2">
+          <form onSubmit={handleSearchSubmit} className="flex gap-2">
             <div className="relative flex-1">
               <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                onKeyPress={(e) =>
-                  e.key === "Enter" && searchLocation(searchQuery)
-                }
-                placeholder="Adresse oder Ort eingeben..."
+                placeholder="Adresse oder Ort eingeben (z.B. 'Berlin, Alexanderplatz')"
                 className="w-full rounded-lg border border-border py-2 pl-10 pr-4 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-border dark:bg-muted dark:text-white"
+                disabled={isSearching}
               />
             </div>
             <button
-              onClick={() => searchLocation(searchQuery)}
-              disabled={isSearching}
-              className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:opacity-50"
+              type="submit"
+              disabled={isSearching || !searchQuery.trim()}
+              className="flex items-center gap-2 rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:opacity-50"
             >
               {isSearching ? (
                 <div className="h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent" />
@@ -194,15 +210,33 @@ const Step4Component: React.FC<Step4ComponentProps> = ({
               )}
               Suchen
             </button>
+          </form>
+
+          {/* Suchtipps */}
+          <div className="mt-2 flex items-center gap-2 text-xs text-muted-foreground">
+            <Info className="h-3 w-3" />
+            <span>
+              Tipp: Verwenden Sie spezifische Adressen für bessere Ergebnisse
+            </span>
           </div>
         </div>
+
+        {/* Fehlermeldung */}
+        {searchError && (
+          <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-900 dark:text-red-200">
+            <div className="flex items-center gap-2">
+              <AlertCircle className="h-4 w-4" />
+              <span>{searchError}</span>
+            </div>
+          </div>
+        )}
 
         {/* Suchergebnisse */}
         {searchResults.length > 0 && (
           <div className="rounded-lg border border-border bg-white dark:border-border dark:bg-muted">
             <div className="p-4">
               <h4 className="mb-2 text-sm font-medium text-muted-foreground dark:text-muted-foreground">
-                Suchergebnisse
+                Suchergebnisse ({searchResults.length})
               </h4>
               <div className="space-y-2">
                 {searchResults.map((result, index) => (
@@ -217,8 +251,9 @@ const Step4Component: React.FC<Step4ComponentProps> = ({
                       );
                       setSearchResults([]);
                       setSearchQuery("");
+                      setSearchError("");
                     }}
-                    className="flex w-full items-center justify-between rounded-lg p-3 text-left hover:bg-muted dark:hover:bg-muted"
+                    className="flex w-full items-center justify-between rounded-lg p-3 text-left transition-colors hover:bg-muted dark:hover:bg-muted"
                   >
                     <div className="flex items-center gap-3">
                       <MapPin className="h-4 w-4 text-muted-foreground" />
@@ -244,7 +279,9 @@ const Step4Component: React.FC<Step4ComponentProps> = ({
             Interaktive Karte
           </label>
           <p className="mb-4 text-xs text-muted-foreground dark:text-muted-foreground">
-            Klicken Sie auf die Karte, um einen Standort hinzuzufügen
+            Klicken Sie auf die Karte, um einen Standort hinzuzufügen. Die Karte
+            zeigt automatisch Fallback-Optionen an, falls der Kartendienst nicht
+            verfügbar ist.
           </p>
         </div>
 
@@ -278,10 +315,36 @@ const Step4Component: React.FC<Step4ComponentProps> = ({
 
       {/* Standort-Liste */}
       <div className="space-y-4">
-        <div>
-          <h4 className="mb-2 text-sm font-medium text-muted-foreground dark:text-muted-foreground">
-            Festgelegte Standorte
+        <div className="flex items-center justify-between">
+          <h4 className="text-sm font-medium text-muted-foreground dark:text-muted-foreground">
+            Festgelegte Standorte (
+            {data.additionalLocations.length + (data.mainLocation ? 1 : 0)})
           </h4>
+          {data.mainLocation && (
+            <button
+              onClick={() => {
+                const newLocation: MapLocation = {
+                  id: generateId(),
+                  address: "Neuer Standort",
+                  lat: data.mainLocation!.lat + 0.001,
+                  lng: data.mainLocation!.lng + 0.001,
+                  type: "sonstiges",
+                  timestamp: new Date(),
+                };
+                onChange({
+                  ...data,
+                  additionalLocations: [
+                    ...data.additionalLocations,
+                    newLocation,
+                  ],
+                });
+              }}
+              className="flex items-center gap-1 rounded bg-blue-100 px-2 py-1 text-xs text-blue-700 hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-300"
+            >
+              <Plus className="h-3 w-3" />
+              Standort hinzufügen
+            </button>
+          )}
         </div>
 
         {/* Hauptstandort */}
@@ -309,7 +372,8 @@ const Step4Component: React.FC<Step4ComponentProps> = ({
                 onClick={() =>
                   data.mainLocation && removeLocation(data.mainLocation.id)
                 }
-                className="rounded p-1 text-red-500 hover:bg-red-100 dark:hover:bg-red-900"
+                className="rounded p-1 text-red-500 transition-colors hover:bg-red-100 dark:hover:bg-red-900"
+                title="Hauptstandort entfernen"
               >
                 <Trash2 className="h-4 w-4" />
               </button>
@@ -343,7 +407,8 @@ const Step4Component: React.FC<Step4ComponentProps> = ({
                 </div>
                 <button
                   onClick={() => removeLocation(location.id)}
-                  className="rounded p-1 text-red-500 hover:bg-red-100 dark:hover:bg-red-900"
+                  className="rounded p-1 text-red-500 transition-colors hover:bg-red-100 dark:hover:bg-red-900"
+                  title="Standort entfernen"
                 >
                   <Trash2 className="h-4 w-4" />
                 </button>
@@ -393,16 +458,27 @@ const Step4Component: React.FC<Step4ComponentProps> = ({
       {/* Info-Box */}
       <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-900">
         <div className="flex items-start gap-3">
-          <AlertCircle className="h-5 w-5 text-blue-500" />
-          <div className="text-sm">
-            <h4 className="font-medium text-blue-900 dark:text-blue-100">
-              Standort-Tipps
+          <Info className="mt-0.5 h-5 w-5 text-blue-600 dark:text-blue-400" />
+          <div>
+            <h4 className="text-sm font-medium text-blue-900 dark:text-blue-100">
+              Standort-Hinweise
             </h4>
-            <ul className="mt-2 space-y-1 text-blue-800 dark:text-blue-200">
-              <li>• Hauptstandort: Der wichtigste Ort der Fahndung</li>
-              <li>• Tatort: Wo das Ereignis stattgefunden hat</li>
-              <li>• Wohnort: Bekannter Wohnort der gesuchten Person</li>
-              <li>• Sichtungen: Wo die Person zuletzt gesehen wurde</li>
+            <ul className="mt-2 space-y-1 text-xs text-blue-800 dark:text-blue-200">
+              <li>
+                • Der Hauptstandort wird als primärer Ort für die Fahndung
+                verwendet
+              </li>
+              <li>
+                • Weitere Standorte können für zusätzliche Kontextinformationen
+                hinzugefügt werden
+              </li>
+              <li>
+                • Die Karte zeigt automatisch Fallback-Optionen an, falls
+                Kartendienste nicht verfügbar sind
+              </li>
+              <li>
+                • Verwenden Sie spezifische Adressen für genauere Ergebnisse
+              </li>
             </ul>
           </div>
         </div>

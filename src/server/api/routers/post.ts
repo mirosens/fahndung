@@ -909,6 +909,88 @@ export const postRouter = createTRPCRouter({
       }
     }),
 
+  // Öffentlich: Fahndung duplizieren
+  duplicateInvestigation: publicProcedure
+    .input(z.object({ id: z.string().uuid() }))
+    .mutation(async ({ ctx, input }) => {
+      try {
+        // Hole die ursprüngliche Fahndung
+        const originalResponse = (await ctx.db
+          .from("investigations")
+          .select("*")
+          .eq("id", input.id)
+          .single()) as SupabaseResponse<Investigation>;
+
+        const { data: originalInvestigation, error: fetchError } =
+          originalResponse;
+
+        if (fetchError || !originalInvestigation) {
+          throw new Error("Fahndung nicht gefunden");
+        }
+
+        // Erstelle eine neue Aktennummer für die duplizierte Fahndung
+        const { generateNewCaseNumber } = await import(
+          "~/lib/utils/caseNumberGenerator"
+        );
+        const newCaseNumber = generateNewCaseNumber(
+          originalInvestigation.category,
+          "draft",
+        );
+
+        // Erstelle die duplizierte Fahndung
+        const duplicatedInvestigation = {
+          ...originalInvestigation,
+          id: crypto.randomUUID(),
+          case_number: newCaseNumber,
+          title: `${originalInvestigation.title} (Kopie)`,
+          status: "draft",
+          created_at: new Date().toISOString(),
+          updated_at: new Date().toISOString(),
+          published_as_article: false,
+          article_published_at: null,
+          article_views: 0,
+        };
+
+        // Entferne Felder, die nicht dupliziert werden sollen
+        delete (duplicatedInvestigation as any).id;
+        delete (duplicatedInvestigation as any).article_slug;
+
+        const insertResponse = (await ctx.db
+          .from("investigations")
+          .insert(duplicatedInvestigation)
+          .select()
+          .single()) as SupabaseResponse<Investigation>;
+
+        const { data: newInvestigation, error: insertError } = insertResponse;
+
+        if (insertError) {
+          throw new Error(`Fehler beim Duplizieren: ${insertError.message}`);
+        }
+
+        // Dupliziere auch die Bilder
+        const imagesResponse = await ctx.db
+          .from("investigation_images")
+          .select("*")
+          .eq("investigation_id", input.id);
+
+        if (imagesResponse.data && imagesResponse.data.length > 0) {
+          const duplicatedImages = imagesResponse.data.map((img) => ({
+            ...img,
+            id: crypto.randomUUID(),
+            investigation_id: newInvestigation!.id,
+            created_at: new Date().toISOString(),
+          }));
+
+          await ctx.db.from("investigation_images").insert(duplicatedImages);
+        }
+
+        return newInvestigation!;
+      } catch (error) {
+        console.error("❌ Fehler beim Duplizieren der Fahndung:", error);
+        throw new Error(`Fehler beim Duplizieren: ${String(error)}`);
+      }
+    }),
+
   // Öffentlich: Meine Fahndungen (alle vom ptlsweb User)
   getMyInvestigations: publicProcedure
     .input(

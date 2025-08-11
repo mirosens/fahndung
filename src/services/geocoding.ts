@@ -63,11 +63,11 @@ export class NominatimService {
       params.append("bounded", options?.bounded ? "1" : "0");
     }
 
-    // Timeout erhöhen für bessere Stabilität
+    // Längerer Timeout für bessere Stabilität
     const controller = new AbortController();
     const timeoutId = setTimeout(
       () => controller.abort(new DOMException("Timeout", "AbortError")),
-      5000, // 5s statt 3s
+      10000, // 10s statt 5s
     );
 
     try {
@@ -153,11 +153,11 @@ export class NominatimService {
       namedetails: "1",
     });
 
-    // Timeout erhöhen für bessere Stabilität
+    // Längerer Timeout für bessere Stabilität
     const controller = new AbortController();
     const timeoutId = setTimeout(
       () => controller.abort(new DOMException("Timeout", "AbortError")),
-      5000, // 5s statt 3s
+      10000, // 10s statt 5s
     );
 
     try {
@@ -205,7 +205,7 @@ export class NominatimService {
     }
   }
 
-  // Neue Methode für optimiertes Geocoding mit Fallback
+  // Neue Methode für optimiertes Geocoding mit Fallback und Retry
   static async searchOptimized(
     query: string,
     options?: {
@@ -213,62 +213,76 @@ export class NominatimService {
       countrycodes?: string;
       bounded?: boolean;
       viewbox?: [number, number, number, number];
+      retries?: number;
     },
   ): Promise<GeocodingResult[]> {
-    try {
-      return await this.search(query, options);
-    } catch (error) {
-      // Spezielle Behandlung für AbortError (Timeout)
-      if (error instanceof Error && error.name === "AbortError") {
-        console.warn("⚠️ Geocoding Request abgebrochen (Timeout)");
-        return [];
-      }
+    const maxRetries = options?.retries ?? 2;
 
-      // Behandlung für Netzwerkfehler
-      if (
-        error instanceof TypeError &&
-        error.message.includes("Failed to fetch")
-      ) {
+    for (let attempt = 0; attempt <= maxRetries; attempt++) {
+      try {
+        return await this.search(query, options);
+      } catch (error) {
+        // Spezielle Behandlung für AbortError (Timeout)
+        if (error instanceof Error && error.name === "AbortError") {
+          console.warn(
+            `⚠️ Geocoding Request abgebrochen (Timeout) - Versuch ${attempt + 1}/${maxRetries + 1}`,
+          );
+          if (attempt < maxRetries) {
+            // Warte kurz vor dem nächsten Versuch
+            await new Promise((resolve) =>
+              setTimeout(resolve, 1000 * (attempt + 1)),
+            );
+            continue;
+          }
+          return [];
+        }
+
+        // Behandlung für Netzwerkfehler
+        if (
+          error instanceof TypeError &&
+          error.message.includes("Failed to fetch")
+        ) {
+          console.warn(
+            `🌐 Netzwerkfehler beim Geocoding - Versuch ${attempt + 1}/${maxRetries + 1}`,
+          );
+          if (attempt < maxRetries) {
+            await new Promise((resolve) =>
+              setTimeout(resolve, 1000 * (attempt + 1)),
+            );
+            continue;
+          }
+          return [];
+        }
+
         console.warn(
-          "🌐 Netzwerkfehler beim Geocoding - Überprüfen Sie Ihre Internetverbindung",
+          `⚠️ Geocoding fehlgeschlagen - Versuch ${attempt + 1}/${maxRetries + 1}:`,
+          error,
+        );
+
+        if (attempt < maxRetries) {
+          await new Promise((resolve) =>
+            setTimeout(resolve, 1000 * (attempt + 1)),
+          );
+          continue;
+        }
+      }
+    }
+
+    // Fallback: Versuche mit vereinfachter Suche
+    const simplifiedQuery = query.split(",")[0]; // Verwende nur den ersten Teil
+    if (simplifiedQuery && simplifiedQuery !== query) {
+      try {
+        return await this.search(simplifiedQuery, options);
+      } catch (fallbackError) {
+        console.warn(
+          "⚠️ Fallback Geocoding auch fehlgeschlagen:",
+          fallbackError,
         );
         return [];
       }
-
-      console.warn("⚠️ Geocoding fehlgeschlagen, verwende Fallback:", error);
-
-      // Fallback: Versuche mit vereinfachter Suche
-      const simplifiedQuery = query.split(",")[0]; // Verwende nur den ersten Teil
-      if (simplifiedQuery && simplifiedQuery !== query) {
-        try {
-          return await this.search(simplifiedQuery, options);
-        } catch (fallbackError) {
-          // Auch hier AbortError und Netzwerkfehler behandeln
-          if (
-            fallbackError instanceof Error &&
-            fallbackError.name === "AbortError"
-          ) {
-            console.warn("⚠️ Fallback Geocoding Request abgebrochen (Timeout)");
-            return [];
-          } else if (
-            fallbackError instanceof TypeError &&
-            fallbackError.message.includes("Failed to fetch")
-          ) {
-            console.warn(
-              "🌐 Netzwerkfehler beim Fallback Geocoding - Überprüfen Sie Ihre Internetverbindung",
-            );
-            return [];
-          }
-          console.warn(
-            "⚠️ Fallback Geocoding auch fehlgeschlagen:",
-            fallbackError,
-          );
-          return [];
-        }
-      }
-
-      return [];
     }
+
+    return [];
   }
 
   // Cache-Management

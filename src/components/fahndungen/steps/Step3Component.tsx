@@ -62,25 +62,42 @@ const Step3Component: React.FC<Step3ComponentProps> = ({
     try {
       console.log("🚀 Starte Bild-Upload für:", file.name);
 
-      // Session prüfen
-      const {
-        data: { session },
-        error: sessionError,
-      } = await supabase.auth.getSession();
+      // 🚀 PROTOYP-MODUS: Überspringe Authentifizierung im Development
+      const PROTOTYPE_MODE = process.env.NODE_ENV === "development";
 
-      if (sessionError) {
-        console.error("❌ Session-Fehler:", sessionError);
-        throw new Error("Authentifizierungsfehler - Bitte melden Sie sich an");
+      if (!PROTOTYPE_MODE) {
+        // Session prüfen (nur in Production)
+        const {
+          data: { session },
+          error: sessionError,
+        } = await supabase.auth.getSession();
+
+        if (sessionError) {
+          console.error("❌ Session-Fehler:", sessionError);
+          throw new Error(
+            "Authentifizierungsfehler - Bitte melden Sie sich an",
+          );
+        }
+
+        if (!session?.user) {
+          console.error("❌ Keine aktive Session");
+          throw new Error("Nicht authentifiziert - Bitte melden Sie sich an");
+        }
+
+        console.log("✅ Authentifiziert für User:", session.user.email);
+      } else {
+        console.log("🚀 Prototyp-Modus: Authentifizierung übersprungen");
       }
 
-      if (!session?.user) {
-        console.error("❌ Keine aktive Session");
-        throw new Error("Nicht authentifiziert - Bitte melden Sie sich an");
+      // 🚀 PROTOYP-MODUS: Verwende lokale URLs für Development
+      if (PROTOTYPE_MODE) {
+        // Erstelle eine lokale URL für das File
+        const localUrl = URL.createObjectURL(file);
+        console.log("🚀 Prototyp-Modus: Lokale URL erstellt:", localUrl);
+        return localUrl;
       }
 
-      console.log("✅ Authentifiziert für User:", session.user.email);
-
-      // Eindeutigen Dateinamen generieren
+      // Production: Upload zu Supabase Storage
       const timestamp = Date.now();
       const randomString = Math.random().toString(36).substring(2, 8);
       const fileExtension = file.name.split(".").pop();

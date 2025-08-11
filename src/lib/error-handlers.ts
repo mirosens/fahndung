@@ -275,6 +275,7 @@ export async function retryOperation<T>(
     }
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   throw lastError;
 }
 
