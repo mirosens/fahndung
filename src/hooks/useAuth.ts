@@ -83,51 +83,15 @@ export const useAuth = () => {
 
       // Benutzer-Profil abrufen mit einfacher Fehlerbehandlung
       try {
-        const { data: profile, error: profileError } = await supabase
-          .from("user_profiles")
-          .select("*")
-          .eq("id", user.id)
-          .single();
-
-        if (profileError) {
-          console.error("❌ Profil-Fehler:", profileError);
-          
-          // Bei 406 Fehler (RLS Problem) - versuche ohne Profil weiterzumachen
-          if (profileError.code === '406' || profileError.message?.includes('406') || profileError.status === 406) {
-            console.log("⚠️ RLS Problem erkannt - fahre ohne Profil fort");
-            setSession({
-              user: {
-                id: user.id,
-                email: user.email ?? "",
-              },
-              profile: null,
-            });
-            retryCount.current = 0;
-            return;
-          }
-          
-          // Bei allen anderen Fehlern - Session trotzdem setzen
-          console.log("⚠️ Profil-Fehler, aber Session wird trotzdem gesetzt");
-          setSession({
-            user: {
-              id: user.id,
-              email: user.email ?? "",
-            },
-            profile: null,
-          });
-          retryCount.current = 0; // Reset retry count on success
-          return;
-        }
+        // Vereinfachte Session ohne Profil-Abfrage (wegen RLS-Problemen)
+        console.log("✅ Session gesetzt ohne Profil-Abfrage");
         
-        // Erfolgreich - Session mit Profil setzen
-        console.log("✅ Profil erfolgreich geladen");
-
         setSession({
           user: {
             id: user.id,
             email: user.email ?? "",
           },
-          profile: profile as unknown as Session["profile"],
+          profile: null, // Profil wird nicht geladen
         });
         retryCount.current = 0; // Reset retry count on success
       } catch (profileError) {

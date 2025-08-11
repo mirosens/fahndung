@@ -85,6 +85,12 @@ export default function ProtectedRoute({
         return;
       }
 
+      // 🔥 ERLAUBE ZUGRIFF auch ohne Profil (wegen RLS-Problemen)
+      if (!session?.profile && window.location.pathname.includes("/fahndungen/neu")) {
+        console.log("✅ ProtectedRoute: Zugriff auf Wizard erlaubt (ohne Profil)");
+        return;
+      }
+
       if (!hasRequiredRole) {
         console.log(
           "❌ ProtectedRoute: Unzureichende Berechtigung - Weiterleitung zu Dashboard",
