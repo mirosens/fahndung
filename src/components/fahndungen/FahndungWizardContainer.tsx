@@ -437,55 +437,45 @@ const FahndungWizardContainer = ({
     switch (currentStep) {
       case 1:
         return (
-          wizardData.step1 && (
-            <Step1Component
-              data={wizardData.step1}
-              onChange={(data) => updateStepData("step1", data)}
-              wizard={wizardData}
-              showValidation={triedNext}
-            />
-          )
+          <Step1Component
+            data={wizardData.step1}
+            onChange={(data) => updateStepData("step1", data)}
+            wizard={wizardData}
+            showValidation={triedNext}
+          />
         );
       case 2:
         return (
-          wizardData.step2 && (
-            <Step2Component
-              data={wizardData.step2}
-              onChange={(data) => updateStepData("step2", data)}
-              wizard={wizardData}
-              showValidation={triedNext}
-            />
-          )
+          <Step2Component
+            data={wizardData.step2}
+            onChange={(data) => updateStepData("step2", data)}
+            wizard={wizardData}
+            showValidation={triedNext}
+          />
         );
       case 3:
         return (
-          wizardData.step3 && (
-            <Step3Component
-              data={wizardData.step3}
-              onChange={(data) => updateStepData("step3", data)}
-              showValidation={triedNext}
-            />
-          )
+          <Step3Component
+            data={wizardData.step3}
+            onChange={(data) => updateStepData("step3", data)}
+            showValidation={triedNext}
+          />
         );
       case 4:
         return (
-          wizardData.step4 && (
-            <Step4Component
-              data={wizardData.step4}
-              onChange={(data) => updateStepData("step4", data)}
-              showValidation={triedNext}
-            />
-          )
+          <Step4Component
+            data={wizardData.step4}
+            onChange={(data) => updateStepData("step4", data)}
+            showValidation={triedNext}
+          />
         );
       case 5:
         return (
-          wizardData.step5 && (
-            <Step5Component
-              data={wizardData.step5}
-              onChange={(data) => updateStepData("step5", data)}
-              showValidation={triedNext}
-            />
-          )
+          <Step5Component
+            data={wizardData.step5}
+            onChange={(data) => updateStepData("step5", data)}
+            showValidation={triedNext}
+          />
         );
       case 6:
         return (
@@ -499,7 +489,11 @@ const FahndungWizardContainer = ({
           />
         );
       default:
-        return null;
+        return (
+          <div className="text-center p-8">
+            <p className="text-muted-foreground">Unbekannter Schritt</p>
+          </div>
+        );
     }
   };
 
@@ -516,6 +510,17 @@ const FahndungWizardContainer = ({
   return (
     <div className="min-h-screen bg-muted dark:bg-muted">
       <div className="mx-auto max-w-7xl px-4 py-8">
+        {/* Debug Info - nur in Development */}
+        {process.env.NODE_ENV === "development" && (
+          <div className="mb-4 rounded-lg bg-blue-50 p-4 text-sm text-blue-800 dark:bg-blue-900 dark:text-blue-200">
+            <p><strong>Debug Info:</strong></p>
+            <p>Current Step: {currentStep}</p>
+            <p>Is Initialized: {isInitialized ? "Yes" : "No"}</p>
+            <p>Render Count: {renderCount.current}</p>
+            <p>Step1 Data: {wizardData.step1 ? "Exists" : "Missing"}</p>
+          </div>
+        )}
+
         {/* Header */}
         <div className="mb-8">
           <div className="mb-4 flex items-center gap-4">
@@ -610,6 +615,13 @@ const FahndungWizardContainer = ({
                   </div>
                 )}
                 {renderCurrentStep()}
+                
+                {/* Fallback falls renderCurrentStep nichts zurückgibt */}
+                {!renderCurrentStep() && (
+                  <div className="text-center p-8">
+                    <p className="text-muted-foreground">Lade Schritt {currentStep}...</p>
+                  </div>
+                )}
 
                 {/* Desktop Navigation */}
                 {currentStep < 6 && (
