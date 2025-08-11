@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useMemo, useEffect } from "react";
-import { AlertTriangle, Eye } from "lucide-react";
+import { AlertTriangle, Eye, Plus } from "lucide-react";
 import { api } from "~/trpc/react";
 
 import FahndungFilter, { type FilterState } from "./FahndungFilter";
@@ -248,6 +248,31 @@ export default function HomeContent() {
             </div>
           )}
         </div>
+
+          {/* Call-to-Action Buttons */}
+          <div className="mt-8 flex flex-col gap-4 sm:flex-row sm:justify-center">
+            <button
+              onClick={() => {
+                console.log("🚀 Navigation zu Fahndungen...");
+                window.location.href = "/fahndungen";
+              }}
+              className="inline-flex items-center justify-center rounded-lg bg-primary px-6 py-3 text-base font-medium text-primary-foreground shadow-sm transition-colors hover:bg-primary/90 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2"
+            >
+              <Eye className="mr-2 h-5 w-5" />
+              Fahndungen anzeigen
+            </button>
+            
+            <button
+              onClick={() => {
+                console.log("🚀 Navigation zum Wizard...");
+                window.location.href = "/fahndungen/neu/enhanced";
+              }}
+              className="inline-flex items-center justify-center rounded-lg border border-border bg-background px-6 py-3 text-base font-medium text-foreground shadow-sm transition-colors hover:bg-muted focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 dark:border-border dark:bg-muted dark:hover:bg-muted/80"
+            >
+              <Plus className="mr-2 h-5 w-5" />
+              Neue Fahndung erstellen
+            </button>
+          </div>
       </div>
     </>
   );

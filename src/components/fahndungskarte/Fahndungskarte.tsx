@@ -10,6 +10,7 @@ import { useFahndungskarteOptimized } from "~/hooks/useFahndungskarteOptimized";
 import { CATEGORY_CONFIG, PRIORITY_CONFIG, TAB_CONFIG } from "./types";
 import type { FahndungsData } from "./types";
 import styles from "~/styles/fahndungskarte.module.css";
+import FahndungskarteImage from "./FahndungskarteImage";
 
 interface ModernFahndungskarteProps {
   data?: FahndungsData;
@@ -346,17 +347,13 @@ const Fahndungskarte: React.FC<ModernFahndungskarteProps> = ({
                 </button>
               )}
 
-            <Image
-              src={safeData.step3?.mainImage || "/placeholder-image.jpg"}
+            <FahndungskarteImage
+              src={safeData.step3?.mainImage}
               alt={`Hauptfoto von ${safeData.step1.title}`}
-              width={400}
-              height={400}
-              sizes="(max-width: 768px) 100vw, 400px"
               className="object-cover transition-transform duration-500 group-hover:scale-105"
-              loading="lazy"
-              placeholder="blur"
-              blurDataURL="data:image/jpeg;base64,/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAYEBQYFBAYGBQYHBwYIChAKCgkJChQODwwQFxQYGBcUFhYaHSUfGhsjHBYWICwgIyYnKSopGR8tMC0oMCUoKSj/2wBDAQcHBwoIChMKChMoGhYaKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCgoKCj/wAARCAABAAEDASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAv/xAAhEAACAQMDBQAAAAAAAAAAAAABAgMABAUGIWGRkqGx0f/EABUBAQEAAAAAAAAAAAAAAAAAAAMF/8QAGhEAAgIDAAAAAAAAAAAAAAAAAAECEgMRkf/aAAwDAQACEQMRAD8AltJagyeH0AthI5xdrLcNM91BF5pX2HaH9bcfaSXWGaRmknyJckliyjqTzSlT54b6bk+h0R//2Q=="
-              onError={handleImageError}
+              fallbackSrc="/images/placeholder-image.jpg"
+              showPlaceholder={true}
+              priority={false}
             />
 
             {safeData.step2.priority !== "normal" && !state.isFlipped && (

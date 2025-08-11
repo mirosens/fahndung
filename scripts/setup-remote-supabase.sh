@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Remote Supabase Setup Script
+# Remote Supabase Setup Script für Vercel Deployment
 # Dieses Script richtet das Projekt für Remote-Supabase ein
 
 set -e
@@ -48,145 +48,183 @@ check_env() {
     print_info "Anon Key: ${NEXT_PUBLIC_SUPABASE_ANON_KEY:0:20}..."
 }
 
-# Entferne lokale Supabase-Komponenten
-remove_local_supabase() {
-    print_info "Entferne lokale Supabase-Komponenten..."
+# Erstelle .env.local für Remote-Supabase
+create_remote_env() {
+    print_info "Erstelle .env.local für Remote-Supabase..."
     
-    # Entferne Supabase-Verzeichnis
-    if [ -d "supabase" ]; then
-        rm -rf supabase/
-        print_success "Supabase-Verzeichnis entfernt"
+    if [ -f ".env.local" ]; then
+        cp .env.local .env.local.backup.$(date +%Y%m%d_%H%M%S)
+        print_success "Backup von .env.local erstellt"
     fi
     
-    # Entferne lokale Scripts
-    if [ -f "start-database.sh" ]; then
-        rm -f start-database.sh
-        print_success "start-database.sh entfernt"
-    fi
-    
-    if [ -f "fix_local_supabase.sql" ]; then
-        rm -f fix_local_supabase.sql
-        print_success "fix_local_supabase.sql entfernt"
-    fi
-    
-    if [ -f "scripts/supabase-local.sh" ]; then
-        rm -f scripts/supabase-local.sh
-        print_success "scripts/supabase-local.sh entfernt"
-    fi
+    cat > .env.local << 'EOF'
+# Remote Supabase Konfiguration für Vercel
+# Bitte ersetzen Sie die folgenden Werte mit Ihren echten Supabase-Credentials
+
+# Supabase URLs (Remote)
+NEXT_PUBLIC_SUPABASE_URL=https://your-project-ref.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-remote-anon-key-here
+
+# Datenbank URL (Remote)
+DATABASE_URL=postgresql://postgres:[YOUR-PASSWORD]@db.[YOUR-PROJECT-REF].supabase.co:5432/postgres
+
+# Supabase Service Role Key (Remote)
+SUPABASE_SERVICE_ROLE_KEY=your-remote-service-role-key-here
+
+# JWT Secret (Remote)
+SUPABASE_JWT_SECRET=your-remote-jwt-secret-here
+
+# E-Mail Konfiguration
+SMTP_HOST=your-smtp-host
+SMTP_PORT=587
+SMTP_USER=your-smtp-user
+SMTP_PASS=your-smtp-password
+SMTP_FROM=noreply@yourdomain.com
+
+# Admin E-Mail für Benachrichtigungen
+ADMIN_EMAIL=ptlsweb@gmail.com
+
+# App URLs
+NEXT_PUBLIC_APP_URL=https://your-app.vercel.app
+
+# Upload-Konfiguration
+MAX_FILE_SIZE=52428800
+ALLOWED_FILE_TYPES=image/jpeg,image/png,image/gif,image/webp
+
+# Sicherheit
+NEXTAUTH_SECRET=your-nextauth-secret-key-here
+NEXTAUTH_URL=https://your-app.vercel.app
+
+# Produktion
+NODE_ENV=production
+EOF
+
+    print_success ".env.local für Remote-Supabase erstellt"
+    print_warning "Bitte konfigurieren Sie Ihre echten Supabase-Credentials in .env.local"
 }
 
-# Aktualisiere .env.local für Remote-Supabase
-update_env_file() {
-    print_info "Aktualisiere .env.local für Remote-Supabase..."
+# Setup Storage Buckets
+setup_storage() {
+    print_info "Setup Storage Buckets..."
     
-    if [ ! -f ".env.local" ]; then
-        print_error ".env.local Datei nicht gefunden!"
-        print_info "Bitte kopieren Sie env.local.example zu .env.local und konfigurieren Sie Ihre Remote-Supabase-URLs"
+    # Führe das Storage-Setup aus
+    node scripts/check-buckets.cjs
+    
+    if [ $? -eq 0 ]; then
+        print_success "Storage Buckets erfolgreich eingerichtet"
+    else
+        print_error "Fehler beim Setup der Storage Buckets"
         exit 1
     fi
-    
-    # Backup erstellen
-    cp .env.local .env.local.backup.$(date +%Y%m%d_%H%M%S)
-    print_success "Backup von .env.local erstellt"
-    
-    print_info "Bitte konfigurieren Sie Ihre Remote-Supabase-URLs in .env.local:"
-    print_info "NEXT_PUBLIC_SUPABASE_URL=https://your-project-ref.supabase.co"
-    print_info "NEXT_PUBLIC_SUPABASE_ANON_KEY=your-remote-anon-key-here"
-    print_info "DATABASE_URL=postgresql://postgres:[YOUR-PASSWORD]@db.[YOUR-PROJECT-REF].supabase.co:5432/postgres"
-    print_info "SUPABASE_SERVICE_ROLE_KEY=your-remote-service-role-key-here"
 }
 
-# Prüfe Remote-Supabase-Verbindung
+# Teste Remote-Verbindung
 test_remote_connection() {
     print_info "Teste Remote-Supabase-Verbindung..."
     
-    # Starte temporär die Anwendung für den Test
-    print_info "Starte Anwendung für Verbindungstest..."
-    timeout 30s pnpm dev > /dev/null 2>&1 &
-    local app_pid=$!
+    # Führe einen einfachen Test aus
+    node -e "
+    const { createClient } = require('@supabase/supabase-js');
+    require('dotenv').config({ path: '.env.local' });
     
-    # Warte kurz
-    sleep 5
+    const supabase = createClient(
+        process.env.NEXT_PUBLIC_SUPABASE_URL,
+        process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY
+    );
     
-    # Prüfe ob die Anwendung läuft
-    if kill -0 $app_pid 2>/dev/null; then
-        print_success "Anwendung gestartet - Verbindungstest läuft"
-        print_info "Öffnen Sie http://localhost:3000 um die Verbindung zu testen"
-        
-        # Warte auf Benutzer-Input
-        read -p "Drücken Sie Enter um den Test zu beenden..."
-        
-        # Stoppe Anwendung
-        kill $app_pid 2>/dev/null || true
-        print_success "Verbindungstest beendet"
+    supabase.from('investigations').select('count').limit(1)
+        .then(result => {
+            if (result.error) {
+                console.error('❌ Verbindungsfehler:', result.error.message);
+                process.exit(1);
+            } else {
+                console.log('✅ Remote-Verbindung erfolgreich');
+            }
+        })
+        .catch(error => {
+            console.error('❌ Verbindungsfehler:', error.message);
+            process.exit(1);
+        });
+    "
+    
+    if [ $? -eq 0 ]; then
+        print_success "Remote-Verbindung erfolgreich getestet"
     else
-        print_error "Anwendung konnte nicht gestartet werden"
+        print_error "Fehler bei der Remote-Verbindung"
         exit 1
     fi
 }
 
-# Zeige Setup-Anweisungen
-show_setup_instructions() {
-    print_info "🚀 Remote Supabase Setup abgeschlossen!"
-    print_info ""
-    print_info "Nächste Schritte:"
-    print_info "1. Konfigurieren Sie Ihre Remote-Supabase-URLs in .env.local"
-    print_info "2. Führen Sie 'pnpm dev' aus um die Anwendung zu starten"
-    print_info "3. Gehen Sie zu http://localhost:3000/login"
-    print_info "4. Klicken Sie auf 'Alle Benutzer einrichten'"
-    print_info "5. Melden Sie sich mit admin@fahndung.local / admin123 an"
-    print_info ""
-    print_info "Wichtige Hinweise:"
-    print_info "- Alle lokalen Supabase-Komponenten wurden entfernt"
-    print_info "- Das Projekt verwendet jetzt ausschließlich Remote-Supabase"
-    print_info "- Backup-Dateien wurden erstellt (.env.local.backup.*)"
-}
-
-# Hilfe anzeigen
-show_help() {
-    echo "Remote Supabase Setup Script"
-    echo ""
-    echo "Verwendung: $0 [COMMAND]"
-    echo ""
-    echo "Commands:"
-    echo "  setup     - Vollständiges Remote-Supabase-Setup"
-    echo "  test      - Teste Remote-Supabase-Verbindung"
-    echo "  clean     - Entferne lokale Supabase-Komponenten"
-    echo "  help      - Zeige diese Hilfe"
-    echo ""
-    echo "Beispiele:"
-    echo "  $0 setup"
-    echo "  $0 test"
-    echo "  $0 clean"
+# Vercel Environment-Variablen Setup
+setup_vercel_env() {
+    print_info "Setup Vercel Environment-Variablen..."
+    
+    if ! command -v vercel &> /dev/null; then
+        print_warning "Vercel CLI nicht installiert. Installieren Sie es mit: npm i -g vercel"
+        print_info "Sie können die Environment-Variablen auch manuell im Vercel Dashboard setzen:"
+        print_info "1. Gehen Sie zu Ihrem Vercel Projekt"
+        print_info "2. Settings > Environment Variables"
+        print_info "3. Fügen Sie die folgenden Variablen hinzu:"
+        echo ""
+        echo "NEXT_PUBLIC_SUPABASE_URL=https://your-project-ref.supabase.co"
+        echo "NEXT_PUBLIC_SUPABASE_ANON_KEY=your-remote-anon-key-here"
+        echo "DATABASE_URL=postgresql://postgres:[YOUR-PASSWORD]@db.[YOUR-PROJECT-REF].supabase.co:5432/postgres"
+        echo "SUPABASE_SERVICE_ROLE_KEY=your-remote-service-role-key-here"
+        echo "SUPABASE_JWT_SECRET=your-remote-jwt-secret-here"
+        echo ""
+        return
+    fi
+    
+    # Lade .env.local
+    if [ -f ".env.local" ]; then
+        export $(grep -v '^#' .env.local | xargs)
+    fi
+    
+    # Setze Vercel Environment-Variablen
+    vercel env add NEXT_PUBLIC_SUPABASE_URL production <<< "$NEXT_PUBLIC_SUPABASE_URL"
+    vercel env add NEXT_PUBLIC_SUPABASE_ANON_KEY production <<< "$NEXT_PUBLIC_SUPABASE_ANON_KEY"
+    vercel env add DATABASE_URL production <<< "$DATABASE_URL"
+    vercel env add SUPABASE_SERVICE_ROLE_KEY production <<< "$SUPABASE_SERVICE_ROLE_KEY"
+    vercel env add SUPABASE_JWT_SECRET production <<< "$SUPABASE_JWT_SECRET"
+    
+    print_success "Vercel Environment-Variablen gesetzt"
 }
 
 # Hauptfunktion
 main() {
+    print_info "🚀 Remote Supabase Setup für Vercel"
+    print_info "===================================="
+    
     case "${1:-setup}" in
         "setup")
-            print_info "🚀 Starte Remote Supabase Setup..."
-            remove_local_supabase
-            update_env_file
+            create_remote_env
             check_env
-            show_setup_instructions
+            setup_storage
+            test_remote_connection
+            setup_vercel_env
             ;;
         "test")
             check_env
             test_remote_connection
             ;;
-        "clean")
-            remove_local_supabase
-            print_success "Lokale Supabase-Komponenten entfernt"
+        "storage")
+            setup_storage
             ;;
-        "help"|"-h"|"--help")
-            show_help
+        "vercel")
+            setup_vercel_env
             ;;
         *)
             print_error "Unbekannter Befehl: $1"
-            show_help
+            print_info "Verfügbare Befehle: setup, test, storage, vercel"
             exit 1
             ;;
     esac
+    
+    print_success "Remote Supabase Setup abgeschlossen!"
+    print_info "Nächste Schritte:"
+    print_info "1. Konfigurieren Sie Ihre echten Supabase-Credentials in .env.local"
+    print_info "2. Führen Sie 'vercel --prod' aus, um zu deployen"
+    print_info "3. Testen Sie die Anwendung auf Vercel"
 }
 
 # Script ausführen

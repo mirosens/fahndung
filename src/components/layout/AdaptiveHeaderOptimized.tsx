@@ -274,7 +274,8 @@ const AdaptiveDesktopHeader = ({
               onClick={() => {
                 // 🚀 SOFORTIGE NAVIGATION ZUM WIZARD
                 console.log("🚀 Navigation zum Wizard...");
-                router.push("/fahndungen/neu/enhanced");
+                // Verwende window.location für zuverlässigere Navigation
+                window.location.href = "/fahndungen/neu/enhanced";
               }}
               className="flex items-center gap-1 rounded-lg bg-primary px-3 py-2 text-sm font-medium text-primary-foreground transition-colors hover:bg-primary/90"
             >
