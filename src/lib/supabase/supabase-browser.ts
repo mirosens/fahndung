@@ -9,6 +9,11 @@ const supabaseAnonKey = process.env["NEXT_PUBLIC_SUPABASE_ANON_KEY"]!;
 let _client: ReturnType<typeof createClient> | null = null;
 
 export function getBrowserClient() {
+  // Prüfe ob bereits eine Instanz existiert
+  if (typeof window !== 'undefined' && (window as any).__supabaseClient) {
+    return (window as any).__supabaseClient;
+  }
+
   if (_client) {
     return _client;
   }
@@ -32,6 +37,12 @@ export function getBrowserClient() {
       },
     },
   });
+  
+  // Speichere Client global für Browser
+  if (typeof window !== 'undefined') {
+    (window as any).__supabaseClient = _client;
+  }
+  
   return _client;
 }
 
