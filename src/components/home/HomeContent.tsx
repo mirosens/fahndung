@@ -151,10 +151,7 @@ export default function HomeContent() {
         <div className="animate-pulse space-y-4">
           <div className="grid grid-cols-1 gap-4 md:grid-cols-4">
             {Array.from({ length: 4 }).map((_, i) => (
-              <div
-                key={i}
-                className="h-24 rounded-lg bg-muted dark:bg-muted"
-              />
+              <div key={i} className="h-24 rounded-lg bg-muted dark:bg-muted" />
             ))}
           </div>
           <div className="h-64 rounded-lg bg-muted dark:bg-muted" />
@@ -168,7 +165,7 @@ export default function HomeContent() {
       {/* Hero Section */}
       <HeroSection
         showAlert={true}
-        alertText="EILMELDUNG! Polizei sucht Zeugen zu aktuellem Fall"
+        alertText="EILMELDUNG! Polizei sucht Zeugen"
         title="Hinweise helfen"
         subtitle="Unterstützen Sie die Polizei bei Ermittlungen!"
         primaryButtonText="Fahndungen ansehen"
@@ -237,7 +234,7 @@ export default function HomeContent() {
               />
             )
           ) : (
-            <div className="shadow-xs rounded-lg border border-border bg-white p-8 text-center dark:border-border dark:bg-muted">
+            <div className="rounded-lg border border-border bg-white p-8 text-center shadow-xs dark:border-border dark:bg-muted">
               <AlertTriangle className="mx-auto mb-4 h-12 w-12 text-muted-foreground" />
               <h3 className="mb-2 text-lg font-semibold text-muted-foreground dark:text-white">
                 {typedInvestigations &&

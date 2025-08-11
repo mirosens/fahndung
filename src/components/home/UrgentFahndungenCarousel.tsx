@@ -65,6 +65,7 @@ export default function UrgentFahndungenCarousel({
 }: UrgentFahndungenCarouselProps) {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isAutoPlaying, setIsAutoPlaying] = useState(false); // Standardmäßig pausiert
+  const [isCurrentCardFlipped, setIsCurrentCardFlipped] = useState(false);
 
   const carouselRef = useRef<HTMLDivElement>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -191,6 +192,12 @@ export default function UrgentFahndungenCarousel({
 
   const goToSlide = useCallback((index: number) => {
     setCurrentIndex(index);
+    setIsCurrentCardFlipped(false); // Reset flip status when changing slides
+  }, []);
+
+  // Funktion zum Überwachen des Flip-Status der aktuellen Karte
+  const handleCardFlip = useCallback((isFlipped: boolean) => {
+    setIsCurrentCardFlipped(isFlipped);
   }, []);
 
   // Tastatursteuerung
@@ -263,7 +270,7 @@ export default function UrgentFahndungenCarousel({
       {/* Carousel Container */}
       <div className="relative overflow-hidden rounded-lg shadow-sm">
         <div className="flex transition-transform duration-700 ease-out">
-          {investigations.map((investigation) => (
+          {investigations.map((investigation, index) => (
             <div
               key={investigation.id}
               className="w-full flex-shrink-0"
@@ -275,34 +282,57 @@ export default function UrgentFahndungenCarousel({
                 data={convertInvestigationToFahndungsData(investigation)}
                 investigationId={investigation.id}
                 className="w-full"
+                onFlipStatusChange={
+                  index === currentIndex ? handleCardFlip : undefined
+                }
               />
             </div>
           ))}
         </div>
 
-        {/* Navigation Buttons */}
-        {showNavigation && investigations.length > 1 && (
-          <>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={goToPrevious}
-              className="absolute left-3 top-1/2 -translate-y-1/2 rounded-full bg-white/90 p-3 shadow-sm backdrop-blur-sm transition-all duration-200 hover:scale-110 hover:bg-white dark:bg-muted/90 dark:hover:bg-muted"
-              aria-label="Vorherige Fahndung"
-            >
-              <ChevronLeft className="h-5 w-5" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={goToNext}
-              className="absolute right-3 top-1/2 -translate-y-1/2 rounded-full bg-white/90 p-3 shadow-sm backdrop-blur-sm transition-all duration-200 hover:scale-110 hover:bg-white dark:bg-muted/90 dark:hover:bg-muted"
-              aria-label="Nächste Fahndung"
-            >
-              <ChevronRight className="h-5 w-5" />
-            </Button>
-          </>
-        )}
+        {/* Professionelle Navigation-Pfeile - nur auf Vorderseite sichtbar */}
+        {showNavigation &&
+          investigations.length > 1 &&
+          !isCurrentCardFlipped && (
+            <>
+              <button
+                onClick={goToPrevious}
+                className="
+                absolute left-3 top-1/2 z-20
+                flex h-10 w-10
+                -translate-y-1/2 items-center
+                justify-center rounded-full
+                border
+                border-white/20
+                bg-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.12)]
+                backdrop-blur-md
+                transition-all duration-300 hover:bg-white/20
+                hover:shadow-[0_8px_40px_rgba(0,0,0,0.2)]
+              "
+                aria-label="Vorherige Fahndung"
+              >
+                <ChevronLeft className="h-5 w-5 text-white" />
+              </button>
+              <button
+                onClick={goToNext}
+                className="
+                absolute right-3 top-1/2 z-20
+                flex h-10 w-10
+                -translate-y-1/2 items-center
+                justify-center rounded-full
+                border
+                border-white/20
+                bg-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.12)]
+                backdrop-blur-md
+                transition-all duration-300 hover:bg-white/20
+                hover:shadow-[0_8px_40px_rgba(0,0,0,0.2)]
+              "
+                aria-label="Nächste Fahndung"
+              >
+                <ChevronRight className="h-5 w-5 text-white" />
+              </button>
+            </>
+          )}
       </div>
 
       {/* Kontrollleiste */}

@@ -38,6 +38,11 @@ interface ModernFahndungskarteProps {
    * `userPermissions`.
    */
   disableEdit?: boolean;
+  /**
+   * Callback-Funktion, die aufgerufen wird, wenn sich der Flip-Status der Karte ändert.
+   * Wird hauptsächlich für Carousel-Navigation verwendet.
+   */
+  onFlipStatusChange?: (isFlipped: boolean) => void;
 }
 
 const Fahndungskarte: React.FC<ModernFahndungskarteProps> = ({
@@ -47,6 +52,7 @@ const Fahndungskarte: React.FC<ModernFahndungskarteProps> = ({
   userPermissions,
   disableNavigation,
   disableEdit,
+  onFlipStatusChange,
 }) => {
   const router = useRouter();
   const [state, setState] = useState({
@@ -127,9 +133,16 @@ const Fahndungskarte: React.FC<ModernFahndungskarteProps> = ({
 
   const flipCard = useCallback((): void => {
     if (state.isAnimating) return;
-    updateState({ isAnimating: true, isFlipped: !state.isFlipped });
+    const newFlipState = !state.isFlipped;
+    updateState({ isAnimating: true, isFlipped: newFlipState });
+
+    // Callback aufrufen, wenn vorhanden
+    if (onFlipStatusChange) {
+      onFlipStatusChange(newFlipState);
+    }
+
     setTimeout(() => updateState({ isAnimating: false }), 500);
-  }, [state.isFlipped, state.isAnimating, updateState]);
+  }, [state.isFlipped, state.isAnimating, updateState, onFlipStatusChange]);
 
   const navigateToDetail = () => {
     // 🚀 Navigation nur ausführen, wenn nicht deaktiviert und eine ID vorhanden ist
