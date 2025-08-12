@@ -181,7 +181,7 @@ export default function FahndungskarteImage({
           height={0}
           sizes="100vw"
           className={cn(
-            "h-full w-full rounded-lg object-contain transition-opacity duration-300",
+            "h-full w-full rounded-lg object-cover object-center transition-opacity duration-300",
             isLoading ? "opacity-0" : "opacity-100",
             onClick ? "cursor-pointer hover:opacity-90" : "",
             className,

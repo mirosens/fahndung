@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff, Edit, ArrowRight } from "lucide-react";
 import { TabContent } from "./TabContent";
@@ -29,8 +28,8 @@ interface ModernFahndungskarteProps {
   };
   /**
    * Deaktiviert Navigationsfunktionen (Links zur Detailseite). Wenn diese
-   * Eigenschaft wahr ist, werden Buttons wie „Mehr erfahren“ und
-   * „Vollständige Ansicht“ nicht angezeigt und Klicks auf die Karte führen
+   * Eigenschaft wahr ist, werden Buttons wie „Mehr erfahren" und
+   * „Vollständige Ansicht" nicht angezeigt und Klicks auf die Karte führen
    * nicht zu einem Seitenwechsel.
    */
   disableNavigation?: boolean;
@@ -50,6 +49,10 @@ interface ModernFahndungskarteProps {
    * Sollte für die ersten sichtbaren Bilder gesetzt werden.
    */
   imagePriority?: boolean;
+  /**
+   * Layout-Modus für die Karte. "grid-4" sorgt für quadratische Bilddarstellung.
+   */
+  layoutMode?: "default" | "grid-4";
 }
 
 const Fahndungskarte: React.FC<ModernFahndungskarteProps> = ({
@@ -61,6 +64,7 @@ const Fahndungskarte: React.FC<ModernFahndungskarteProps> = ({
   disableEdit,
   onFlipStatusChange,
   imagePriority = false,
+  layoutMode = "default",
 }) => {
   const router = useRouter();
   const [state, setState] = useState({
@@ -166,9 +170,13 @@ const Fahndungskarte: React.FC<ModernFahndungskarteProps> = ({
   };
 
   // Retry-Funktion für NetworkErrors
-  const handleRetry = useCallback(() => {
+  const handleRetry = useCallback(async () => {
     updateState({ networkError: null });
-    void retryFromHook();
+    try {
+      await retryFromHook();
+    } catch (error) {
+      console.error("❌ Retry fehlgeschlagen:", error);
+    }
   }, [updateState, retryFromHook]);
 
   // Vereinfachte Effects
@@ -293,8 +301,11 @@ const Fahndungskarte: React.FC<ModernFahndungskarteProps> = ({
   return (
     <div
       ref={cardRef}
-      className={`relative mx-auto h-[513px] w-full max-w-sm ${className}`}
-      style={{ perspective: "1000px" }}
+      className={`relative mx-auto w-full max-w-sm ${className}`}
+      style={{
+        perspective: "1000px",
+        height: layoutMode === "grid-4" ? "400px" : "513px",
+      }}
       role="region"
       aria-label={`Fahndungskarte: ${safeData.step1.title}`}
       onMouseEnter={() => updateState({ showQuickEdit: true })}
@@ -337,8 +348,14 @@ const Fahndungskarte: React.FC<ModernFahndungskarteProps> = ({
         >
           {/* Image Section */}
           <div
-            className="relative w-full overflow-hidden bg-muted dark:bg-muted"
-            style={{ height: "60%" }}
+            className={`relative w-full overflow-hidden bg-muted dark:bg-muted ${
+              layoutMode === "grid-4" ? "rounded-t-lg" : ""
+            }`}
+            style={{
+              height: layoutMode === "grid-4" ? "60%" : "65%",
+              borderRadius:
+                layoutMode === "grid-4" ? "0.5rem 0.5rem 0 0" : undefined,
+            }}
           >
             {!disableEdit &&
               userPermissions?.canEdit &&
@@ -364,7 +381,11 @@ const Fahndungskarte: React.FC<ModernFahndungskarteProps> = ({
             <FahndungskarteImage
               src={safeData.step3?.mainImage}
               alt={`Hauptfoto von ${safeData.step1.title}`}
-              className="object-contain transition-transform duration-500 group-hover:scale-105"
+              className={`transition-transform duration-500 group-hover:scale-105 ${
+                layoutMode === "grid-4"
+                  ? "aspect-square rounded-t-lg object-cover object-center"
+                  : "object-cover object-center"
+              }`}
               fallbackSrc="/images/placeholder-image.jpg"
               showPlaceholder={true}
               priority={imagePriority}
@@ -384,8 +405,14 @@ const Fahndungskarte: React.FC<ModernFahndungskarteProps> = ({
 
           {/* Info Section - Fester Hintergrund für bessere Sichtbarkeit */}
           <div
-            className="absolute bottom-0 left-0 right-0 h-[40%] bg-white/95 backdrop-blur-sm dark:bg-black/95"
-            style={{ height: "40%" }}
+            className={`absolute bottom-0 left-0 right-0 bg-white/95 backdrop-blur-sm dark:bg-black/95 ${
+              layoutMode === "grid-4" ? "rounded-b-lg" : ""
+            }`}
+            style={{
+              height: layoutMode === "grid-4" ? "40%" : "35%",
+              borderRadius:
+                layoutMode === "grid-4" ? "0 0 0.5rem 0.5rem" : undefined,
+            }}
           >
             <div className="relative z-10 flex h-full flex-col justify-between p-4">
               <div className="space-y-2">

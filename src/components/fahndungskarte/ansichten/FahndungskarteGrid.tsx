@@ -136,7 +136,7 @@ const FahndungskarteGrid: React.FC<FahndungskarteGridProps> = ({
   const getGapClasses = () => {
     switch (viewMode) {
       case "grid-4":
-        return "gap-8"; // Einheitliche 32px Abstände für 4er-Grid
+        return "gap-6"; // Kompaktere 24px Abstände für 4er-Grid
       case "grid-3":
       default:
         return "gap-x-8 gap-y-12"; // Mehr vertikaler Abstand für 3er-Grid
@@ -166,6 +166,7 @@ const FahndungskarteGrid: React.FC<FahndungskarteGridProps> = ({
           investigationId={investigation.id}
           userPermissions={userPermissions}
           imagePriority={index < 3} // Erste 3 Bilder als priorisiert markieren
+          layoutMode={viewMode === "grid-4" ? "grid-4" : "default"}
         />
       ))}
     </div>

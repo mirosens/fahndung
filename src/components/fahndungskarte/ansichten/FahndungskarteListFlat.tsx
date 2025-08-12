@@ -54,7 +54,7 @@ export default function FahndungskarteListFlat({
     setImageErrors((prev) => ({ ...prev, [investigationId]: true }));
   };
 
-  // Priority Badge
+  // Priority Badge - kompakter
   const getPriorityBadge = (priority: string) => {
     const config = {
       urgent: { label: "DRINGEND", color: "bg-red-600", pulse: true },
@@ -67,7 +67,7 @@ export default function FahndungskarteListFlat({
 
     return (
       <div
-        className={`rounded-full px-2 py-1 text-xs font-bold text-white ${priorityConfig.color} ${priorityConfig.pulse ? "animate-pulse" : ""}`}
+        className={`rounded px-1.5 py-0.5 text-xs font-bold text-white ${priorityConfig.color} ${priorityConfig.pulse ? "animate-pulse" : ""}`}
       >
         {priorityConfig.label}
       </div>
@@ -106,38 +106,36 @@ export default function FahndungskarteListFlat({
       {investigations.map((investigation, index) => (
         <div
           key={investigation.id}
-          className="group relative overflow-hidden rounded-lg border border-border bg-white shadow-sm transition-all duration-200 hover:shadow-sm dark:border-border dark:bg-muted"
+          className="group relative cursor-pointer overflow-hidden rounded-lg border border-border bg-white shadow-sm transition-all duration-200 hover:border-blue-300 hover:shadow-sm dark:border-border dark:bg-muted dark:hover:border-blue-600"
+          onClick={() =>
+            router.push(
+              getFahndungUrl(investigation.title, investigation.case_number),
+            )
+          }
         >
           <div className="flex items-center">
-            {/* Bild-Sektion - kleiner auf großen Bildschirmen */}
-            <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden bg-muted dark:bg-muted sm:h-20 sm:w-20 lg:h-12 lg:w-12">
+            {/* Bild-Sektion - kompakter für Mobile */}
+            <div className="relative h-12 w-12 flex-shrink-0 overflow-hidden bg-muted dark:bg-muted sm:h-16 sm:w-16 lg:h-12 lg:w-12">
               <Image
                 src={getSafeImageSrc(investigation)}
                 alt={`Hauptfoto von ${investigation.title}`}
                 fill
-                sizes="(max-width: 640px) 64px, (max-width: 1024px) 80px, 48px"
+                sizes="(max-width: 640px) 48px, (max-width: 1024px) 64px, 48px"
                 className="object-cover"
                 priority={index === 0}
                 loading={index === 0 ? "eager" : "lazy"}
                 onError={() => handleImageError(investigation.id)}
               />
-
-              {/* Priority Badge */}
-              {investigation.priority !== "normal" && (
-                <div className="absolute right-1 top-1">
-                  {getPriorityBadge(investigation.priority)}
-                </div>
-              )}
             </div>
 
             {/* Content-Sektion - flach und kompakt */}
-            <div className="flex flex-1 items-center justify-between p-3 lg:p-2">
+            <div className="flex flex-1 items-center justify-between p-2 sm:p-3 lg:p-2">
               {/* Linke Seite - Hauptinformationen */}
-              <div className="flex min-w-0 flex-1 items-center gap-3">
+              <div className="flex min-w-0 flex-1 items-center gap-2 sm:gap-3">
                 {/* Titel und Badges */}
                 <div className="min-w-0 flex-1">
                   <div className="mb-1 flex items-center gap-2">
-                    <h3 className="line-clamp-2 text-sm font-semibold text-muted-foreground dark:text-white lg:text-xs">
+                    <h3 className="line-clamp-2 text-xs font-semibold text-muted-foreground dark:text-white sm:text-sm lg:text-xs">
                       {investigation.title}
                     </h3>
                     <span className="text-xs text-muted-foreground">
@@ -148,7 +146,12 @@ export default function FahndungskarteListFlat({
                     </span>
                   </div>
                   <div className="flex items-center gap-2">
-                    <CaseNumberBadge caseNumber={investigation.case_number} />
+                    {/* Priority Badge - außerhalb des Bildes */}
+                    {investigation.priority !== "normal" && (
+                      <div className="flex-shrink-0">
+                        {getPriorityBadge(investigation.priority)}
+                      </div>
+                    )}
                     {/* Standort - nur auf größeren Bildschirmen */}
                     {investigation.location && (
                       <div className="hidden items-center gap-1 text-xs text-muted-foreground dark:text-muted-foreground md:flex">
@@ -220,22 +223,6 @@ export default function FahndungskarteListFlat({
                     <span className="hidden sm:inline">Bearbeiten</span>
                   </button>
                 )}
-
-                {/* Action Button */}
-                <button
-                  onClick={() =>
-                    router.push(
-                      getFahndungUrl(
-                        investigation.title,
-                        investigation.case_number,
-                      ),
-                    )
-                  }
-                  className="flex items-center gap-1 rounded-lg bg-muted px-2 py-1 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted dark:bg-muted dark:text-muted-foreground dark:hover:bg-muted"
-                >
-                  <Eye className="h-3 w-3" />
-                  <span className="hidden sm:inline">Details</span>
-                </button>
               </div>
             </div>
           </div>
