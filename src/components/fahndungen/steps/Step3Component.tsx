@@ -15,10 +15,12 @@ import {
   Upload,
   Loader2,
   Edit3,
+  FolderOpen,
 } from "lucide-react";
 import Image from "next/image";
 import { uploadToCloudinary } from "~/lib/cloudinary-client";
 import ImageEditor from "../ImageEditor";
+import CloudinaryMediaLibrary from "../CloudinaryMediaLibrary";
 import type { Step3Data } from "../types/WizardTypes";
 
 interface Step3ComponentProps {
@@ -41,6 +43,10 @@ const Step3Component: React.FC<Step3ComponentProps> = ({
   const [uploadProgress, setUploadProgress] = useState(0);
   const [isImageEditorOpen, setIsImageEditorOpen] = useState(false);
   const [editingImageUrl, setEditingImageUrl] = useState<string>("");
+  const [isMediaLibraryOpen, setIsMediaLibraryOpen] = useState(false);
+  const [mediaLibraryMode, setMediaLibraryMode] = useState<
+    "main" | "additional"
+  >("main");
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const imageInputRef = useRef<HTMLInputElement>(null);
@@ -299,6 +305,30 @@ const Step3Component: React.FC<Step3ComponentProps> = ({
     setIsImageEditorOpen(false);
   };
 
+  // Cloudinary Media Library Handler
+  const handleMediaLibrarySelect = (imageUrl: string, publicId: string) => {
+    onChange({
+      ...data,
+      mainImageUrl: imageUrl,
+      mainImage: null, // Kein File-Objekt, da aus Media Library
+    });
+    setIsMediaLibraryOpen(false);
+  };
+
+  // Cloudinary Media Library Handler für mehrere Bilder
+  const handleMediaLibrarySelectMultiple = (
+    images: Array<{ url: string; publicId: string }>,
+  ) => {
+    const currentAdditionalImageUrls = data.additionalImageUrls ?? [];
+    const newUrls = images.map((img) => img.url);
+
+    onChange({
+      ...data,
+      additionalImageUrls: [...currentAdditionalImageUrls, ...newUrls],
+    });
+    setIsMediaLibraryOpen(false);
+  };
+
   return (
     <div className="space-y-6">
       <div>
@@ -400,23 +430,36 @@ const Step3Component: React.FC<Step3ComponentProps> = ({
                   </p>
                 )}
               </div>
-              <button
-                onClick={() => imageInputRef.current?.click()}
-                disabled={isUploading}
-                className="rounded-lg bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-muted"
-              >
-                {isUploading ? (
-                  <>
-                    <Loader2 className="mr-2 inline-block h-4 w-4 animate-spin" />
-                    Wird hochgeladen...
-                  </>
-                ) : (
-                  <>
-                    <Upload className="mr-2 inline-block h-4 w-4" />
-                    Bild auswählen
-                  </>
-                )}
-              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => imageInputRef.current?.click()}
+                  disabled={isUploading}
+                  className="rounded-lg bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-muted"
+                >
+                  {isUploading ? (
+                    <>
+                      <Loader2 className="mr-2 inline-block h-4 w-4 animate-spin" />
+                      Wird hochgeladen...
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="mr-2 inline-block h-4 w-4" />
+                      Bild hochladen
+                    </>
+                  )}
+                </button>
+                <button
+                  onClick={() => {
+                    setMediaLibraryMode("main");
+                    setIsMediaLibraryOpen(true);
+                  }}
+                  disabled={isUploading}
+                  className="rounded-lg bg-green-600 px-4 py-2 text-sm text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:bg-muted"
+                >
+                  <FolderOpen className="mr-2 inline-block h-4 w-4" />
+                  Aus Media Library
+                </button>
+              </div>
             </div>
           )}
           <input
@@ -480,23 +523,36 @@ const Step3Component: React.FC<Step3ComponentProps> = ({
                   PNG, JPG, GIF bis 20MB
                 </p>
               </div>
-              <button
-                onClick={() => fileInputRef.current?.click()}
-                disabled={isUploading}
-                className="rounded-lg bg-muted px-4 py-2 text-sm text-white hover:bg-muted disabled:cursor-not-allowed disabled:bg-muted"
-              >
-                {isUploading ? (
-                  <>
-                    <Loader2 className="mr-2 inline-block h-4 w-4 animate-spin" />
-                    Wird hochgeladen...
-                  </>
-                ) : (
-                  <>
-                    <Upload className="mr-2 inline-block h-4 w-4" />
-                    Bilder auswählen
-                  </>
-                )}
-              </button>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isUploading}
+                  className="rounded-lg bg-blue-600 px-4 py-2 text-sm text-white hover:bg-blue-700 disabled:cursor-not-allowed disabled:bg-muted"
+                >
+                  {isUploading ? (
+                    <>
+                      <Loader2 className="mr-2 inline-block h-4 w-4 animate-spin" />
+                      Wird hochgeladen...
+                    </>
+                  ) : (
+                    <>
+                      <Upload className="mr-2 inline-block h-4 w-4" />
+                      Bilder hochladen
+                    </>
+                  )}
+                </button>
+                <button
+                  onClick={() => {
+                    setMediaLibraryMode("additional");
+                    setIsMediaLibraryOpen(true);
+                  }}
+                  disabled={isUploading}
+                  className="rounded-lg bg-green-600 px-4 py-2 text-sm text-white hover:bg-green-700 disabled:cursor-not-allowed disabled:bg-muted"
+                >
+                  <FolderOpen className="mr-2 inline-block h-4 w-4" />
+                  Aus Media Library
+                </button>
+              </div>
             </div>
           )}
           <input
@@ -616,6 +672,16 @@ const Step3Component: React.FC<Step3ComponentProps> = ({
         onSave={handleImageEditSave}
         onCancel={handleImageEditCancel}
         isOpen={isImageEditorOpen}
+      />
+
+      {/* Cloudinary Media Library */}
+      <CloudinaryMediaLibrary
+        isOpen={isMediaLibraryOpen}
+        onClose={() => setIsMediaLibraryOpen(false)}
+        onSelectImage={handleMediaLibrarySelect}
+        onSelectMultipleImages={handleMediaLibrarySelectMultiple}
+        cloudName={process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "dpfpr3yxc"}
+        multiple={mediaLibraryMode === "additional"}
       />
     </div>
   );

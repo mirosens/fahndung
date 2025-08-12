@@ -146,16 +146,16 @@ export default function HeroSection({
               {/* CTAs */}
               <div className="mt-8 flex flex-col gap-3 sm:flex-row">
                 <Link
-                  href="#fahndungen"
+                  href="/fahndungen"
                   className="inline-flex items-center justify-center rounded-lg border border-slate-200 bg-white px-6 py-3.5 text-base font-semibold text-slate-800 shadow-sm hover:bg-slate-50 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2 dark:border-slate-700 dark:bg-slate-800 dark:text-slate-100 dark:hover:bg-slate-700 dark:focus-visible:ring-offset-slate-900"
                 >
-                  {secondaryButtonText}
+                  {primaryButtonText}
                 </Link>
                 <Link
-                  href="/hinweis"
+                  href="/fahndungen/neu/enhanced"
                   className="inline-flex items-center justify-center rounded-lg bg-slate-800 px-6 py-3.5 text-base font-semibold text-white shadow hover:bg-slate-900 focus:outline-none focus-visible:ring-2 focus-visible:ring-slate-500 focus-visible:ring-offset-2 dark:focus-visible:ring-offset-slate-900"
                 >
-                  {primaryButtonText}
+                  {secondaryButtonText}
                 </Link>
               </div>
             </div>

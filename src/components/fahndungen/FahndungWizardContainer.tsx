@@ -512,18 +512,6 @@ const FahndungWizardContainer = ({
   return (
     <div className="min-h-screen bg-muted dark:bg-muted">
       <div className="mx-auto max-w-7xl px-4 py-8">
-        {/* Debug Info - nur in Development */}
-        {process.env.NODE_ENV === "development" && (
-          <div className="mb-4 rounded-lg bg-blue-50 p-4 text-sm text-blue-800 dark:bg-blue-900 dark:text-blue-200">
-            <p>
-              <strong>Debug Info:</strong>
-            </p>
-            <p>Current Step: {currentStep}</p>
-            <p>Is Initialized: {isInitialized ? "Yes" : "No"}</p>
-            <p>Step1 Data: {wizardData.step1 ? "Exists" : "Missing"}</p>
-          </div>
-        )}
-
         {/* Header */}
         <div className="mb-8">
           <div className="mb-4 flex items-center gap-4">

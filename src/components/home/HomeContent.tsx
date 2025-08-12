@@ -163,8 +163,8 @@ export default function HomeContent() {
         alertText="EILMELDUNG! Polizei sucht Zeugen"
         title="Hinweise helfen"
         subtitle="Unterstützen Sie die Polizei bei Ermittlungen!"
-        primaryButtonText="Fahndungen ansehen"
-        secondaryButtonText="Hinweis abgeben"
+        primaryButtonText="Fahndungen"
+        secondaryButtonText="+ Fahndung erstellen"
         showUrgentFahndungen={true}
         urgentInvestigations={
           Array.isArray(investigations)
