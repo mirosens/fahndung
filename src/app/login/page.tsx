@@ -9,6 +9,7 @@ import {
   EyeOff,
   AlertCircle,
   CheckCircle,
+  User,
 } from "lucide-react";
 import { getBrowserClient } from "~/lib/supabase/supabase-browser";
 import AuthPageLayout from "~/components/layout/AuthPageLayout";
@@ -29,8 +30,8 @@ interface SessionResult {
 }
 
 export default function Login() {
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
+  const [email, setEmail] = useState("admin@ptls.de");
+  const [password, setPassword] = useState("admin123");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -50,12 +51,16 @@ export default function Login() {
         // 🔥 ZUSÄTZLICHE SICHERHEIT: Prüfe URL-Parameter für Session-Reset
         const urlParams = new URLSearchParams(window.location.search);
         const forceLogout = urlParams.get("logout");
-        
+
         if (forceLogout === "true") {
           console.log("🔄 Erzwungener Logout über URL-Parameter...");
           await supabase.auth.signOut();
           // Cleanup URL Parameter
-          window.history.replaceState({}, document.title, window.location.pathname);
+          window.history.replaceState(
+            {},
+            document.title,
+            window.location.pathname,
+          );
           setIsAuthenticated(false);
           setUserEmail("");
           setSessionCheckComplete(true);
@@ -65,12 +70,11 @@ export default function Login() {
         // 🔥 VERBESSERTE SESSION-PRÜFUNG FÜR FIREFOX
         // Verwende einen längeren Timeout für Firefox-Kompatibilität
         const sessionPromise = supabase.auth.getSession();
-        const timeoutPromise = new Promise<SessionResult>(
-          (resolve) =>
-            setTimeout(
-              () => resolve({ data: { session: null }, error: null }),
-              3000, // Reduziert auf 3 Sekunden
-            ),
+        const timeoutPromise = new Promise<SessionResult>((resolve) =>
+          setTimeout(
+            () => resolve({ data: { session: null }, error: null }),
+            3000, // Reduziert auf 3 Sekunden
+          ),
         );
 
         const result = await Promise.race([sessionPromise, timeoutPromise]);
@@ -84,7 +88,7 @@ export default function Login() {
             // 🔥 ZUSÄTZLICHE TOKEN-VALIDIERUNG
             const now = Math.floor(Date.now() / 1000);
             const expiresAt = session.expires_at;
-            
+
             // Prüfe ob Token abgelaufen ist
             if (expiresAt && now >= expiresAt) {
               console.log("❌ Session abgelaufen - bereinige...");
@@ -96,12 +100,15 @@ export default function Login() {
             }
 
             // Prüfe ob Token in den nächsten 5 Minuten abläuft
-            if (expiresAt && (expiresAt - now) < 300) {
+            if (expiresAt && expiresAt - now < 300) {
               console.log("⚠️ Session läuft bald ab - versuche Refresh...");
               try {
-                const { data: refreshData, error: refreshError } = await supabase.auth.refreshSession();
+                const { data: refreshData, error: refreshError } =
+                  await supabase.auth.refreshSession();
                 if (refreshError || !refreshData.session) {
-                  console.log("❌ Session-Refresh fehlgeschlagen - bereinige...");
+                  console.log(
+                    "❌ Session-Refresh fehlgeschlagen - bereinige...",
+                  );
                   await supabase.auth.signOut();
                   setIsAuthenticated(false);
                   setUserEmail("");
@@ -120,9 +127,12 @@ export default function Login() {
 
             // 🔥 ZUSÄTZLICHE VALIDIERUNG: Teste Session mit API-Call
             try {
-              const { data: testData, error: testError } = await supabase.auth.getUser();
+              const { data: testData, error: testError } =
+                await supabase.auth.getUser();
               if (testError || !testData.user) {
-                console.log("❌ Session-Validierung fehlgeschlagen - bereinige...");
+                console.log(
+                  "❌ Session-Validierung fehlgeschlagen - bereinige...",
+                );
                 await supabase.auth.signOut();
                 setIsAuthenticated(false);
                 setUserEmail("");
@@ -189,6 +199,12 @@ export default function Login() {
 
     void checkSession();
   }, [router]);
+
+  // Demo-Daten Funktion
+  const fillDemoData = () => {
+    setEmail("admin@ptls.de");
+    setPassword("admin123");
+  };
 
   // 🔥 VERBESSERTE LOGIN-FUNKTION
   const handleLogin = async (e: React.FormEvent) => {
@@ -338,10 +354,17 @@ export default function Login() {
                     setIsAuthenticated(false);
                     setUserEmail("");
                     setSessionCheckComplete(false);
-                    setSuccess("Bestehende Session wurde bereinigt. Sie können sich jetzt neu anmelden.");
+                    setSuccess(
+                      "Bestehende Session wurde bereinigt. Sie können sich jetzt neu anmelden.",
+                    );
                   } catch (err) {
-                    console.error("❌ Fehler beim Bereinigen der Session:", err);
-                    setError("Fehler beim Bereinigen der Session. Bitte versuchen Sie es erneut.");
+                    console.error(
+                      "❌ Fehler beim Bereinigen der Session:",
+                      err,
+                    );
+                    setError(
+                      "Fehler beim Bereinigen der Session. Bitte versuchen Sie es erneut.",
+                    );
                   }
                 }}
                 className="w-full rounded-lg border border-orange-500 bg-orange-50 px-4 py-3 font-medium text-orange-700 transition-colors hover:bg-orange-100 dark:border-orange-400 dark:bg-orange-900/20 dark:text-orange-400 dark:hover:bg-orange-900/30"
@@ -442,6 +465,17 @@ export default function Login() {
                   </button>
                 </div>
               </div>
+
+              {/* Demo Admin Button */}
+              <button
+                type="button"
+                onClick={fillDemoData}
+                disabled={loading}
+                className="mb-3 w-full rounded-lg bg-gray-500 px-4 py-3 font-medium text-white transition-colors hover:bg-gray-600 disabled:bg-gray-500/50"
+              >
+                <User className="mr-2 inline-block h-4 w-4" />
+                Demo Admin ausfüllen
+              </button>
 
               {/* Anmelden Button */}
               <button

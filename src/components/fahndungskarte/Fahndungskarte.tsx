@@ -386,7 +386,7 @@ const Fahndungskarte: React.FC<ModernFahndungskarteProps> = ({
                   ? "aspect-square rounded-t-lg object-cover object-center"
                   : "object-cover object-center"
               }`}
-              fallbackSrc="/images/placeholder-image.svg"
+              fallbackSrc="/images/placeholders/fotos/platzhalterbild.svg"
               showPlaceholder={true}
               priority={imagePriority}
             />

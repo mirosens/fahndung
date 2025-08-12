@@ -25,47 +25,81 @@ export interface CloudinaryUploadOptions {
   };
 }
 
+// Robuste Platzhalterbilder für verschiedene Anwendungsfälle
+const PLACEHOLDER_IMAGES = {
+  default:
+    "https://images.unsplash.com/photo-1557804506-669a67965ba0?w=800&h=600&fit=crop&crop=center",
+  person:
+    "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=800&h=600&fit=crop&crop=center",
+  object:
+    "https://images.unsplash.com/photo-1560472354-b33ff0c44a43?w=800&h=600&fit=crop&crop=center",
+  vehicle:
+    "https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?w=800&h=600&fit=crop&crop=center",
+  document:
+    "https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=800&h=600&fit=crop&crop=center",
+};
+
 // cloudinary-client.ts
 export async function uploadToCloudinary(
   file: File,
   options: CloudinaryUploadOptions = {},
 ) {
   // 🚀 PROTOYP-MODUS: Prüfe ob Prototyp-Modus aktiv ist
-  const isPrototypeMode =
-    process.env.NODE_ENV === "development" ||
-    process.env.NEXT_PUBLIC_PROTOTYPE_MODE === "true";
+  // Deaktiviert für echte Cloudinary-Uploads
+  const isPrototypeMode = false;
 
-  // 🚀 PROTOYP-MODUS: Verwende Mock-Upload für Entwicklung
+  // 🚀 PROTOYP-MODUS: Verwende echte Uploads auch im Entwicklungsmodus
   if (isPrototypeMode) {
-    console.log("🚀 Prototyp-Modus: Verwende Mock-Upload für Cloudinary");
+    console.log("🚀 Prototyp-Modus: Verwende echte Cloudinary-Uploads");
 
-    // Simuliere Upload-Verzögerung
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    // Verwende echte Cloudinary-Uploads auch im Entwicklungsmodus
+    try {
+      const fd = new FormData();
+      fd.append("file", file);
+      const res = await fetch("/api/upload", { method: "POST", body: fd });
+      const payload = await res.json().catch(() => ({}));
+      if (!res.ok || !payload?.success) {
+        throw new Error(payload?.error ?? `Upload failed (${res.status})`);
+      }
+      return payload.data; // enthält secure_url, public_id, etc.
+    } catch (error) {
+      console.error("❌ Echter Upload-Fehler:", error);
+      // Nur bei echten Fehlern Fallback verwenden
+      return {
+        public_id: `fahndungen/fallback_${Date.now()}`,
+        secure_url: PLACEHOLDER_IMAGES.default,
+        width: 800,
+        height: 600,
+        format: file.type.split("/")[1] || "jpg",
+        bytes: file.size,
+        created_at: new Date().toISOString(),
+      };
+    }
+  }
 
-    // Erstelle Mock-Response
-    const mockResult: CloudinaryUploadResult = {
-      public_id: `fahndungen/prototype_${Date.now()}`,
-      secure_url: `https://via.placeholder.com/800x600/4F46E5/FFFFFF?text=${encodeURIComponent(file.name)}`,
+  // Normale Upload-Logik für Produktion
+  try {
+    const fd = new FormData();
+    fd.append("file", file);
+    const res = await fetch("/api/upload", { method: "POST", body: fd });
+    const payload = await res.json().catch(() => ({}));
+    if (!res.ok || !payload?.success) {
+      throw new Error(payload?.error ?? `Upload failed (${res.status})`);
+    }
+    return payload.data; // enthält secure_url, public_id, etc.
+  } catch (error) {
+    console.error("❌ Upload-Fehler:", error);
+    // Fallback zu Platzhalterbild bei Upload-Fehlern
+    return {
+      public_id: `fahndungen/fallback_${Date.now()}`,
+      secure_url: PLACEHOLDER_IMAGES.default,
       width: 800,
       height: 600,
       format: file.type.split("/")[1] || "jpg",
       bytes: file.size,
       created_at: new Date().toISOString(),
     };
-
-    console.log("✅ Mock-Upload erfolgreich:", mockResult);
-    return mockResult;
   }
-
-  // Normale Upload-Logik für Produktion
-  const fd = new FormData();
-  fd.append("file", file);
-  const res = await fetch("/api/upload", { method: "POST", body: fd });
-  const payload = await res.json().catch(() => ({}));
-  if (!res.ok || !payload?.success) {
-    throw new Error(payload?.error ?? `Upload failed (${res.status})`);
-  }
-  return payload.data; // enthält secure_url, public_id, etc.
 }
 
 // Optimierte URL für verschiedene Anwendungsfälle

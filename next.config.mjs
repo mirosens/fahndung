@@ -46,6 +46,7 @@ const nextConfig = {
       { protocol: "https", hostname: "maps.googleapis.com" },
       { protocol: "https", hostname: "res.cloudinary.com" },
       { protocol: "https", hostname: "via.placeholder.com" },
+      { protocol: "https", hostname: "**.unsplash.com" },
     ],
     formats: ["image/avif", "image/webp"],
   },

@@ -1,7 +1,16 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { X, Search, Image as ImageIcon, Loader2, Check } from "lucide-react";
+import React, { useState, useEffect, useCallback } from "react";
+import {
+  X,
+  Search,
+  Image as ImageIcon,
+  Loader2,
+  Check,
+  RefreshCw,
+} from "lucide-react";
+import { cn } from "@/lib/utils";
+import Image from "next/image";
 
 interface CloudinaryMediaLibraryProps {
   isOpen: boolean;
@@ -24,6 +33,42 @@ interface CloudinaryResource {
   tags?: string[];
 }
 
+interface CloudinaryAsset {
+  secure_url: string;
+  public_id: string;
+}
+
+interface CloudinaryWidgetData {
+  assets: CloudinaryAsset[];
+}
+
+interface CloudinaryWidget {
+  open: () => void;
+}
+
+interface CloudinaryConfig {
+  cloudName: string;
+  insertCaption: string;
+  multiple: boolean;
+  maxFiles: number;
+  searchByRights: boolean;
+  showAdvancedOptions: boolean;
+  showInsecureSource: boolean;
+  showUploadMoreButton: boolean;
+  showPoweredBy: boolean;
+  showPublicId: boolean;
+  showUrl: boolean;
+  transformation: {
+    crop: string;
+    width: number;
+    height: number;
+  };
+}
+
+interface CloudinaryOptions {
+  insertHandler: (data: CloudinaryWidgetData) => void;
+}
+
 export default function CloudinaryMediaLibrary({
   isOpen,
   onClose,
@@ -36,11 +81,64 @@ export default function CloudinaryMediaLibrary({
   const [loading, setLoading] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedImages, setSelectedImages] = useState<Set<string>>(new Set());
+  const [lastSync, setLastSync] = useState<Date | null>(null);
 
   // 🚀 PROTOYP-MODUS: Prüfe ob Prototyp-Modus aktiv ist
-  const isPrototypeMode =
-    process.env.NODE_ENV === "development" ||
-    process.env.NEXT_PUBLIC_PROTOTYPE_MODE === "true";
+  // Deaktiviert für echte Cloudinary-Uploads
+  const isPrototypeMode = false;
+
+  // Alternative: REST API für Media Library (falls Widget nicht funktioniert)
+  const fetchMediaLibrary = useCallback(
+    async (forceRefresh = false) => {
+      setLoading(true);
+      try {
+        // 🚀 PROTOYP-MODUS: Verwende echte Cloudinary-API auch im Entwicklungsmodus
+        if (isPrototypeMode) {
+          console.log(
+            "🚀 Prototyp-Modus: Verwende echte Cloudinary-API für Media Library",
+          );
+        }
+
+        // Echte Cloudinary-API für Produktion
+        const response = await fetch(
+          `/api/cloudinary/resources?search=${encodeURIComponent(searchTerm)}&force_refresh=${forceRefresh}`,
+        );
+
+        if (response.ok) {
+          const data = (await response.json()) as {
+            resources?: CloudinaryResource[];
+          };
+          setResources(data.resources ?? []);
+          setLastSync(new Date());
+        } else {
+          throw new Error(`API error: ${response.status}`);
+        }
+      } catch (error) {
+        console.error("Fehler beim Laden der Media Library:", error);
+        // 🚀 PROTOYP-MODUS: Fallback zu echten Cloudinary-Bildern bei Fehler
+        if (isPrototypeMode) {
+          console.log(
+            "🚀 Prototyp-Modus: Fallback zu echten Cloudinary-Bildern bei API-Fehler",
+          );
+          setResources([
+            {
+              public_id: "fahndungen/uploads/fallback1",
+              secure_url:
+                "https://res.cloudinary.com/dpfpr3yxc/image/upload/v1754983515/fahndungen/uploads/fallback1.jpg",
+              width: 800,
+              height: 600,
+              format: "jpg",
+              created_at: "2024-01-01T00:00:00Z",
+              tags: ["fallback", "fahndung"],
+            },
+          ]);
+        }
+      } finally {
+        setLoading(false);
+      }
+    },
+    [isPrototypeMode, searchTerm],
+  );
 
   // Cloudinary Media Library Widget laden
   useEffect(() => {
@@ -61,42 +159,48 @@ export default function CloudinaryMediaLibrary({
       script.onload = () => {
         // Widget initialisieren
         if (window.cloudinary) {
-          const widget = window.cloudinary.createMediaLibrary(
-            {
-              cloudName: cloudName,
-              insertCaption: "Bild auswählen",
-              multiple: multiple,
-              maxFiles: multiple ? 10 : 1,
-              searchByRights: false,
-              showAdvancedOptions: false,
-              showInsecureSource: false,
-              showUploadMoreButton: false,
-              showPoweredBy: false,
-              showPublicId: false,
-              showUrl: false,
-              transformation: {
-                crop: "limit",
-                width: 800,
-                height: 600,
-              },
+          const config: CloudinaryConfig = {
+            cloudName: cloudName,
+            insertCaption: "Bild auswählen",
+            multiple: multiple,
+            maxFiles: multiple ? 10 : 1,
+            searchByRights: false,
+            showAdvancedOptions: false,
+            showInsecureSource: false,
+            showUploadMoreButton: false,
+            showPoweredBy: false,
+            showPublicId: false,
+            showUrl: false,
+            transformation: {
+              crop: "limit",
+              width: 800,
+              height: 600,
             },
-            {
-              insertHandler: (data: any) => {
-                if (data.assets && data.assets.length > 0) {
-                  if (multiple && onSelectMultipleImages) {
-                    const images = data.assets.map((asset: any) => ({
-                      url: asset.secure_url,
-                      publicId: asset.public_id,
-                    }));
-                    onSelectMultipleImages(images);
-                  } else {
-                    const asset = data.assets[0];
+          };
+
+          const options: CloudinaryOptions = {
+            insertHandler: (data: CloudinaryWidgetData) => {
+              if (data.assets && data.assets.length > 0) {
+                if (multiple && onSelectMultipleImages) {
+                  const images = data.assets.map((asset: CloudinaryAsset) => ({
+                    url: asset.secure_url,
+                    publicId: asset.public_id,
+                  }));
+                  onSelectMultipleImages(images);
+                } else {
+                  const asset = data.assets[0];
+                  if (asset) {
                     onSelectImage(asset.secure_url, asset.public_id);
                   }
-                  onClose();
                 }
-              },
+                onClose();
+              }
             },
+          };
+
+          const widget: CloudinaryWidget = window.cloudinary.createMediaLibrary(
+            config,
+            options,
           );
 
           // Widget öffnen
@@ -117,132 +221,39 @@ export default function CloudinaryMediaLibrary({
     };
 
     loadCloudinaryWidget();
-  }, [isOpen, cloudName, onSelectImage, onClose, isPrototypeMode]);
-
-  // Alternative: REST API für Media Library (falls Widget nicht funktioniert)
-  const fetchMediaLibrary = async () => {
-    setLoading(true);
-    try {
-      // 🚀 PROTOYP-MODUS: Verwende Mock-Daten falls API nicht verfügbar
-      if (isPrototypeMode) {
-        console.log("🚀 Prototyp-Modus: Verwende Mock-Daten für Media Library");
-        // Mock-Daten für Prototyp-Modus
-        const mockResources: CloudinaryResource[] = [
-          {
-            public_id: "fahndungen/sample1",
-            secure_url:
-              "https://via.placeholder.com/800x600/4F46E5/FFFFFF?text=Sample+Image+1",
-            width: 800,
-            height: 600,
-            format: "jpg",
-            created_at: "2024-01-01T00:00:00Z",
-            tags: ["sample", "fahndung"],
-          },
-          {
-            public_id: "fahndungen/sample2",
-            secure_url:
-              "https://via.placeholder.com/1200x800/10B981/FFFFFF?text=Sample+Image+2",
-            width: 1200,
-            height: 800,
-            format: "jpg",
-            created_at: "2024-01-01T00:00:00Z",
-            tags: ["sample", "fahndung"],
-          },
-          {
-            public_id: "fahndungen/sample3",
-            secure_url:
-              "https://via.placeholder.com/600x400/F59E0B/FFFFFF?text=Sample+Image+3",
-            width: 600,
-            height: 400,
-            format: "jpg",
-            created_at: "2024-01-01T00:00:00Z",
-            tags: ["sample", "fahndung"],
-          },
-          {
-            public_id: "fahndungen/sample4",
-            secure_url:
-              "https://via.placeholder.com/800x600/EF4444/FFFFFF?text=Sample+Image+4",
-            width: 800,
-            height: 600,
-            format: "jpg",
-            created_at: "2024-01-01T00:00:00Z",
-            tags: ["sample", "fahndung"],
-          },
-          {
-            public_id: "fahndungen/sample5",
-            secure_url:
-              "https://via.placeholder.com/1000x700/8B5CF6/FFFFFF?text=Sample+Image+5",
-            width: 1000,
-            height: 700,
-            format: "jpg",
-            created_at: "2024-01-01T00:00:00Z",
-            tags: ["sample", "fahndung"],
-          },
-          {
-            public_id: "fahndungen/sample6",
-            secure_url:
-              "https://via.placeholder.com/900x600/06B6D4/FFFFFF?text=Sample+Image+6",
-            width: 900,
-            height: 600,
-            format: "jpg",
-            created_at: "2024-01-01T00:00:00Z",
-            tags: ["sample", "fahndung"],
-          },
-        ];
-
-        // Filtere nach Suchbegriff
-        const filteredResources = searchTerm
-          ? mockResources.filter(
-              (resource) =>
-                resource.public_id
-                  .toLowerCase()
-                  .includes(searchTerm.toLowerCase()) ||
-                resource.tags?.some((tag) =>
-                  tag.toLowerCase().includes(searchTerm.toLowerCase()),
-                ),
-            )
-          : mockResources;
-
-        setResources(filteredResources);
-        return;
-      }
-
-      const response = await fetch(
-        `/api/cloudinary/resources?search=${searchTerm}`,
-      );
-      if (response.ok) {
-        const data = await response.json();
-        setResources(data.resources || []);
-      }
-    } catch (error) {
-      console.error("Fehler beim Laden der Media Library:", error);
-      // 🚀 PROTOYP-MODUS: Fallback zu Mock-Daten bei Fehler
-      if (isPrototypeMode) {
-        console.log("🚀 Prototyp-Modus: Fallback zu Mock-Daten bei API-Fehler");
-        setResources([
-          {
-            public_id: "fahndungen/fallback1",
-            secure_url:
-              "https://via.placeholder.com/800x600/4F46E5/FFFFFF?text=Sample+Image+1",
-            width: 800,
-            height: 600,
-            format: "jpg",
-            created_at: "2024-01-01T00:00:00Z",
-            tags: ["fallback", "sample"],
-          },
-        ]);
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
+  }, [
+    isOpen,
+    cloudName,
+    onSelectImage,
+    onClose,
+    isPrototypeMode,
+    multiple,
+    onSelectMultipleImages,
+    fetchMediaLibrary,
+  ]);
 
   // Lade Bilder beim Öffnen der Media Library (nur wenn nicht im Prototyp-Modus)
   useEffect(() => {
     if (isOpen && !isPrototypeMode) {
       void fetchMediaLibrary();
     }
-  }, [isOpen, searchTerm, isPrototypeMode]);
+  }, [isOpen, isPrototypeMode, fetchMediaLibrary]);
+
+  // Automatische Synchronisation alle 30 Sekunden
+  useEffect(() => {
+    if (!isOpen || isPrototypeMode) return;
+
+    const interval = setInterval(() => {
+      void fetchMediaLibrary(true); // Force refresh
+    }, 30000); // 30 Sekunden
+
+    return () => clearInterval(interval);
+  }, [isOpen, isPrototypeMode, fetchMediaLibrary]);
+
+  // Manuelle Synchronisation
+  const handleManualSync = () => {
+    void fetchMediaLibrary(true);
+  };
 
   if (!isOpen) return null;
 
@@ -251,15 +262,32 @@ export default function CloudinaryMediaLibrary({
       <div className="relative max-h-[90vh] w-full max-w-4xl overflow-hidden rounded-lg bg-white dark:bg-gray-900">
         {/* Header */}
         <div className="flex items-center justify-between border-b border-gray-200 p-4 dark:border-gray-700">
-          <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
-            Cloudinary Media Library
-          </h2>
-          <button
-            onClick={onClose}
-            className="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-800 dark:hover:text-gray-300"
-          >
-            <X className="h-5 w-5" />
-          </button>
+          <div>
+            <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+              Cloudinary Media Library
+            </h2>
+            {lastSync && (
+              <p className="text-xs text-muted-foreground">
+                Letzte Synchronisation: {lastSync.toLocaleTimeString()}
+              </p>
+            )}
+          </div>
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={handleManualSync}
+              disabled={loading}
+              className="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-800 dark:hover:text-gray-300"
+              title="Media Library synchronisieren"
+            >
+              <RefreshCw className={cn("h-5 w-5", loading && "animate-spin")} />
+            </button>
+            <button
+              onClick={onClose}
+              className="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-800 dark:hover:text-gray-300"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
         </div>
 
         {/* Content */}
@@ -325,16 +353,40 @@ export default function CloudinaryMediaLibrary({
                     }
                   }}
                 >
-                  <img
+                  <Image
                     src={resource.secure_url}
                     alt={resource.public_id}
+                    width={200}
+                    height={128}
                     className="h-32 w-full rounded-lg object-cover"
                     onError={(e) => {
                       // Fallback bei Fehler
                       const target = e.target as HTMLImageElement;
-                      target.src = `https://via.placeholder.com/200x128/6B7280/FFFFFF?text=${encodeURIComponent(resource.public_id.split("/").pop() || "Image")}`;
+                      target.src = `https://via.placeholder.com/200x128/6B7280/FFFFFF?text=${encodeURIComponent(resource.public_id.split("/").pop() ?? "Image")}`;
                     }}
                   />
+
+                  {/* Tags anzeigen */}
+                  {resource.tags && resource.tags.length > 0 && (
+                    <div className="absolute bottom-0 left-0 right-0 bg-black/50 p-1">
+                      <div className="flex flex-wrap gap-1">
+                        {resource.tags.slice(0, 2).map((tag, index) => (
+                          <span
+                            key={index}
+                            className="rounded bg-blue-600 px-1 text-xs text-white"
+                          >
+                            {tag}
+                          </span>
+                        ))}
+                        {resource.tags.length > 2 && (
+                          <span className="text-xs text-white">
+                            +{resource.tags.length - 2}
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  )}
+
                   {selectedImages.has(resource.public_id) && (
                     <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-blue-500/20">
                       <Check className="h-6 w-6 text-white" />
@@ -352,6 +404,11 @@ export default function CloudinaryMediaLibrary({
               <p className="mt-2 text-gray-600 dark:text-gray-400">
                 Keine Bilder gefunden
               </p>
+              {searchTerm && (
+                <p className="text-sm text-gray-500">
+                  Versuchen Sie einen anderen Suchbegriff
+                </p>
+              )}
             </div>
           )}
         </div>
@@ -404,7 +461,10 @@ export default function CloudinaryMediaLibrary({
 declare global {
   interface Window {
     cloudinary: {
-      createMediaLibrary: (config: any, options: any) => any;
+      createMediaLibrary: (
+        config: CloudinaryConfig,
+        options: CloudinaryOptions,
+      ) => CloudinaryWidget;
     };
   }
 }

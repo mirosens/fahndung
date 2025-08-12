@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import Image from "next/image";
 import { Eye, Image as ImageIcon, AlertCircle } from "lucide-react";
 import { cn } from "~/lib/utils";
@@ -15,11 +15,19 @@ interface FahndungskarteImageProps {
   priority?: boolean;
 }
 
+// Robuste Fallback-Bilder
+const FALLBACK_IMAGES = {
+  default: "/images/placeholders/fotos/platzhalterbild.svg",
+  person: "/images/placeholders/fotos/platzhalterbild.svg",
+  object: "/images/placeholders/fotos/platzhalterbild.svg",
+  vehicle: "/images/placeholders/fotos/platzhalterbild.svg",
+};
+
 export default function FahndungskarteImage({
   src,
   alt = "Fahndungsbild",
   className = "",
-  fallbackSrc = "/images/placeholder-image.svg",
+  fallbackSrc = "/images/placeholders/fotos/platzhalterbild.svg",
   showPlaceholder = true,
   onClick,
   priority = false,
@@ -28,6 +36,28 @@ export default function FahndungskarteImage({
   const [isLoading, setIsLoading] = useState(true);
   const [hasError, setHasError] = useState(false);
   const [isImageLoaded, setIsImageLoaded] = useState(false);
+  const [retryCount, setRetryCount] = useState(0);
+
+  // Bestimme passendes Fallback-Bild basierend auf alt-Text
+  const getAppropriateFallback = useCallback(() => {
+    const altText = alt.toLowerCase();
+    if (
+      altText.includes("person") ||
+      altText.includes("portrait") ||
+      altText.includes("face")
+    ) {
+      return FALLBACK_IMAGES.person;
+    } else if (
+      altText.includes("car") ||
+      altText.includes("vehicle") ||
+      altText.includes("auto")
+    ) {
+      return FALLBACK_IMAGES.vehicle;
+    } else if (altText.includes("object") || altText.includes("item")) {
+      return FALLBACK_IMAGES.object;
+    }
+    return FALLBACK_IMAGES.default;
+  }, [alt]);
 
   // Debug-Logging für Bildprobleme (nur bei Fehlern)
   useEffect(() => {
@@ -38,9 +68,10 @@ export default function FahndungskarteImage({
         hasError,
         isLoading,
         isImageLoaded,
+        retryCount,
       });
     }
-  }, [src, imageSrc, hasError, isLoading, isImageLoaded]);
+  }, [src, imageSrc, hasError, isLoading, isImageLoaded, retryCount]);
 
   // Aktualisiere Bildquelle wenn sich src ändert
   useEffect(() => {
@@ -57,39 +88,44 @@ export default function FahndungskarteImage({
                 setIsLoading(true);
                 setHasError(false);
                 setIsImageLoaded(false);
+                setRetryCount(0);
               } else {
                 // Blob-URL ist ungültig, verwende Fallback
                 console.warn("⚠️ Ungültige Blob-URL:", src);
-                setImageSrc(fallbackSrc);
+                setImageSrc(getAppropriateFallback());
                 setIsLoading(true);
                 setHasError(false);
                 setIsImageLoaded(false);
+                setRetryCount(0);
               }
             })
             .catch(() => {
               // Blob-URL ist ungültig, verwende Fallback
               console.warn("⚠️ Ungültige Blob-URL:", src);
-              setImageSrc(fallbackSrc);
+              setImageSrc(getAppropriateFallback());
               setIsLoading(true);
               setHasError(false);
               setIsImageLoaded(false);
+              setRetryCount(0);
             });
         } catch (error) {
           // Bei Fehlern verwende Fallback
           console.warn("⚠️ Fehler bei Blob-URL Validierung:", error);
-          setImageSrc(fallbackSrc);
+          setImageSrc(getAppropriateFallback());
           setIsLoading(true);
           setHasError(false);
           setIsImageLoaded(false);
+          setRetryCount(0);
         }
       } else {
         setImageSrc(src);
         setIsLoading(true);
         setHasError(false);
         setIsImageLoaded(false);
+        setRetryCount(0);
       }
     }
-  }, [src, fallbackSrc]);
+  }, [src, alt, getAppropriateFallback]);
 
   const handleImageLoad = () => {
     setIsLoading(false);
@@ -103,12 +139,28 @@ export default function FahndungskarteImage({
     setIsLoading(false);
     setHasError(true);
 
-    // Versuche Fallback-Bild für alle ungültigen URLs (inkl. Blob-URLs)
-    if (imageSrc && imageSrc !== fallbackSrc) {
-      console.log("🔄 Versuche Fallback-Bild:", fallbackSrc);
+    // Versuche verschiedene Fallback-Strategien
+    if (retryCount === 0) {
+      // Erster Versuch: Verwende lokales Fallback-Bild
+      console.log("🔄 Versuche lokales Fallback-Bild:", fallbackSrc);
       setImageSrc(fallbackSrc);
       setIsLoading(true);
       setHasError(false);
+      setRetryCount(1);
+    } else if (retryCount === 1) {
+      // Zweiter Versuch: Verwende lokales Platzhalterbild
+      console.log("🔄 Versuche lokales Platzhalterbild");
+      setImageSrc(getAppropriateFallback());
+      setIsLoading(true);
+      setHasError(false);
+      setRetryCount(2);
+    } else {
+      // Letzter Versuch: Verwende Standard-Fallback
+      console.log("🔄 Verwende Standard-Fallback");
+      setImageSrc(FALLBACK_IMAGES.default);
+      setIsLoading(true);
+      setHasError(false);
+      setRetryCount(3);
     }
   };
 
@@ -134,7 +186,7 @@ export default function FahndungskarteImage({
   }
 
   // Zeige Fehler-Zustand
-  if (hasError && !isLoading) {
+  if (hasError && !isLoading && retryCount >= 3) {
     return (
       <div
         className={cn(
