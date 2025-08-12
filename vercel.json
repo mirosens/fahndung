@@ -7,6 +7,8 @@
     "NEXT_PUBLIC_SUPABASE_URL": "https://rhuhrqlucgfiqwjtqsoa.supabase.co",
     "NEXT_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJodWhycWx1Y2dmaXF3anRxc29hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ5MzkzMDMsImV4cCI6MjA3MDUxNTMwM30.G1-qrryrxhna6RO9TfEWSY2ddK2kQrm1rd9Bprp1rD4",
     "SUPABASE_SERVICE_ROLE_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJodWhycWx1Y2dmaXF3anRxc29hIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1NDkzOTMwMywiZXhwIjoyMDcwNTE1MzAzfQ.pDe_8QW8O0VHRIYy1fZyJreLhfKH86cISZ7A70_OCzw",
+    "SUPABASE_JWT_SECRET": "fahndung-jwt-secret-2025",
+    "DATABASE_URL": "postgresql://postgres:SNnSLMx2wYvmNbIF@db.rhuhrqlucgfiqwjtqsoa.supabase.co:5432/postgres",
     "NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME": "dpfpr3yxc",
     "NEXT_PUBLIC_CLOUDINARY_API_KEY": "163413616558123",
     "CLOUDINARY_API_SECRET": "3owG6BleMFr6LOG2gxW5JyU6l9U",
@@ -15,7 +17,12 @@
     "NEXTAUTH_URL": "https://fahndung.vercel.app",
     "ADMIN_EMAIL": "ptlsweb@gmail.com",
     "MAX_FILE_SIZE": "52428800",
-    "ALLOWED_FILE_TYPES": "image/jpeg,image/png,image/gif,image/webp"
+    "ALLOWED_FILE_TYPES": "image/jpeg,image/png,image/gif,image/webp",
+    "SMTP_HOST": "smtp.gmail.com",
+    "SMTP_PORT": "587",
+    "SMTP_USER": "ptlsweb@gmail.com",
+    "SMTP_PASS": "",
+    "SMTP_FROM": "ptlsweb@gmail.com"
   },
   "functions": {
     "app/api/**/*.ts": {
