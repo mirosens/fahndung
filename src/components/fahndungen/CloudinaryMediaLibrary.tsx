@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from "react";
 import { X, Search, Image as ImageIcon, Loader2, Check } from "lucide-react";
-import Image from "next/image";
 
 interface CloudinaryMediaLibraryProps {
   isOpen: boolean;
@@ -38,9 +37,21 @@ export default function CloudinaryMediaLibrary({
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedImages, setSelectedImages] = useState<Set<string>>(new Set());
 
+  // 🚀 PROTOYP-MODUS: Prüfe ob Prototyp-Modus aktiv ist
+  const isPrototypeMode =
+    process.env.NODE_ENV === "development" ||
+    process.env.NEXT_PUBLIC_PROTOTYPE_MODE === "true";
+
   // Cloudinary Media Library Widget laden
   useEffect(() => {
     if (!isOpen) return;
+
+    // 🚀 PROTOYP-MODUS: Verwende REST API statt Widget
+    if (isPrototypeMode) {
+      console.log("🚀 Prototyp-Modus: Verwende REST API für Media Library");
+      void fetchMediaLibrary();
+      return;
+    }
 
     const loadCloudinaryWidget = () => {
       // Cloudinary Widget Script laden
@@ -106,12 +117,96 @@ export default function CloudinaryMediaLibrary({
     };
 
     loadCloudinaryWidget();
-  }, [isOpen, cloudName, onSelectImage, onClose]);
+  }, [isOpen, cloudName, onSelectImage, onClose, isPrototypeMode]);
 
   // Alternative: REST API für Media Library (falls Widget nicht funktioniert)
   const fetchMediaLibrary = async () => {
     setLoading(true);
     try {
+      // 🚀 PROTOYP-MODUS: Verwende Mock-Daten falls API nicht verfügbar
+      if (isPrototypeMode) {
+        console.log("🚀 Prototyp-Modus: Verwende Mock-Daten für Media Library");
+        // Mock-Daten für Prototyp-Modus
+        const mockResources: CloudinaryResource[] = [
+          {
+            public_id: "fahndungen/sample1",
+            secure_url:
+              "https://via.placeholder.com/800x600/4F46E5/FFFFFF?text=Sample+Image+1",
+            width: 800,
+            height: 600,
+            format: "jpg",
+            created_at: "2024-01-01T00:00:00Z",
+            tags: ["sample", "fahndung"],
+          },
+          {
+            public_id: "fahndungen/sample2",
+            secure_url:
+              "https://via.placeholder.com/1200x800/10B981/FFFFFF?text=Sample+Image+2",
+            width: 1200,
+            height: 800,
+            format: "jpg",
+            created_at: "2024-01-01T00:00:00Z",
+            tags: ["sample", "fahndung"],
+          },
+          {
+            public_id: "fahndungen/sample3",
+            secure_url:
+              "https://via.placeholder.com/600x400/F59E0B/FFFFFF?text=Sample+Image+3",
+            width: 600,
+            height: 400,
+            format: "jpg",
+            created_at: "2024-01-01T00:00:00Z",
+            tags: ["sample", "fahndung"],
+          },
+          {
+            public_id: "fahndungen/sample4",
+            secure_url:
+              "https://via.placeholder.com/800x600/EF4444/FFFFFF?text=Sample+Image+4",
+            width: 800,
+            height: 600,
+            format: "jpg",
+            created_at: "2024-01-01T00:00:00Z",
+            tags: ["sample", "fahndung"],
+          },
+          {
+            public_id: "fahndungen/sample5",
+            secure_url:
+              "https://via.placeholder.com/1000x700/8B5CF6/FFFFFF?text=Sample+Image+5",
+            width: 1000,
+            height: 700,
+            format: "jpg",
+            created_at: "2024-01-01T00:00:00Z",
+            tags: ["sample", "fahndung"],
+          },
+          {
+            public_id: "fahndungen/sample6",
+            secure_url:
+              "https://via.placeholder.com/900x600/06B6D4/FFFFFF?text=Sample+Image+6",
+            width: 900,
+            height: 600,
+            format: "jpg",
+            created_at: "2024-01-01T00:00:00Z",
+            tags: ["sample", "fahndung"],
+          },
+        ];
+
+        // Filtere nach Suchbegriff
+        const filteredResources = searchTerm
+          ? mockResources.filter(
+              (resource) =>
+                resource.public_id
+                  .toLowerCase()
+                  .includes(searchTerm.toLowerCase()) ||
+                resource.tags?.some((tag) =>
+                  tag.toLowerCase().includes(searchTerm.toLowerCase()),
+                ),
+            )
+          : mockResources;
+
+        setResources(filteredResources);
+        return;
+      }
+
       const response = await fetch(
         `/api/cloudinary/resources?search=${searchTerm}`,
       );
@@ -121,17 +216,33 @@ export default function CloudinaryMediaLibrary({
       }
     } catch (error) {
       console.error("Fehler beim Laden der Media Library:", error);
+      // 🚀 PROTOYP-MODUS: Fallback zu Mock-Daten bei Fehler
+      if (isPrototypeMode) {
+        console.log("🚀 Prototyp-Modus: Fallback zu Mock-Daten bei API-Fehler");
+        setResources([
+          {
+            public_id: "fahndungen/fallback1",
+            secure_url:
+              "https://via.placeholder.com/800x600/4F46E5/FFFFFF?text=Sample+Image+1",
+            width: 800,
+            height: 600,
+            format: "jpg",
+            created_at: "2024-01-01T00:00:00Z",
+            tags: ["fallback", "sample"],
+          },
+        ]);
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  // Lade Bilder beim Öffnen der Media Library
+  // Lade Bilder beim Öffnen der Media Library (nur wenn nicht im Prototyp-Modus)
   useEffect(() => {
-    if (isOpen) {
+    if (isOpen && !isPrototypeMode) {
       void fetchMediaLibrary();
     }
-  }, [isOpen, searchTerm]);
+  }, [isOpen, searchTerm, isPrototypeMode]);
 
   if (!isOpen) return null;
 
@@ -214,12 +325,15 @@ export default function CloudinaryMediaLibrary({
                     }
                   }}
                 >
-                  <Image
+                  <img
                     src={resource.secure_url}
                     alt={resource.public_id}
-                    width={200}
-                    height={200}
                     className="h-32 w-full rounded-lg object-cover"
+                    onError={(e) => {
+                      // Fallback bei Fehler
+                      const target = e.target as HTMLImageElement;
+                      target.src = `https://via.placeholder.com/200x128/6B7280/FFFFFF?text=${encodeURIComponent(resource.public_id.split("/").pop() || "Image")}`;
+                    }}
                   />
                   {selectedImages.has(resource.public_id) && (
                     <div className="absolute inset-0 flex items-center justify-center rounded-lg bg-blue-500/20">

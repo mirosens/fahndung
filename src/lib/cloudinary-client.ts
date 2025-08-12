@@ -16,10 +16,48 @@ export interface CloudinaryUploadOptions {
   tags?: string[];
   public_id?: string;
   overwrite?: boolean;
+  editOptions?: {
+    width?: number;
+    height?: number;
+    crop?: string;
+    quality?: number;
+    format?: string;
+  };
 }
 
 // cloudinary-client.ts
-export async function uploadToCloudinary(file: File) {
+export async function uploadToCloudinary(
+  file: File,
+  options: CloudinaryUploadOptions = {},
+) {
+  // 🚀 PROTOYP-MODUS: Prüfe ob Prototyp-Modus aktiv ist
+  const isPrototypeMode =
+    process.env.NODE_ENV === "development" ||
+    process.env.NEXT_PUBLIC_PROTOTYPE_MODE === "true";
+
+  // 🚀 PROTOYP-MODUS: Verwende Mock-Upload für Entwicklung
+  if (isPrototypeMode) {
+    console.log("🚀 Prototyp-Modus: Verwende Mock-Upload für Cloudinary");
+
+    // Simuliere Upload-Verzögerung
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
+    // Erstelle Mock-Response
+    const mockResult: CloudinaryUploadResult = {
+      public_id: `fahndungen/prototype_${Date.now()}`,
+      secure_url: `https://via.placeholder.com/800x600/4F46E5/FFFFFF?text=${encodeURIComponent(file.name)}`,
+      width: 800,
+      height: 600,
+      format: file.type.split("/")[1] || "jpg",
+      bytes: file.size,
+      created_at: new Date().toISOString(),
+    };
+
+    console.log("✅ Mock-Upload erfolgreich:", mockResult);
+    return mockResult;
+  }
+
+  // Normale Upload-Logik für Produktion
   const fd = new FormData();
   fd.append("file", file);
   const res = await fetch("/api/upload", { method: "POST", body: fd });

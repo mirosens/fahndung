@@ -2,7 +2,7 @@ import type { Session as SupabaseSession, User } from "@supabase/supabase-js";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 // 🚀 PROTOYP-MODUS: Automatische Admin-Session für Entwicklung
-const PROTOTYPE_MODE = process.env.NODE_ENV === "development";
+const PROTOTYPE_MODE = process.env.NODE_ENV === "development" && process.env.NEXT_PUBLIC_PROTOTYPE_MODE === "true";
 
 // Entferne die globale Supabase-Instanz
 // const supabase = getServerClient();

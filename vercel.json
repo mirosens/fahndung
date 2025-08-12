@@ -23,7 +23,7 @@
     "SMTP_USER": "ptlsweb@gmail.com",
     "SMTP_PASS": "",
     "SMTP_FROM": "ptlsweb@gmail.com",
-    "NEXT_PUBLIC_PROTOTYPE_MODE": "true"
+    "NEXT_PUBLIC_PROTOTYPE_MODE": "false"
   },
   "functions": {
     "app/api/**/*.ts": {

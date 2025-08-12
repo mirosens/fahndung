@@ -3,6 +3,8 @@
 import React, { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../providers";
+import Header from "~/components/layout/Header";
+import Footer from "~/components/layout/Footer";
 import {
   Loader2,
   LayoutDashboard,
@@ -15,6 +17,7 @@ import {
   Archive,
   Edit3,
   Eye,
+  EyeOff,
   MoreHorizontal,
   CheckSquare,
   Square,
@@ -27,19 +30,9 @@ import { getBrowserClient } from "~/lib/supabase/supabase-browser";
 import { getRolePermissions } from "~/lib/auth";
 import { type Fahndungskarte } from "~/types/fahndungskarte";
 
-interface SessionInfo {
-  userId: string;
-  email: string;
-  tokenLength: number;
-  expiresAt: string;
-}
-
 export default function DashboardPage() {
   const { user, session, loading, initialized } = useAuth();
   const router = useRouter();
-  const [authDebug, setAuthDebug] = useState<string | null>(null);
-  const [debugInfo, setDebugInfo] = useState<string | null>(null);
-  const [sessionInfo, setSessionInfo] = useState<SessionInfo | null>(null);
 
   // Dashboard-spezifische States
   const [searchTerm, setSearchTerm] = useState("");
@@ -53,11 +46,17 @@ export default function DashboardPage() {
   const [investigationsLoading, setInvestigationsLoading] = useState(true);
 
   // Benutzer und Berechtigungen
-  const currentUser = session?.user ?? null;
   const userProfile = session?.profile ?? null;
   const userPermissions = userProfile
     ? getRolePermissions(userProfile.role)
-    : null;
+    : {
+        canRead: true,
+        canCreate: true,
+        canEdit: true,
+        canDelete: true,
+        canPublish: true,
+        canManageUsers: true,
+      };
 
   // Fahndungen direkt von Supabase laden
   const loadInvestigations = useCallback(async () => {
@@ -84,7 +83,6 @@ export default function DashboardPage() {
         console.error("Fehler beim Laden der Fahndungen:", error);
         setInvestigations([]);
       } else {
-        console.log("✅ Fahndungen geladen:", data?.length ?? 0);
         // Sichere Typkonvertierung mit Validierung
         const validatedData =
           (data as unknown as Fahndungskarte[])?.filter(
@@ -111,24 +109,6 @@ export default function DashboardPage() {
       void loadInvestigations();
     }
   }, [initialized, loading, loadInvestigations]);
-
-  // Debug-Logging
-  useEffect(() => {
-    console.log("🔍 Dashboard Debug:", {
-      investigationsCount: investigations.length,
-      investigations: investigations.slice(0, 3), // Erste 3 für Debug
-      isLoading: investigationsLoading,
-      currentUser: !!currentUser,
-      statusFilter,
-      priorityFilter,
-    });
-  }, [
-    investigations,
-    investigationsLoading,
-    currentUser,
-    statusFilter,
-    priorityFilter,
-  ]);
 
   // Gefilterte Fahndungen
   const filteredInvestigations = investigations.filter(
@@ -160,28 +140,6 @@ export default function DashboardPage() {
     }
   }, [user, initialized, loading, router]);
 
-  // Debug-Informationen sammeln
-  useEffect(() => {
-    if (process.env.NODE_ENV === "development") {
-      if (!user) {
-        setAuthDebug("Kein Benutzer gefunden");
-      } else {
-        setAuthDebug(`Benutzer: ${user.email}`);
-      }
-
-      if (session) {
-        setSessionInfo({
-          userId: session.user.id,
-          email: session.user.email ?? "",
-          tokenLength: 0,
-          expiresAt: "Aktiv",
-        });
-      }
-
-      setDebugInfo(`Loading: ${loading}, Initialized: ${initialized}`);
-    }
-  }, [user, session, loading, initialized]);
-
   // Bulk-Aktionen
   const handleSelectAll = () => {
     if (selectedInvestigations.length === filteredInvestigations.length) {
@@ -198,7 +156,10 @@ export default function DashboardPage() {
   };
 
   const handleBulkDelete = async () => {
-    if (!userPermissions?.canDelete) return;
+    if (!userPermissions?.canDelete) {
+      alert("Sie haben keine Berechtigung zum Löschen von Fahndungen.");
+      return;
+    }
 
     if (
       !confirm(
@@ -210,36 +171,152 @@ export default function DashboardPage() {
 
     setIsProcessing(true);
     try {
-      // Hier würde die tatsächliche Lösch-Logik implementiert
-      console.log("Lösche Fahndungen:", selectedInvestigations);
+      const supabase = getBrowserClient();
 
-      // Simuliere API-Aufruf
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      // Fahndungen aus der Datenbank löschen
+      const { error } = await supabase
+        .from("investigations")
+        .delete()
+        .in("id", selectedInvestigations);
 
+      if (error) {
+        console.error("Fehler beim Löschen der Fahndungen:", error);
+        alert(
+          "Fehler beim Löschen der Fahndungen. Bitte versuchen Sie es erneut.",
+        );
+        return;
+      }
+
+      // Erfolgreich gelöscht - aus der lokalen Liste entfernen
+      setInvestigations((prev) =>
+        prev.filter((inv) => !selectedInvestigations.includes(inv.id)),
+      );
       setSelectedInvestigations([]);
-      void loadInvestigations();
+
+      alert(
+        `${selectedInvestigations.length} Fahndungen wurden erfolgreich gelöscht.`,
+      );
     } catch (error) {
       console.error("Fehler beim Löschen:", error);
+      alert(
+        "Ein unerwarteter Fehler ist aufgetreten. Bitte versuchen Sie es erneut.",
+      );
     } finally {
       setIsProcessing(false);
     }
   };
 
   const handleBulkArchive = async () => {
-    if (!userPermissions?.canEdit) return;
+    if (!userPermissions?.canEdit) {
+      alert("Sie haben keine Berechtigung zum Bearbeiten von Fahndungen.");
+      return;
+    }
+
+    if (
+      !confirm(
+        `Möchten Sie wirklich ${selectedInvestigations.length} Fahndungen archivieren?`,
+      )
+    ) {
+      return;
+    }
 
     setIsProcessing(true);
     try {
-      // Hier würde die tatsächliche Archivierungs-Logik implementiert
-      console.log("Archiviere Fahndungen:", selectedInvestigations);
+      const supabase = getBrowserClient();
 
-      // Simuliere API-Aufruf
-      await new Promise((resolve) => setTimeout(resolve, 1000));
+      // Fahndungen als archiviert markieren
+      const { error } = await supabase
+        .from("investigations")
+        .update({
+          status: "archived",
+          updated_at: new Date().toISOString(),
+        })
+        .in("id", selectedInvestigations);
 
+      if (error) {
+        console.error("Fehler beim Archivieren der Fahndungen:", error);
+        alert(
+          "Fehler beim Archivieren der Fahndungen. Bitte versuchen Sie es erneut.",
+        );
+        return;
+      }
+
+      // Lokale Liste aktualisieren
+      setInvestigations((prev) =>
+        prev.map((inv) =>
+          selectedInvestigations.includes(inv.id)
+            ? { ...inv, status: "archived" }
+            : inv,
+        ),
+      );
       setSelectedInvestigations([]);
-      void loadInvestigations();
+
+      alert(
+        `${selectedInvestigations.length} Fahndungen wurden erfolgreich archiviert.`,
+      );
     } catch (error) {
       console.error("Fehler beim Archivieren:", error);
+      alert(
+        "Ein unerwarteter Fehler ist aufgetreten. Bitte versuchen Sie es erneut.",
+      );
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleBulkUnpublish = async () => {
+    if (!userPermissions?.canEdit) {
+      alert("Sie haben keine Berechtigung zum Bearbeiten von Fahndungen.");
+      return;
+    }
+
+    if (
+      !confirm(
+        `Möchten Sie wirklich ${selectedInvestigations.length} Fahndungen unpublizieren?`,
+      )
+    ) {
+      return;
+    }
+
+    setIsProcessing(true);
+    try {
+      const supabase = getBrowserClient();
+
+      // Fahndungen als Entwurf markieren (unpublizieren)
+      const { error } = await supabase
+        .from("investigations")
+        .update({
+          status: "draft",
+          updated_at: new Date().toISOString(),
+        })
+        .in("id", selectedInvestigations);
+
+      if (error) {
+        console.error("Fehler beim Unpublizieren der Fahndungen:", error);
+        alert(
+          "Fehler beim Unpublizieren der Fahndungen. Bitte versuchen Sie es erneut.",
+        );
+        return;
+      }
+
+      // Lokale Liste aktualisieren
+      setInvestigations((prev) =>
+        prev.map((inv) =>
+          selectedInvestigations.includes(inv.id)
+            ? { ...inv, status: "draft" }
+            : inv,
+        ),
+      );
+      setSelectedInvestigations([]);
+
+      alert(
+        `${selectedInvestigations.length} Fahndungen wurden erfolgreich unpubliziert.`,
+      );
+    } catch (error) {
+      console.error("Fehler beim Unpublizieren:", error);
+      alert(
+        "Ein unerwarteter Fehler ist aufgetreten. Bitte versuchen Sie es erneut.",
+      );
     } finally {
       setIsProcessing(false);
     }
@@ -267,40 +344,10 @@ export default function DashboardPage() {
               Prüfe Authentifizierung...
             </p>
 
-            {/* Debug-Informationen */}
-            {authDebug && (
-              <div className="mb-4 rounded-lg border border-blue-500/30 bg-blue-500/20 p-3">
-                <div className="flex items-center space-x-2">
-                  <div className="text-sm text-blue-400">{authDebug}</div>
-                </div>
-              </div>
-            )}
-
-            {debugInfo && (
-              <div className="mb-4 rounded-lg border border-green-500/30 bg-green-500/20 p-3">
-                <div className="flex items-center space-x-2">
-                  <div className="text-sm text-green-400">{debugInfo}</div>
-                </div>
-              </div>
-            )}
-
             <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
               <Shield className="h-4 w-4" />
               <span>Nur für autorisierte Benutzer</span>
             </div>
-
-            {/* Debug-Button für Development */}
-            {process.env.NODE_ENV === "development" && (
-              <div className="mt-4">
-                <button
-                  onClick={() => window.location.reload()}
-                  className="flex items-center gap-2 rounded bg-gray-600 px-3 py-2 text-xs text-white hover:bg-gray-700"
-                >
-                  <RefreshCw className="h-3 w-3" />
-                  Seite neu laden
-                </button>
-              </div>
-            )}
           </div>
         </div>
       </div>
@@ -342,7 +389,8 @@ export default function DashboardPage() {
   // Wenn angemeldet, zeige Dashboard-Inhalt
   return (
     <div className="min-h-screen bg-background">
-      <div className="mx-auto max-w-7xl px-4 py-8">
+      <Header variant="dashboard" session={session} />
+      <main className="mx-auto max-w-7xl px-4 py-8">
         {/* Header mit Benutzer-Informationen */}
         <div className="mb-8">
           <div className="flex items-center justify-between">
@@ -366,48 +414,13 @@ export default function DashboardPage() {
                     {session.user.email}
                   </p>
                   <p className="text-muted-foreground">
-                    {session.profile?.role || "Benutzer"}
+                    {session.profile?.role ?? "Benutzer"}
                   </p>
                 </div>
                 <CheckCircle className="h-4 w-4 text-green-500" />
               </div>
             )}
           </div>
-
-          {/* Debug-Informationen für Development */}
-          {process.env.NODE_ENV === "development" && (
-            <div className="mt-4 space-y-2">
-              {authDebug && (
-                <div className="rounded-lg border border-blue-500/30 bg-blue-500/20 p-3">
-                  <div className="flex items-center space-x-2">
-                    <div className="text-sm text-blue-400">{authDebug}</div>
-                  </div>
-                </div>
-              )}
-
-              {sessionInfo && (
-                <div className="rounded-lg border border-green-500/30 bg-green-500/20 p-3">
-                  <div className="text-sm text-green-400">
-                    <p>
-                      <strong>Session Info:</strong>
-                    </p>
-                    <p>User ID: {sessionInfo.userId}</p>
-                    <p>Email: {sessionInfo.email}</p>
-                    <p>Token Length: {sessionInfo.tokenLength}</p>
-                    <p>Expires: {sessionInfo.expiresAt}</p>
-                  </div>
-                </div>
-              )}
-
-              {debugInfo && (
-                <div className="rounded-lg border border-purple-500/30 bg-purple-500/20 p-3">
-                  <div className="flex items-center space-x-2">
-                    <div className="text-sm text-purple-400">{debugInfo}</div>
-                  </div>
-                </div>
-              )}
-            </div>
-          )}
         </div>
 
         {/* Statistiken */}
@@ -539,26 +552,30 @@ export default function DashboardPage() {
                 </span>
               </div>
               <div className="flex gap-2">
-                {userPermissions?.canEdit && (
-                  <button
-                    onClick={handleBulkArchive}
-                    disabled={isProcessing}
-                    className="flex items-center gap-2 rounded-lg bg-orange-500 px-3 py-2 text-sm font-medium text-white hover:bg-orange-600 disabled:opacity-50"
-                  >
-                    <Archive className="h-4 w-4" />
-                    {isProcessing ? "Archiviere..." : "Archivieren"}
-                  </button>
-                )}
-                {userPermissions?.canDelete && (
-                  <button
-                    onClick={handleBulkDelete}
-                    disabled={isProcessing}
-                    className="flex items-center gap-2 rounded-lg bg-red-500 px-3 py-2 text-sm font-medium text-white hover:bg-red-600 disabled:opacity-50"
-                  >
-                    <Trash2 className="h-4 w-4" />
-                    {isProcessing ? "Lösche..." : "Löschen"}
-                  </button>
-                )}
+                <button
+                  onClick={handleBulkUnpublish}
+                  disabled={isProcessing}
+                  className="flex items-center gap-2 rounded-lg bg-yellow-500 px-3 py-2 text-sm font-medium text-white hover:bg-yellow-600 disabled:opacity-50"
+                >
+                  <EyeOff className="h-4 w-4" />
+                  {isProcessing ? "Unpubliziere..." : "Unpublizieren"}
+                </button>
+                <button
+                  onClick={handleBulkArchive}
+                  disabled={isProcessing}
+                  className="flex items-center gap-2 rounded-lg bg-orange-500 px-3 py-2 text-sm font-medium text-white hover:bg-orange-600 disabled:opacity-50"
+                >
+                  <Archive className="h-4 w-4" />
+                  {isProcessing ? "Archiviere..." : "Archivieren"}
+                </button>
+                <button
+                  onClick={handleBulkDelete}
+                  disabled={isProcessing}
+                  className="flex items-center gap-2 rounded-lg bg-red-500 px-3 py-2 text-sm font-medium text-white hover:bg-red-600 disabled:opacity-50"
+                >
+                  <Trash2 className="h-4 w-4" />
+                  {isProcessing ? "Lösche..." : "Löschen"}
+                </button>
               </div>
             </div>
           </div>
@@ -650,7 +667,7 @@ export default function DashboardPage() {
                           )}
                         </div>
                         <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
-                          {investigation.short_description ||
+                          {investigation.short_description ??
                             investigation.description}
                         </p>
                         <div className="mt-2 flex items-center gap-4 text-xs text-muted-foreground">
@@ -742,7 +759,8 @@ export default function DashboardPage() {
             </button>
           </div>
         </div>
-      </div>
+      </main>
+      <Footer />
     </div>
   );
 }

@@ -12,7 +12,7 @@ export default function NeueFahndungPage() {
   useEffect(() => {
     // 🔥 PROTOYP-MODUS: Erlaube direkten Zugriff auf Wizard
     if (
-      process.env.NODE_ENV === "development" ||
+      process.env.NODE_ENV === "development" &&
       process.env["NEXT_PUBLIC_PROTOTYPE_MODE"] === "true"
     ) {
       console.log("🚀 Prototyp-Modus: Direkter Zugriff auf Wizard erlaubt");
