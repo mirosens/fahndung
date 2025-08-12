@@ -44,8 +44,7 @@ export async function uploadToCloudinary(
   file: File,
   options: CloudinaryUploadOptions = {},
 ) {
-  // 🚀 PROTOYP-MODUS: Prüfe ob Prototyp-Modus aktiv ist
-  // Deaktiviert für echte Cloudinary-Uploads
+  // 🚀 PROTOYP-MODUS: Deaktiviert für echte Cloudinary-Uploads
   const isPrototypeMode = false;
 
   // 🚀 PROTOYP-MODUS: Verwende echte Uploads auch im Entwicklungsmodus

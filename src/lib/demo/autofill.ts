@@ -1,5 +1,8 @@
 import type { PresetsShape } from "@/lib/demo/presets.types";
-import type { WizardData } from "@/components/fahndungen/types/WizardTypes";
+import type {
+  WizardData,
+  Step5Data,
+} from "@/components/fahndungen/types/WizardTypes";
 import { DEMO_DEFAULTS, resolvePlaceholders } from "@/lib/demo/helpers";
 
 // Dynamischer Import für JSON-Datei (SSR-sicher)
@@ -288,5 +291,252 @@ export async function generateAllStep2Data(
     description,
     features,
     tags: uniqueTags,
+  };
+}
+
+// Neue Funktionen für Step5: Kontaktdaten
+export function generateDemoContactPerson(data: Partial<WizardData>): string {
+  const department = data.step1?.department ?? data.step5?.department ?? "";
+  const priority = data.step1?.priority;
+
+  // Verschiedene Kontaktpersonen basierend auf Priorität und Abteilung
+  const contacts = [
+    "KHK Müller",
+    "KK Weber",
+    "PHK Schmidt",
+    "KOK Fischer",
+    "Kriminalhauptkommissar Meyer",
+    "Kriminalkommissar Wagner",
+    "Polizeihauptkommissar Schulz",
+    "Kriminaloberkommissar Hoffmann",
+  ];
+
+  // Bei dringenden Fällen verwende höhere Ränge
+  if (priority === "urgent") {
+    return contacts[0] || "KHK Müller"; // Kriminalhauptkommissar
+  } else if (priority === "high") {
+    return contacts[1] || "KK Weber"; // Kriminalkommissar
+  } else {
+    return (
+      contacts[Math.floor(Math.random() * contacts.length)] || "KHK Müller"
+    );
+  }
+}
+
+export function generateDemoContactPhone(data: Partial<WizardData>): string {
+  const department = data.step1?.department ?? data.step5?.department ?? "";
+  const city = extractCity(department);
+
+  // Verschiedene Telefonnummern basierend auf Stadt/Abteilung
+  const phoneNumbers = [
+    "0711 899-0000", // Stuttgart
+    "0721 666-0000", // Karlsruhe
+    "0621 174-0000", // Mannheim
+    "0761 882-0000", // Freiburg
+    "0731 188-0000", // Ulm
+    "0751 366-0000", // Ravensburg
+    "07121 301-0000", // Reutlingen
+    "07141 910-0000", // Ludwigsburg
+    "07131 56-0000", // Heilbronn
+    "0781 82-0000", // Offenburg
+    "07231 39-0000", // Pforzheim
+    "07361 52-0000", // Aalen
+    "07531 98-0000", // Konstanz
+  ];
+
+  // Versuche passende Nummer zur Stadt zu finden
+  if (city) {
+    const cityMap: Record<string, string> = {
+      Stuttgart: "0711 899-0000",
+      Karlsruhe: "0721 666-0000",
+      Mannheim: "0621 174-0000",
+      Freiburg: "0761 882-0000",
+      Ulm: "0731 188-0000",
+      Ravensburg: "0751 366-0000",
+      Reutlingen: "07121 301-0000",
+      Ludwigsburg: "07141 910-0000",
+      Heilbronn: "07131 56-0000",
+      Offenburg: "0781 82-0000",
+      Pforzheim: "07231 39-0000",
+      Aalen: "07361 52-0000",
+      Konstanz: "07531 98-0000",
+    };
+
+    if (cityMap[city]) {
+      return cityMap[city];
+    }
+  }
+
+  // Fallback: zufällige Nummer
+  return (
+    phoneNumbers[Math.floor(Math.random() * phoneNumbers.length)] ||
+    DEMO_DEFAULTS.phone
+  );
+}
+
+export function generateDemoContactEmail(data: Partial<WizardData>): string {
+  const department = data.step1?.department ?? data.step5?.department ?? "";
+  const city = extractCity(department);
+
+  // Verschiedene E-Mail-Adressen basierend auf Stadt/Abteilung
+  const emailTemplates = [
+    "hinweise@polizei-bw.de",
+    "kriminalpolizei@polizei-bw.de",
+    "fahndung@polizei-bw.de",
+    "kontakt@polizei-bw.de",
+  ];
+
+  // Spezielle E-Mails für bestimmte Städte
+  if (city) {
+    const cityEmails: Record<string, string> = {
+      Stuttgart: "hinweise@polizei-stuttgart.de",
+      Karlsruhe: "hinweise@polizei-karlsruhe.de",
+      Mannheim: "hinweise@polizei-mannheim.de",
+      Freiburg: "hinweise@polizei-freiburg.de",
+      Ulm: "hinweise@polizei-ulm.de",
+    };
+
+    if (cityEmails[city]) {
+      return cityEmails[city];
+    }
+  }
+
+  // Fallback: zufällige E-Mail
+  return (
+    emailTemplates[Math.floor(Math.random() * emailTemplates.length)] ||
+    DEMO_DEFAULTS.email
+  );
+}
+
+export function generateDemoDepartment(data: Partial<WizardData>): string {
+  const department = data.step1?.department ?? "";
+  const category = data.step1?.category;
+
+  // Verschiedene Abteilungen basierend auf Kategorie
+  const departments = [
+    "Kriminalpolizei",
+    "Kriminalhauptkommissariat",
+    "Ermittlungsgruppe",
+    "Fahndungsgruppe",
+    "Sachbearbeitung",
+    "Kriminalinspektion",
+  ];
+
+  // Spezielle Abteilungen für bestimmte Kategorien
+  if (category === "MISSING_PERSON") {
+    return "Vermisstensachbearbeitung";
+  } else if (category === "WANTED_PERSON") {
+    return "Fahndungsgruppe";
+  } else if (category === "UNKNOWN_DEAD") {
+    return "Kriminalinspektion";
+  } else if (category === "STOLEN_GOODS") {
+    return "Sachbearbeitung";
+  }
+
+  // Fallback: zufällige Abteilung
+  return (
+    departments[Math.floor(Math.random() * departments.length)] ||
+    DEMO_DEFAULTS.department
+  );
+}
+
+export function generateDemoAvailableHours(data: Partial<WizardData>): string {
+  const priority = data.step1?.priority;
+
+  // Verschiedene Verfügbarkeiten basierend auf Priorität
+  const hours = [
+    "Mo–Fr 08:00–18:00",
+    "Mo–Fr 08:00–16:00",
+    "Mo–Do 08:00–17:00, Fr 08:00–15:00",
+    "Mo–Fr 07:00–19:00",
+    "24/7 erreichbar",
+    "Mo–So 08:00–20:00",
+  ];
+
+  // Bei dringenden Fällen 24/7 oder erweiterte Zeiten
+  if (priority === "urgent") {
+    return "24/7 erreichbar";
+  } else if (priority === "high") {
+    return "Mo–So 08:00–20:00";
+  } else {
+    return (
+      hours[Math.floor(Math.random() * hours.length)] ||
+      DEMO_DEFAULTS.availableHours
+    );
+  }
+}
+
+// Neue Master-Funktion: Fülle alle Step5-Felder auf einmal
+export function generateAllStep5Data(data: Partial<WizardData>): {
+  contactPerson: string;
+  contactPhone: string;
+  contactEmail: string;
+  department: string;
+  availableHours: string;
+  publishStatus: Step5Data["publishStatus"];
+  urgencyLevel: Step5Data["urgencyLevel"];
+  visibility: Step5Data["visibility"];
+  notifications: Step5Data["notifications"];
+  articlePublishing: Step5Data["articlePublishing"];
+} {
+  const priority = data.step1?.priority;
+  const category = data.step1?.category;
+
+  // Bestimme Veröffentlichungsstatus basierend auf Priorität
+  let publishStatus: Step5Data["publishStatus"] = "draft";
+  if (priority === "urgent") {
+    publishStatus = "immediate";
+  } else if (priority === "high") {
+    publishStatus = "review";
+  } else {
+    publishStatus = "draft";
+  }
+
+  // Bestimme Dringlichkeitsstufe basierend auf Priorität
+  let urgencyLevel: Step5Data["urgencyLevel"] = "medium";
+  if (priority === "urgent") {
+    urgencyLevel = "critical";
+  } else if (priority === "high") {
+    urgencyLevel = "high";
+  } else {
+    urgencyLevel = "medium";
+  }
+
+  // Sichtbarkeit basierend auf Kategorie und Priorität
+  const visibility: Step5Data["visibility"] = {
+    internal: true,
+    regional: priority === "urgent" || priority === "high",
+    national: priority === "urgent" || category === "MISSING_PERSON",
+    international: priority === "urgent" && category === "WANTED_PERSON",
+  };
+
+  // Benachrichtigungen basierend auf Priorität
+  const notifications: Step5Data["notifications"] = {
+    emailAlerts: true,
+    smsAlerts: priority === "urgent",
+    appNotifications: true,
+    pressRelease: priority === "urgent" || priority === "high",
+  };
+
+  // Artikel-Veröffentlichung basierend auf Priorität
+  const articlePublishing: Step5Data["articlePublishing"] = {
+    publishAsArticle: priority === "urgent" || priority === "high",
+    generateSeoUrl: priority === "urgent" || priority === "high",
+    seoTitle: "",
+    seoDescription: "",
+    keywords: [],
+  };
+
+  return {
+    contactPerson: generateDemoContactPerson(data),
+    contactPhone: generateDemoContactPhone(data),
+    contactEmail: generateDemoContactEmail(data),
+    department: generateDemoDepartment(data),
+    availableHours: generateDemoAvailableHours(data),
+    publishStatus,
+    urgencyLevel,
+    visibility,
+    notifications,
+    articlePublishing,
   };
 }

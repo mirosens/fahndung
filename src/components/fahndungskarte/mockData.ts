@@ -26,7 +26,7 @@ export const mockData: FahndungsData = {
   },
   step5: {
     contactPerson: "Kommissar Weber",
-    contactPhone: "+49 89 2910-0",
+    contactPhone: "089 2910-0",
     contactEmail: "weber@polizei.muenchen.de",
     department: "Polizeipräsidium München",
     availableHours: "Mo-Fr 08:00-18:00, Sa-So Bereitschaftsdienst",

@@ -21,7 +21,7 @@ export function pronounOf(sex?: "m" | "w"): "er" | "sie" | "die Person" {
 }
 
 export const DEMO_DEFAULTS = {
-  phone: "+49 711 899-0000",
+  phone: "0711 899-0000",
   email: "hinweise@polizei-bw.de",
   hintUrl: "https://hinweisportal.polizei-bw.de",
   department: "Polizeipräsidium Stuttgart",
@@ -44,6 +44,3 @@ export function resolvePlaceholders(
       : "";
   });
 }
-
-
-

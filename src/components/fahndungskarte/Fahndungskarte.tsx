@@ -11,6 +11,7 @@ import type { FahndungsData } from "./types";
 import styles from "~/styles/fahndungskarte.module.css";
 import FahndungskarteImage from "./FahndungskarteImage";
 import { getCityFromDepartment } from "./utils";
+import { getFahndungUrl, getFahndungEditUrl } from "~/lib/seo";
 
 interface ModernFahndungskarteProps {
   data?: FahndungsData;
@@ -146,8 +147,22 @@ const Fahndungskarte: React.FC<ModernFahndungskarteProps> = ({
   const handleImageError = () => updateState({ imageError: true });
   const handleQuickEdit = (e: React.MouseEvent | React.KeyboardEvent) => {
     e.stopPropagation();
-    if (investigationId)
-      router.push(`/fahndungen/${investigationId}?edit=true`);
+    if (investigationId) {
+      try {
+        const url = getFahndungEditUrl(
+          safeData.step1.title,
+          safeData.step1.caseNumber,
+        );
+        router.push(url);
+      } catch (error) {
+        // Fallback auf direkte ID-Navigation
+        console.warn(
+          "SEO-URL-Generierung fehlgeschlagen, verwende Fallback:",
+          error,
+        );
+        router.push(`/fahndungen/${investigationId}?edit=true`);
+      }
+    }
   };
 
   const flipCard = useCallback((): void => {
@@ -166,7 +181,22 @@ const Fahndungskarte: React.FC<ModernFahndungskarteProps> = ({
   const navigateToDetail = () => {
     // 🚀 Navigation nur ausführen, wenn nicht deaktiviert und eine ID vorhanden ist
     if (disableNavigation || !investigationId) return;
-    router.push(`/fahndungen/${investigationId}`);
+
+    // Verwende SEO-freundliche URL basierend auf Titel und Fallnummer
+    try {
+      const url = getFahndungUrl(
+        safeData.step1.title,
+        safeData.step1.caseNumber,
+      );
+      router.push(url);
+    } catch (error) {
+      // Fallback auf direkte ID-Navigation
+      console.warn(
+        "SEO-URL-Generierung fehlgeschlagen, verwende Fallback:",
+        error,
+      );
+      router.push(`/fahndungen/${investigationId}`);
+    }
   };
 
   // Retry-Funktion für NetworkErrors

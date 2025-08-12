@@ -320,7 +320,7 @@ export const postRouter = createTRPCRouter({
           const expectedSlug = generateSeoSlug(investigation.title);
           const expectedShortSlug = generateShortSeoSlug(
             investigation.title,
-            10,
+            42,
           );
 
           if (expectedSlug === input.slug || expectedShortSlug === input.slug) {

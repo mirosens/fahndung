@@ -50,12 +50,23 @@ export const step2Schema = z.object({
 });
 
 // Step 3 Schema
-export const step3Schema = z.object({
-  mainImage: z.any().refine((val) => val !== null, {
-    message: "Hauptbild ist erforderlich",
-  }),
-  mainImageUrl: z.string().optional(),
-});
+export const step3Schema = z
+  .object({
+    mainImage: z.any().optional(),
+    mainImageUrl: z.string().optional(),
+  })
+  .refine(
+    (data) => {
+      // Prüfe ob entweder mainImage (File) oder mainImageUrl (String) vorhanden ist
+      const hasMainImage = data.mainImage && data.mainImage !== null;
+      const hasMainImageUrl = data.mainImageUrl && data.mainImageUrl.length > 0;
+      return hasMainImage || hasMainImageUrl;
+    },
+    {
+      message: "Hauptbild ist erforderlich",
+      path: ["mainImage"], // Zeige Fehler beim mainImage Feld
+    },
+  );
 
 // Step 4 Schema
 export const step4Schema = z.object({

@@ -771,7 +771,7 @@ export default function ModernContactCategory({
               value: step5.contactPhone,
               required: true,
               type: "tel",
-              placeholder: "+49 711 8990-0",
+              placeholder: "0711 8990-0",
             },
             {
               icon: MailCheck,

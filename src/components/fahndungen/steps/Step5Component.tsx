@@ -9,19 +9,33 @@ import {
   Clock,
   AlertCircle,
   Wand2,
+  WandSparkles,
+  Globe,
+  Bell,
+  FileText,
 } from "lucide-react";
-import { DEMO_DEFAULTS } from "@/lib/demo/helpers";
-import type { Step5Data } from "../types/WizardTypes";
+
+import {
+  generateDemoContactPerson,
+  generateDemoContactPhone,
+  generateDemoContactEmail,
+  generateDemoDepartment,
+  generateDemoAvailableHours,
+  generateAllStep5Data,
+} from "@/lib/demo/autofill";
+import type { Step5Data, WizardData } from "../types/WizardTypes";
 
 interface Step5ComponentProps {
   data: Step5Data;
   onChange: (data: Step5Data) => void;
+  wizard?: Partial<WizardData>;
   showValidation?: boolean;
 }
 
 const Step5Component: React.FC<Step5ComponentProps> = ({
   data,
   onChange,
+  wizard,
   showValidation = false,
 }) => {
   const [keywordInput, setKeywordInput] = useState("");
@@ -133,6 +147,47 @@ const Step5Component: React.FC<Step5ComponentProps> = ({
           <h3 className="mb-4 text-lg font-semibold text-muted-foreground dark:text-white">
             Kontaktdaten
           </h3>
+
+          {/* Master-Zauberstab für alle Kontaktfelder */}
+          <div className="mb-4 flex items-center justify-between rounded-lg border border-blue-200 bg-blue-50 p-3 dark:border-blue-800 dark:bg-blue-900">
+            <div className="flex items-center gap-2">
+              <WandSparkles className="h-5 w-5 text-blue-600 dark:text-blue-400" />
+              <span className="text-sm font-medium text-blue-900 dark:text-blue-100">
+                Alle Kontaktdaten automatisch ausfüllen
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                const demo = generateAllStep5Data({
+                  ...(wizard ?? {}),
+                  step5: data,
+                });
+                setLocalContactPerson(demo.contactPerson);
+                setLocalContactPhone(demo.contactPhone);
+                setLocalContactEmail(demo.contactEmail);
+                setLocalDepartment(demo.department);
+                setLocalAvailableHours(demo.availableHours);
+                onChange({
+                  ...data,
+                  contactPerson: demo.contactPerson,
+                  contactPhone: demo.contactPhone,
+                  contactEmail: demo.contactEmail,
+                  department: demo.department,
+                  availableHours: demo.availableHours,
+                  publishStatus: demo.publishStatus,
+                  urgencyLevel: demo.urgencyLevel,
+                  visibility: demo.visibility,
+                  notifications: demo.notifications,
+                  articlePublishing: demo.articlePublishing,
+                });
+              }}
+              className="rounded-lg bg-blue-600 px-3 py-1 text-xs text-white transition-colors hover:bg-blue-700"
+            >
+              Alle ausfüllen
+            </button>
+          </div>
+
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div>
               <label className="mb-1 block text-sm font-medium text-muted-foreground dark:text-muted-foreground">
@@ -148,7 +203,7 @@ const Step5Component: React.FC<Step5ComponentProps> = ({
                   value={localContactPerson}
                   onChange={(e) => setLocalContactPerson(e.target.value)}
                   onBlur={commitChanges}
-                  className={`w-full rounded-lg border py-2 pl-10 pr-3 focus:outline-none focus:ring-1 dark:border-border dark:bg-muted dark:text-white ${
+                  className={`w-full rounded-lg border py-2 pl-10 pr-10 focus:outline-none focus:ring-1 dark:border-border dark:bg-muted dark:text-white ${
                     showValidation && (localContactPerson?.length ?? 0) < 3
                       ? "border-red-400 focus:border-red-500 focus:ring-red-500"
                       : "border-border focus:border-blue-500 focus:ring-blue-500"
@@ -159,13 +214,13 @@ const Step5Component: React.FC<Step5ComponentProps> = ({
                 <button
                   type="button"
                   aria-label="Demo füllen"
-                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-muted-foreground hover:bg-muted"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg bg-blue-100 p-2 text-blue-600 transition-colors hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-300 dark:hover:bg-blue-800"
                   onClick={() => {
-                    setLocalContactPerson("KHK Müller");
-                    setLocalContactPhone(DEMO_DEFAULTS.phone);
-                    setLocalContactEmail(DEMO_DEFAULTS.email);
-                    setLocalDepartment(DEMO_DEFAULTS.department);
-                    setLocalAvailableHours(DEMO_DEFAULTS.availableHours);
+                    const demo = generateDemoContactPerson({
+                      ...(wizard ?? {}),
+                      step5: data,
+                    });
+                    setLocalContactPerson(demo);
                     commitChanges();
                   }}
                 >
@@ -194,22 +249,37 @@ const Step5Component: React.FC<Step5ComponentProps> = ({
                   value={localContactPhone}
                   onChange={(e) => setLocalContactPhone(e.target.value)}
                   onBlur={commitChanges}
-                  className={`w-full rounded-lg border py-2 pl-10 pr-3 focus:outline-none focus:ring-1 dark:border-border dark:bg-muted dark:text-white ${
+                  className={`w-full rounded-lg border py-2 pl-10 pr-10 focus:outline-none focus:ring-1 dark:border-border dark:bg-muted dark:text-white ${
                     showValidation &&
                     (localContactPhone?.replace(/\D/g, "").length ?? 0) < 7
                       ? "border-red-400 focus:border-red-500 focus:ring-red-500"
                       : "border-border focus:border-blue-500 focus:ring-blue-500"
                   }`}
-                  placeholder="+49 123 456789"
+                  placeholder="0711 899-0000"
                   required
                 />
-                {showValidation &&
-                  (localContactPhone?.replace(/\D/g, "").length ?? 0) < 7 && (
-                    <p className="mt-1 text-xs text-red-600 dark:text-red-400">
-                      Telefonnummer muss mindestens 7 Ziffern enthalten
-                    </p>
-                  )}
+                <button
+                  type="button"
+                  aria-label="Demo füllen"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg bg-blue-100 p-2 text-blue-600 transition-colors hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-300 dark:hover:bg-blue-800"
+                  onClick={() => {
+                    const demo = generateDemoContactPhone({
+                      ...(wizard ?? {}),
+                      step5: data,
+                    });
+                    setLocalContactPhone(demo);
+                    commitChanges();
+                  }}
+                >
+                  <Wand2 className="h-4 w-4" />
+                </button>
               </div>
+              {showValidation &&
+                (localContactPhone?.replace(/\D/g, "").length ?? 0) < 7 && (
+                  <p className="mt-1 text-xs text-red-600 dark:text-red-400">
+                    Telefonnummer muss mindestens 7 Ziffern enthalten
+                  </p>
+                )}
             </div>
 
             <div>
@@ -226,7 +296,7 @@ const Step5Component: React.FC<Step5ComponentProps> = ({
                   value={localContactEmail}
                   onChange={(e) => setLocalContactEmail(e.target.value)}
                   onBlur={commitChanges}
-                  className={`w-full rounded-lg border py-2 pl-10 pr-3 focus:outline-none focus:ring-1 dark:border-border dark:bg-muted dark:text-white ${
+                  className={`w-full rounded-lg border py-2 pl-10 pr-10 focus:outline-none focus:ring-1 dark:border-border dark:bg-muted dark:text-white ${
                     showValidation &&
                     localContactEmail &&
                     !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(localContactEmail)
@@ -235,14 +305,29 @@ const Step5Component: React.FC<Step5ComponentProps> = ({
                   }`}
                   placeholder="kontakt@polizei.de"
                 />
-                {showValidation &&
-                  localContactEmail &&
-                  !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(localContactEmail) && (
-                    <p className="mt-1 text-xs text-red-600 dark:text-red-400">
-                      Ungültige E-Mail-Adresse
-                    </p>
-                  )}
+                <button
+                  type="button"
+                  aria-label="Demo füllen"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg bg-blue-100 p-2 text-blue-600 transition-colors hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-300 dark:hover:bg-blue-800"
+                  onClick={() => {
+                    const demo = generateDemoContactEmail({
+                      ...(wizard ?? {}),
+                      step5: data,
+                    });
+                    setLocalContactEmail(demo);
+                    commitChanges();
+                  }}
+                >
+                  <Wand2 className="h-4 w-4" />
+                </button>
               </div>
+              {showValidation &&
+                localContactEmail &&
+                !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(localContactEmail) && (
+                  <p className="mt-1 text-xs text-red-600 dark:text-red-400">
+                    Ungültige E-Mail-Adresse
+                  </p>
+                )}
             </div>
 
             <div>
@@ -256,9 +341,24 @@ const Step5Component: React.FC<Step5ComponentProps> = ({
                   value={localDepartment}
                   onChange={(e) => setLocalDepartment(e.target.value)}
                   onBlur={commitChanges}
-                  className="w-full rounded-lg border border-border py-2 pl-10 pr-3 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-border dark:bg-muted dark:text-white"
+                  className="w-full rounded-lg border border-border py-2 pl-10 pr-10 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-border dark:bg-muted dark:text-white"
                   placeholder="z.B. Kriminalpolizei"
                 />
+                <button
+                  type="button"
+                  aria-label="Demo füllen"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg bg-blue-100 p-2 text-blue-600 transition-colors hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-300 dark:hover:bg-blue-800"
+                  onClick={() => {
+                    const demo = generateDemoDepartment({
+                      ...(wizard ?? {}),
+                      step5: data,
+                    });
+                    setLocalDepartment(demo);
+                    commitChanges();
+                  }}
+                >
+                  <Wand2 className="h-4 w-4" />
+                </button>
               </div>
             </div>
 
@@ -273,9 +373,24 @@ const Step5Component: React.FC<Step5ComponentProps> = ({
                   value={localAvailableHours}
                   onChange={(e) => setLocalAvailableHours(e.target.value)}
                   onBlur={commitChanges}
-                  className="w-full rounded-lg border border-border py-2 pl-10 pr-3 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-border dark:bg-muted dark:text-white"
+                  className="w-full rounded-lg border border-border py-2 pl-10 pr-10 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-border dark:bg-muted dark:text-white"
                   placeholder="Mo-Fr 8:00-16:00 Uhr"
                 />
+                <button
+                  type="button"
+                  aria-label="Demo füllen"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg bg-blue-100 p-2 text-blue-600 transition-colors hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-300 dark:hover:bg-blue-800"
+                  onClick={() => {
+                    const demo = generateDemoAvailableHours({
+                      ...(wizard ?? {}),
+                      step5: data,
+                    });
+                    setLocalAvailableHours(demo);
+                    commitChanges();
+                  }}
+                >
+                  <Wand2 className="h-4 w-4" />
+                </button>
               </div>
             </div>
           </div>
@@ -286,26 +401,80 @@ const Step5Component: React.FC<Step5ComponentProps> = ({
           <h3 className="mb-4 text-lg font-semibold text-muted-foreground dark:text-white">
             Veröffentlichungseinstellungen
           </h3>
+
+          {/* Master-Zauberstab für alle Veröffentlichungseinstellungen */}
+          <div className="mb-4 flex items-center justify-between rounded-lg border border-purple-200 bg-purple-50 p-3 dark:border-purple-800 dark:bg-purple-900">
+            <div className="flex items-center gap-2">
+              <WandSparkles className="h-5 w-5 text-purple-600 dark:text-purple-400" />
+              <span className="text-sm font-medium text-purple-900 dark:text-purple-100">
+                Alle Veröffentlichungseinstellungen automatisch konfigurieren
+              </span>
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                const demo = generateAllStep5Data({
+                  ...(wizard ?? {}),
+                  step5: data,
+                });
+                onChange({
+                  ...data,
+                  publishStatus: demo.publishStatus,
+                  urgencyLevel: demo.urgencyLevel,
+                  visibility: demo.visibility,
+                  notifications: demo.notifications,
+                  articlePublishing: demo.articlePublishing,
+                });
+              }}
+              className="rounded-lg bg-purple-600 px-3 py-1 text-xs text-white transition-colors hover:bg-purple-700"
+            >
+              Alle konfigurieren
+            </button>
+          </div>
           <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
             <div>
               <label className="mb-2 block text-sm font-medium text-muted-foreground dark:text-muted-foreground">
                 Veröffentlichungsstatus
               </label>
-              <select
-                value={data.publishStatus}
-                onChange={(e) =>
-                  onChange({
-                    ...data,
-                    publishStatus: e.target.value as Step5Data["publishStatus"],
-                  })
-                }
-                className="w-full rounded-lg border border-border px-3 py-2 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-border dark:bg-muted dark:text-white"
-              >
-                <option value="draft">Entwurf</option>
-                <option value="review">Zur Überprüfung</option>
-                <option value="scheduled">Geplant</option>
-                <option value="immediate">Sofort veröffentlichen</option>
-              </select>
+              <div className="relative">
+                <select
+                  value={data.publishStatus}
+                  onChange={(e) =>
+                    onChange({
+                      ...data,
+                      publishStatus: e.target
+                        .value as Step5Data["publishStatus"],
+                    })
+                  }
+                  className="w-full rounded-lg border border-border px-3 py-2 pr-10 focus:border-blue-500 focus:outline-none focus:ring-1 focus:ring-blue-500 dark:border-border dark:bg-muted dark:text-white"
+                >
+                  <option value="draft">Entwurf</option>
+                  <option value="review">Zur Überprüfung</option>
+                  <option value="scheduled">Geplant</option>
+                  <option value="immediate">Sofort veröffentlichen</option>
+                </select>
+                <button
+                  type="button"
+                  aria-label="Demo füllen"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg bg-purple-100 p-2 text-purple-600 transition-colors hover:bg-purple-200 dark:bg-purple-900 dark:text-purple-300 dark:hover:bg-purple-800"
+                  onClick={() => {
+                    const demo = generateAllStep5Data({
+                      ...(wizard ?? {}),
+                      step5: data,
+                    });
+                    onChange({
+                      ...data,
+                      publishStatus: demo.publishStatus,
+                      urgencyLevel: demo.urgencyLevel,
+                      visibility: demo.visibility,
+                      notifications: demo.notifications,
+                      articlePublishing: demo.articlePublishing,
+                    });
+                  }}
+                >
+                  <WandSparkles className="h-4 w-4" />
+                </button>
+              </div>
             </div>
 
             <div>
@@ -334,6 +503,7 @@ const Step5Component: React.FC<Step5ComponentProps> = ({
         {/* Sichtbarkeit */}
         <div>
           <h4 className="mb-3 text-sm font-medium text-muted-foreground dark:text-muted-foreground">
+            <Globe className="mr-2 inline h-4 w-4" />
             Sichtbarkeit
           </h4>
           <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
@@ -367,6 +537,7 @@ const Step5Component: React.FC<Step5ComponentProps> = ({
         {/* Benachrichtigungen */}
         <div>
           <h4 className="mb-3 text-sm font-medium text-muted-foreground dark:text-muted-foreground">
+            <Bell className="mr-2 inline h-4 w-4" />
             Benachrichtigungen
           </h4>
           <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
@@ -400,6 +571,7 @@ const Step5Component: React.FC<Step5ComponentProps> = ({
         {/* Artikel-Veröffentlichung */}
         <div>
           <h4 className="mb-3 text-sm font-medium text-muted-foreground dark:text-muted-foreground">
+            <FileText className="mr-2 inline h-4 w-4" />
             Artikel-Veröffentlichung
           </h4>
           <div className="space-y-4">

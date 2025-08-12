@@ -147,7 +147,7 @@ async function testCompleteSystem() {
       },
       step5: {
         contactPerson: "Test Kontakt",
-        contactPhone: "+49 123 456789",
+        contactPhone: "0711 899-0000",
         contactEmail: "test@example.com",
         department: "Test Abteilung",
         availableHours: "Mo-Fr 8:00-16:00",

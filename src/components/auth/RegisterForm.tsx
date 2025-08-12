@@ -391,7 +391,7 @@ export default function RegisterForm() {
                   value={formData.phone}
                   onChange={(e) => handleInputChange("phone", e.target.value)}
                   className="input-dark-mode py-3 pl-10 pr-4"
-                  placeholder="+49 123 456789"
+                  placeholder="0711 899-0000"
                 />
               </div>
             </div>

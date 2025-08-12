@@ -23,6 +23,7 @@ import {
 import { useResponsive } from "~/hooks/useResponsive";
 import { useRouter } from "next/navigation";
 import { api } from "~/trpc/react";
+import { getFahndungUrl } from "~/lib/seo";
 
 // Import separate Komponenten
 import Step1Component from "./steps/Step1Component";
@@ -162,8 +163,18 @@ const FahndungWizardContainer = ({
     onSuccess: (data) => {
       log("✅ Fahndung erfolgreich erstellt:", data);
       if (wizardData.step5?.publishStatus === "immediate") {
-        // Verwende die case_number statt der internen id für die URL
-        router.push(`/fahndungen/${data.case_number}`);
+        // Verwende SEO-freundliche URL basierend auf Titel und Fallnummer
+        try {
+          const url = getFahndungUrl(data.title, data.case_number);
+          router.push(url);
+        } catch (error) {
+          // Fallback auf direkte Fallnummer-Navigation
+          console.warn(
+            "SEO-URL-Generierung fehlgeschlagen, verwende Fallback:",
+            error,
+          );
+          router.push(`/fahndungen/${data.case_number}`);
+        }
       } else {
         router.push("/fahndungen");
       }
@@ -476,6 +487,7 @@ const FahndungWizardContainer = ({
           <Step5Component
             data={wizardData.step5}
             onChange={(data) => updateStepData("step5", data)}
+            wizard={wizardData}
             showValidation={triedNext}
           />
         );

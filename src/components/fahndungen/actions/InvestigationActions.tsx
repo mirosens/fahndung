@@ -131,8 +131,21 @@ export default function InvestigationActions({
     onSuccess: (duplicatedInvestigation) => {
       toast.success("Fahndung erfolgreich dupliziert");
       onAction?.();
-      // Navigiere zur neuen Fahndung
-      router.push(`/fahndungen/${duplicatedInvestigation.id}?edit=true`);
+      // Navigiere zur neuen Fahndung mit SEO-URL
+      try {
+        const url = getFahndungEditUrl(
+          duplicatedInvestigation.title,
+          duplicatedInvestigation.case_number,
+        );
+        router.push(url);
+      } catch (error) {
+        // Fallback auf direkte ID-Navigation
+        console.warn(
+          "SEO-URL-Generierung fehlgeschlagen, verwende Fallback:",
+          error,
+        );
+        router.push(`/fahndungen/${duplicatedInvestigation.id}?edit=true`);
+      }
     },
     onError: () => {
       toast.error("Fehler beim Duplizieren der Fahndung");

@@ -7,7 +7,6 @@ import {
   FileText,
   Trash2,
   AlertCircle,
-  Camera,
   Info,
   FileImage,
   FileVideo,
@@ -18,7 +17,6 @@ import {
   FolderOpen,
 } from "lucide-react";
 import Image from "next/image";
-import { uploadToCloudinary } from "~/lib/cloudinary-client";
 import ImageEditor from "../ImageEditor";
 import CloudinaryMediaLibrary from "../CloudinaryMediaLibrary";
 import type { Step3Data } from "../types/WizardTypes";
@@ -26,14 +24,9 @@ import type { Step3Data } from "../types/WizardTypes";
 interface Step3ComponentProps {
   data: Step3Data;
   onChange: (data: Step3Data) => void;
-  showValidation?: boolean;
 }
 
-const Step3Component: React.FC<Step3ComponentProps> = ({
-  data,
-  onChange,
-  showValidation = false,
-}) => {
+const Step3Component: React.FC<Step3ComponentProps> = ({ data, onChange }) => {
   const [dragZone, setDragZone] = useState<
     "main" | "additional" | "documents" | null
   >(null);
@@ -70,16 +63,40 @@ const Step3Component: React.FC<Step3ComponentProps> = ({
     try {
       console.log("🚀 Starte Cloudinary-Upload für:", file.name);
 
-      const result = await uploadToCloudinary(file, {
-        folder: "fahndungen",
-        tags: ["fahndung", "upload"],
+      // Verwende die verbesserte Upload-API
+      const formData = new FormData();
+      formData.append("file", file);
+      formData.append("tags", "fahndung,upload");
+      formData.append("context", "fahndung");
+
+      const response = await fetch("/api/upload", {
+        method: "POST",
+        body: formData,
       });
+
+      if (!response.ok) {
+        throw new Error(`Upload failed: ${response.status}`);
+      }
+
+      const result = (await response.json()) as {
+        success: boolean;
+        data?: { secure_url: string };
+        error?: string;
+      };
+
+      if (!result.success) {
+        throw new Error(result.error ?? "Upload failed");
+      }
+
+      if (!result.data?.secure_url) {
+        throw new Error("No secure_url in response");
+      }
 
       console.log(
         "✅ Bild erfolgreich zu Cloudinary hochgeladen:",
-        result.secure_url,
+        result.data.secure_url,
       );
-      return result.secure_url;
+      return result.data.secure_url;
     } catch (error: unknown) {
       console.error("❌ Cloudinary-Upload fehlgeschlagen:", error);
       throw error;
@@ -222,11 +239,10 @@ const Step3Component: React.FC<Step3ComponentProps> = ({
         }
       }
 
-      // Aktualisiere Daten mit URLs
+      // Aktualisiere Daten mit URLs (nur URLs, keine Files)
       const currentAdditionalImageUrls = data.additionalImageUrls ?? [];
       const updatedData: Step3Data = {
         ...data,
-        additionalImages: [...data.additionalImages, ...files],
         additionalImageUrls: [...currentAdditionalImageUrls, ...uploadedUrls],
       };
       onChange(updatedData);
@@ -263,15 +279,12 @@ const Step3Component: React.FC<Step3ComponentProps> = ({
     onChange(updatedData);
   };
 
-  const removeAdditionalImage = (index: number) => {
-    const updatedImages = [...data.additionalImages];
+  const removeAdditionalImageUrl = (index: number) => {
     const updatedUrls = [...(data.additionalImageUrls ?? [])];
-    updatedImages.splice(index, 1);
     updatedUrls.splice(index, 1);
 
     onChange({
       ...data,
-      additionalImages: updatedImages,
       additionalImageUrls: updatedUrls,
     });
   };
@@ -306,7 +319,7 @@ const Step3Component: React.FC<Step3ComponentProps> = ({
   };
 
   // Cloudinary Media Library Handler
-  const handleMediaLibrarySelect = (imageUrl: string, publicId: string) => {
+  const handleMediaLibrarySelect = (imageUrl: string, _publicId: string) => {
     onChange({
       ...data,
       mainImageUrl: imageUrl,
@@ -413,22 +426,17 @@ const Step3Component: React.FC<Step3ComponentProps> = ({
               )}
             </div>
           ) : (
-            <div className="space-y-4">
-              <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-muted dark:bg-muted">
-                <Camera className="h-8 w-8 text-muted-foreground" />
+            <div className="flex flex-col items-center justify-center space-y-4">
+              <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-full bg-muted dark:bg-muted">
+                <ImageIcon className="h-6 w-6 text-muted-foreground" />
               </div>
-              <div>
+              <div className="text-center">
                 <p className="text-sm font-medium text-muted-foreground dark:text-white">
-                  Bild hierher ziehen oder klicken zum Auswählen
+                  Hauptbild hierher ziehen
                 </p>
                 <p className="text-xs text-muted-foreground dark:text-muted-foreground">
                   PNG, JPG, GIF bis 20MB
                 </p>
-                {showValidation && !data.mainImage && (
-                  <p className="mt-2 text-xs text-red-600 dark:text-red-400">
-                    Hauptbild ist erforderlich
-                  </p>
-                )}
               </div>
               <div className="flex gap-2">
                 <button
@@ -489,20 +497,20 @@ const Step3Component: React.FC<Step3ComponentProps> = ({
           onDragLeave={(e) => handleDrag(e, "additional")}
           onDrop={(e) => handleDrop(e, "additional")}
         >
-          {data.additionalImages.length > 0 ? (
+          {data.additionalImageUrls && data.additionalImageUrls.length > 0 ? (
             <div className="grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4">
-              {data.additionalImages.map((file, index) => (
-                <div key={index} className="group relative">
-                  <img
-                    src={
-                      data.additionalImageUrls?.[index] ??
-                      URL.createObjectURL(file)
-                    }
+              {/* Zeige alle Bilder (Files und URLs) */}
+              {data.additionalImageUrls?.map((url, index) => (
+                <div key={`image-${index}`} className="group relative">
+                  <Image
+                    src={url}
                     alt={`Zusätzliches Bild ${index + 1}`}
+                    width={192}
+                    height={192}
                     className="h-24 w-full rounded-lg object-cover"
                   />
                   <button
-                    onClick={() => removeAdditionalImage(index)}
+                    onClick={() => removeAdditionalImageUrl(index)}
                     className="absolute -right-2 -top-2 hidden rounded-full bg-red-500 p-1 text-white hover:bg-red-600 group-hover:block"
                   >
                     <X className="h-3 w-3" />
@@ -680,7 +688,9 @@ const Step3Component: React.FC<Step3ComponentProps> = ({
         onClose={() => setIsMediaLibraryOpen(false)}
         onSelectImage={handleMediaLibrarySelect}
         onSelectMultipleImages={handleMediaLibrarySelectMultiple}
-        cloudName={process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME || "dpfpr3yxc"}
+        cloudName={
+          process.env["NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME"] ?? "dpfpr3yxc"
+        }
         multiple={mediaLibraryMode === "additional"}
       />
     </div>

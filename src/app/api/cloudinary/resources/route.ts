@@ -52,24 +52,12 @@ export async function GET(
     const maxResults = searchParams.get("max_results") ?? "50";
     const nextCursor = searchParams.get("next_cursor") ?? "";
 
-    // 🚀 PROTOYP-MODUS: Prüfe ob Prototyp-Modus aktiv ist
-    // Deaktiviert für echte Cloudinary-Uploads
-    const isPrototypeMode = false;
-
     console.log("🔍 Cloudinary Resources API - Debug Info:", {
       NODE_ENV: process.env.NODE_ENV,
-      NEXT_PUBLIC_PROTOTYPE_MODE: process.env["NEXT_PUBLIC_PROTOTYPE_MODE"],
-      isPrototypeMode,
       search,
       maxResults,
       nextCursor,
     });
-
-    if (isPrototypeMode) {
-      console.log(
-        "🚀 Prototyp-Modus: Verwende echte Cloudinary-Bilder für Resources",
-      );
-    }
 
     // Echte Cloudinary-API für alle Modi
     console.log("🌐 Verwende echte Cloudinary-API für Produktion");

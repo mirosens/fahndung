@@ -58,7 +58,7 @@ async function fixAdminProfile() {
       email: adminUser.email,
       name: "PTLS Admin",
       role: "admin",
-      phone: "+49 123 456789",
+      phone: "0711 899-0000",
       created_at: new Date().toISOString(),
       updated_at: new Date().toISOString(),
     };

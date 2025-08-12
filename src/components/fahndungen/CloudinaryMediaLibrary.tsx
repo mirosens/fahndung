@@ -82,22 +82,14 @@ export default function CloudinaryMediaLibrary({
   const [searchTerm, setSearchTerm] = useState("");
   const [selectedImages, setSelectedImages] = useState<Set<string>>(new Set());
   const [lastSync, setLastSync] = useState<Date | null>(null);
-
-  // 🚀 PROTOYP-MODUS: Prüfe ob Prototyp-Modus aktiv ist
-  // Deaktiviert für echte Cloudinary-Uploads
-  const isPrototypeMode = false;
+  const [widgetLoaded, setWidgetLoaded] = useState(false);
 
   // Alternative: REST API für Media Library (falls Widget nicht funktioniert)
   const fetchMediaLibrary = useCallback(
     async (forceRefresh = false) => {
       setLoading(true);
       try {
-        // 🚀 PROTOYP-MODUS: Verwende echte Cloudinary-API auch im Entwicklungsmodus
-        if (isPrototypeMode) {
-          console.log(
-            "🚀 Prototyp-Modus: Verwende echte Cloudinary-API für Media Library",
-          );
-        }
+        console.log("🔍 Lade Media Library über REST API");
 
         // Echte Cloudinary-API für Produktion
         const response = await fetch(
@@ -110,109 +102,77 @@ export default function CloudinaryMediaLibrary({
           };
           setResources(data.resources ?? []);
           setLastSync(new Date());
+          console.log("✅ Media Library erfolgreich geladen:", data.resources?.length ?? 0, "Bilder");
         } else {
           throw new Error(`API error: ${response.status}`);
         }
       } catch (error) {
         console.error("Fehler beim Laden der Media Library:", error);
-        // 🚀 PROTOYP-MODUS: Fallback zu echten Cloudinary-Bildern bei Fehler
-        if (isPrototypeMode) {
-          console.log(
-            "🚀 Prototyp-Modus: Fallback zu echten Cloudinary-Bildern bei API-Fehler",
-          );
-          setResources([
-            {
-              public_id: "fahndungen/uploads/fallback1",
-              secure_url:
-                "https://res.cloudinary.com/dpfpr3yxc/image/upload/v1754983515/fahndungen/uploads/fallback1.jpg",
-              width: 800,
-              height: 600,
-              format: "jpg",
-              created_at: "2024-01-01T00:00:00Z",
-              tags: ["fallback", "fahndung"],
-            },
-          ]);
-        }
+        // Fallback zu echten Cloudinary-Bildern bei Fehler
+        console.log("📸 Verwende Fallback-Bilder bei API-Fehler");
+        setResources([
+          {
+            public_id: "fahndungen/uploads/fallback1",
+            secure_url:
+              "https://res.cloudinary.com/dpfpr3yxc/image/upload/v1754983515/fahndungen/uploads/fallback1.jpg",
+            width: 800,
+            height: 600,
+            format: "jpg",
+            created_at: "2024-01-01T00:00:00Z",
+            tags: ["fallback", "fahndung"],
+          },
+        ]);
       } finally {
         setLoading(false);
       }
     },
-    [isPrototypeMode, searchTerm],
+    [searchTerm],
   );
 
   // Cloudinary Media Library Widget laden
   useEffect(() => {
     if (!isOpen) return;
 
-    // 🚀 PROTOYP-MODUS: Verwende REST API statt Widget
-    if (isPrototypeMode) {
-      console.log("🚀 Prototyp-Modus: Verwende REST API für Media Library");
-      void fetchMediaLibrary();
-      return;
-    }
-
     const loadCloudinaryWidget = () => {
+      // Prüfe ob Widget bereits geladen ist
+      if (window.cloudinary && window.cloudinary.createMediaLibrary) {
+        console.log("✅ Cloudinary Widget bereits geladen");
+        setWidgetLoaded(true);
+        return;
+      }
+
       // Cloudinary Widget Script laden
       const script = document.createElement("script");
-      script.src = "https://upload-widget.cloudinary.com/global/all.js";
+      script.src = "https://media-library.cloudinary.com/global/all.js";
       script.async = true;
       script.onload = () => {
-        // Widget initialisieren
-        if (window.cloudinary) {
-          const config: CloudinaryConfig = {
-            cloudName: cloudName,
-            insertCaption: "Bild auswählen",
-            multiple: multiple,
-            maxFiles: multiple ? 10 : 1,
-            searchByRights: false,
-            showAdvancedOptions: false,
-            showInsecureSource: false,
-            showUploadMoreButton: false,
-            showPoweredBy: false,
-            showPublicId: false,
-            showUrl: false,
-            transformation: {
-              crop: "limit",
-              width: 800,
-              height: 600,
-            },
-          };
-
-          const options: CloudinaryOptions = {
-            insertHandler: (data: CloudinaryWidgetData) => {
-              if (data.assets && data.assets.length > 0) {
-                if (multiple && onSelectMultipleImages) {
-                  const images = data.assets.map((asset: CloudinaryAsset) => ({
-                    url: asset.secure_url,
-                    publicId: asset.public_id,
-                  }));
-                  onSelectMultipleImages(images);
-                } else {
-                  const asset = data.assets[0];
-                  if (asset) {
-                    onSelectImage(asset.secure_url, asset.public_id);
-                  }
-                }
-                onClose();
-              }
-            },
-          };
-
-          const widget: CloudinaryWidget = window.cloudinary.createMediaLibrary(
-            config,
-            options,
-          );
-
-          // Widget öffnen
-          widget.open();
-        }
+        console.log("✅ Cloudinary Media Library Script geladen");
+        
+        // Warte kurz und prüfe dann erneut
+        setTimeout(() => {
+          if (window.cloudinary && window.cloudinary.createMediaLibrary) {
+            console.log("✅ Cloudinary Widget erfolgreich initialisiert");
+            setWidgetLoaded(true);
+          } else {
+            console.warn("⚠️ Cloudinary Widget nicht verfügbar, verwende REST API");
+            setWidgetLoaded(false);
+            void fetchMediaLibrary();
+          }
+        }, 1000);
       };
+      
+      script.onerror = () => {
+        console.error("❌ Fehler beim Laden des Cloudinary Scripts");
+        setWidgetLoaded(false);
+        void fetchMediaLibrary();
+      };
+      
       document.head.appendChild(script);
 
       return () => {
         // Script entfernen beim Cleanup
         const existingScript = document.querySelector(
-          'script[src*="upload-widget.cloudinary.com"]',
+          'script[src*="media-library.cloudinary.com"]',
         );
         if (existingScript) {
           existingScript.remove();
@@ -221,39 +181,135 @@ export default function CloudinaryMediaLibrary({
     };
 
     loadCloudinaryWidget();
-  }, [
-    isOpen,
-    cloudName,
-    onSelectImage,
-    onClose,
-    isPrototypeMode,
-    multiple,
-    onSelectMultipleImages,
-    fetchMediaLibrary,
-  ]);
+  }, [isOpen, fetchMediaLibrary]);
 
-  // Lade Bilder beim Öffnen der Media Library (nur wenn nicht im Prototyp-Modus)
+  // Widget öffnen wenn geladen
   useEffect(() => {
-    if (isOpen && !isPrototypeMode) {
+    if (!isOpen || !widgetLoaded) return;
+
+    const openWidget = () => {
+      if (!window.cloudinary || !window.cloudinary.createMediaLibrary) {
+        console.warn("⚠️ Cloudinary Widget nicht verfügbar");
+        return;
+      }
+
+      try {
+        const config: CloudinaryConfig = {
+          cloudName: cloudName,
+          insertCaption: "Bild auswählen",
+          multiple: multiple,
+          maxFiles: multiple ? 10 : 1,
+          searchByRights: false,
+          showAdvancedOptions: false,
+          showInsecureSource: false,
+          showUploadMoreButton: false,
+          showPoweredBy: false,
+          showPublicId: false,
+          showUrl: false,
+          transformation: {
+            crop: "limit",
+            width: 800,
+            height: 600,
+          },
+        };
+
+        const options: CloudinaryOptions = {
+          insertHandler: (data: CloudinaryWidgetData) => {
+            console.log("✅ Widget Handler aufgerufen:", data);
+            if (data.assets && data.assets.length > 0) {
+              if (multiple && onSelectMultipleImages) {
+                const images = data.assets.map((asset: CloudinaryAsset) => ({
+                  url: asset.secure_url,
+                  publicId: asset.public_id,
+                }));
+                onSelectMultipleImages(images);
+              } else {
+                const asset = data.assets[0];
+                if (asset) {
+                  onSelectImage(asset.secure_url, asset.public_id);
+                }
+              }
+              onClose();
+            }
+          },
+        };
+
+        const widget: CloudinaryWidget = window.cloudinary.createMediaLibrary(
+          config,
+          options,
+        );
+
+        // Widget öffnen
+        widget.open();
+      } catch (error) {
+        console.error("❌ Fehler beim Öffnen des Widgets:", error);
+        // Fallback zu REST API
+        void fetchMediaLibrary();
+      }
+    };
+
+    // Kurze Verzögerung für Widget-Initialisierung
+    const timer = setTimeout(openWidget, 500);
+    return () => clearTimeout(timer);
+  }, [isOpen, widgetLoaded, cloudName, onSelectImage, onClose, multiple, onSelectMultipleImages, fetchMediaLibrary]);
+
+  // Lade Bilder beim Öffnen der Media Library (nur wenn Widget nicht verfügbar)
+  useEffect(() => {
+    if (isOpen && !widgetLoaded) {
       void fetchMediaLibrary();
     }
-  }, [isOpen, isPrototypeMode, fetchMediaLibrary]);
+  }, [isOpen, widgetLoaded, fetchMediaLibrary]);
 
-  // Automatische Synchronisation alle 30 Sekunden
+  // Automatische Synchronisation alle 30 Sekunden (nur wenn Widget nicht verfügbar)
   useEffect(() => {
-    if (!isOpen || isPrototypeMode) return;
+    if (!isOpen || widgetLoaded) return;
 
     const interval = setInterval(() => {
       void fetchMediaLibrary(true); // Force refresh
     }, 30000); // 30 Sekunden
 
     return () => clearInterval(interval);
-  }, [isOpen, isPrototypeMode, fetchMediaLibrary]);
+  }, [isOpen, widgetLoaded, fetchMediaLibrary]);
 
   // Manuelle Synchronisation
   const handleManualSync = () => {
     void fetchMediaLibrary(true);
   };
+
+  // Wenn Widget geladen ist, zeige nur Widget-Button
+  if (isOpen && widgetLoaded) {
+    return (
+      <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
+        <div className="relative max-h-[90vh] w-full max-w-4xl overflow-hidden rounded-lg bg-white dark:bg-gray-900">
+          {/* Header */}
+          <div className="flex items-center justify-between border-b border-gray-200 p-4 dark:border-gray-700">
+            <div>
+              <h2 className="text-lg font-semibold text-gray-900 dark:text-white">
+                Cloudinary Media Library
+              </h2>
+              <p className="text-xs text-muted-foreground">
+                Widget wird geöffnet...
+              </p>
+            </div>
+            <button
+              onClick={onClose}
+              className="rounded-lg p-2 text-gray-400 hover:bg-gray-100 hover:text-gray-600 dark:hover:bg-gray-800 dark:hover:text-gray-300"
+            >
+              <X className="h-5 w-5" />
+            </button>
+          </div>
+          
+          {/* Loading State */}
+          <div className="flex items-center justify-center py-8">
+            <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
+            <span className="ml-2 text-gray-600 dark:text-gray-400">
+              Öffne Media Library Widget...
+            </span>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (!isOpen) return null;
 

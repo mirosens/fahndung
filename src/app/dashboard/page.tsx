@@ -29,6 +29,7 @@ import {
 import { getBrowserClient } from "~/lib/supabase/supabase-browser";
 import { getRolePermissions } from "~/lib/auth";
 import { type Fahndungskarte } from "~/types/fahndungskarte";
+import { getFahndungUrl, getFahndungEditUrl } from "~/lib/seo";
 
 export default function DashboardPage() {
   const { user, session, loading, initialized } = useAuth();
@@ -697,9 +698,13 @@ export default function DashboardPage() {
                       {/* Aktionen */}
                       <div className="flex items-center gap-2">
                         <button
-                          onClick={() =>
-                            router.push(`/fahndungen/${investigation.id}`)
-                          }
+                          onClick={() => {
+                            const url = getFahndungUrl(
+                              investigation.title,
+                              investigation.case_number,
+                            );
+                            router.push(url);
+                          }}
                           className="flex items-center gap-1 rounded-lg bg-muted px-3 py-1.5 text-xs font-medium text-muted-foreground transition-colors hover:bg-muted"
                         >
                           <Eye className="h-3 w-3" />
@@ -707,11 +712,13 @@ export default function DashboardPage() {
                         </button>
                         {userPermissions?.canEdit && (
                           <button
-                            onClick={() =>
-                              router.push(
-                                `/fahndungen/${investigation.id}/bearbeiten`,
-                              )
-                            }
+                            onClick={() => {
+                              const url = getFahndungEditUrl(
+                                investigation.title,
+                                investigation.case_number,
+                              );
+                              router.push(url);
+                            }}
                             className="flex items-center gap-1 rounded-lg bg-blue-500 px-3 py-1.5 text-xs font-medium text-white transition-colors hover:bg-blue-600"
                           >
                             <Edit3 className="h-3 w-3" />

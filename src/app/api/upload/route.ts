@@ -54,67 +54,6 @@ export async function POST(req: Request) {
       );
     }
 
-    // 🚀 PROTOYP-MODUS: Prüfe ob Prototyp-Modus aktiv ist
-    const isPrototypeMode =
-      process.env.NODE_ENV === "development" ||
-      process.env["NEXT_PUBLIC_PROTOTYPE_MODE"] === "true";
-
-    if (isPrototypeMode) {
-      console.log("🚀 Prototyp-Modus: Verwende Mock-Upload für Cloudinary");
-
-      // Simuliere Upload-Verzögerung
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-
-      // Bestimme passendes Platzhalterbild basierend auf Kontext
-      let placeholderType = "default";
-      const fileName = file.name.toLowerCase();
-      const contextLower = context?.toLowerCase() ?? "";
-
-      if (
-        fileName.includes("person") ||
-        fileName.includes("portrait") ||
-        fileName.includes("face") ||
-        contextLower.includes("person")
-      ) {
-        placeholderType = "person";
-      } else if (
-        fileName.includes("car") ||
-        fileName.includes("vehicle") ||
-        fileName.includes("auto") ||
-        contextLower.includes("vehicle")
-      ) {
-        placeholderType = "vehicle";
-      } else if (
-        fileName.includes("document") ||
-        fileName.includes("paper") ||
-        fileName.includes("file") ||
-        contextLower.includes("document")
-      ) {
-        placeholderType = "document";
-      } else if (
-        fileName.includes("object") ||
-        fileName.includes("item") ||
-        contextLower.includes("object")
-      ) {
-        placeholderType = "object";
-      }
-
-      // Erstelle Mock-Response mit robuster URL
-      const mockResult = {
-        public_id: `fahndungen/prototype_${Date.now()}`,
-        secure_url: getPlaceholderImage(placeholderType),
-        width: 800,
-        height: 600,
-        format: file.type.split("/")[1] ?? "jpg",
-        bytes: file.size,
-        created_at: new Date().toISOString(),
-        tags: parseTags(tags, context),
-      };
-
-      console.log("✅ Mock-Upload erfolgreich:", mockResult);
-      return NextResponse.json({ success: true, data: mockResult });
-    }
-
     // Normale Upload-Logik für Produktion
     const cloudName = required("CLOUDINARY_CLOUD_NAME");
     const apiKey = required("CLOUDINARY_API_KEY");
@@ -126,11 +65,30 @@ export async function POST(req: Request) {
     const uploadTags = parseTags(tags, context);
 
     // Signatur: alphabetisch sortierte Param-String + API_SECRET
-    const toSign = `folder=${folder}&timestamp=${timestamp}`;
+    const params = {
+      folder: folder,
+      timestamp: timestamp,
+    };
+
+    // Tags hinzufügen falls vorhanden
+    if (uploadTags.length > 0) {
+      params.tags = uploadTags.join(",");
+    }
+
+    // Alphabetisch sortierte Parameter für Signatur
+    const sortedParams = Object.keys(params)
+      .sort()
+      .map(key => `${key}=${params[key as keyof typeof params]}`)
+      .join("&");
+
+    console.log("🔍 Signatur-Parameter:", sortedParams);
+
     const signature = crypto
       .createHash("sha1")
-      .update(toSign + apiSecret)
+      .update(sortedParams + apiSecret)
       .digest("hex");
+
+    console.log("🔍 Generierte Signatur:", signature);
 
     // --- Request an Cloudinary ---
     const body = new FormData();
@@ -149,6 +107,15 @@ export async function POST(req: Request) {
       body.append("tags", uploadTags.join(","));
     }
 
+    console.log("🚀 Sende Upload an Cloudinary:", {
+      cloudName,
+      apiKey: apiKey.substring(0, 8) + "...",
+      timestamp,
+      folder,
+      signature: signature.substring(0, 8) + "...",
+      tags: uploadTags,
+    });
+
     // Timeout für Cloudinary-Request
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 Sekunden
@@ -166,6 +133,10 @@ export async function POST(req: Request) {
       clearTimeout(timeoutId);
 
       const json = (await resp.json()) as { error?: { message?: string } };
+      
+      console.log("📡 Cloudinary Response Status:", resp.status);
+      console.log("📡 Cloudinary Response:", json);
+
       if (!resp.ok) {
         console.error("❌ Cloudinary Upload-Fehler:", json?.error?.message);
 
