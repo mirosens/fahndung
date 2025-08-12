@@ -2,11 +2,12 @@
 
 import React, { useState, useEffect } from "react";
 import { useDebounce } from "~/hooks/useDebounce";
-import { X, Wand2, WandSparkles } from "lucide-react";
+import { X, Wand2, WandSparkles, Info } from "lucide-react";
 import {
   generateDemoShortDescription,
   generateDemoDescription,
   generateDemoFeatures,
+  generateAllStep2Data,
 } from "@/lib/demo/autofill";
 import type { Step2Data, WizardData } from "../types/WizardTypes";
 
@@ -101,13 +102,69 @@ const Step2Component: React.FC<Step2ComponentProps> = ({
 
   return (
     <div className="space-y-6">
-      <div>
-        <h2 className="mb-2 text-2xl font-bold text-muted-foreground dark:text-white">
-          Schritt 2: Beschreibung & Details
-        </h2>
-        <p className="text-muted-foreground dark:text-muted-foreground">
-          Fügen Sie detaillierte Informationen zur Fahndung hinzu
-        </p>
+      <div className="flex items-center justify-between">
+        <div>
+          <h2 className="mb-2 text-2xl font-bold text-muted-foreground dark:text-white">
+            Schritt 2: Beschreibung & Details
+          </h2>
+          <p className="text-muted-foreground dark:text-muted-foreground">
+            Fügen Sie detaillierte Informationen zur Fahndung hinzu
+          </p>
+        </div>
+
+        {/* Master-Zauberstab-Button */}
+        <button
+          type="button"
+          onClick={async () => {
+            try {
+              const allData = await generateAllStep2Data({
+                ...(wizard ?? {}),
+                step2: data,
+              });
+
+              setLocalShortDescription(allData.shortDescription);
+              setLocalDescription(allData.description);
+              setLocalFeatures(allData.features);
+
+              // Tags setzen
+              onChange({
+                ...data,
+                shortDescription: allData.shortDescription,
+                description: allData.description,
+                features: allData.features,
+                tags: allData.tags,
+              });
+
+              // Lokale States aktualisieren
+              setLocalShortDescription(allData.shortDescription);
+              setLocalDescription(allData.description);
+              setLocalFeatures(allData.features);
+            } catch (error) {
+              console.error("Fehler beim automatischen Ausfüllen:", error);
+            }
+          }}
+          className="flex items-center gap-2 rounded-lg bg-gradient-to-r from-purple-600 to-blue-600 px-4 py-2 text-white shadow-lg transition-all duration-200 hover:from-purple-700 hover:to-blue-700 focus:outline-none focus:ring-2 focus:ring-purple-500"
+          title="Alle Felder automatisch basierend auf Schritt 1 ausfüllen"
+        >
+          <WandSparkles className="h-5 w-5" />
+          <span className="font-medium">Zauberstab</span>
+        </button>
+      </div>
+
+      {/* Info-Box für Zauberstab */}
+      <div className="rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-900">
+        <div className="flex items-start gap-3">
+          <Info className="mt-0.5 h-5 w-5 flex-shrink-0 text-blue-600 dark:text-blue-400" />
+          <div className="text-sm text-blue-800 dark:text-blue-200">
+            <p className="mb-1 font-medium">💡 Zauberstab-Funktion</p>
+            <p>
+              Der <strong>Zauberstab-Button</strong> füllt automatisch alle
+              Felder basierend auf den Informationen aus Schritt 1 aus. Die
+              einzelnen Zauberstab-Buttons füllen nur das jeweilige Feld. Du
+              kannst die generierten Inhalte jederzeit anpassen.
+            </p>
+          </div>
+        </div>
       </div>
 
       <div className="space-y-6">
@@ -135,7 +192,7 @@ const Step2Component: React.FC<Step2ComponentProps> = ({
             <button
               type="button"
               aria-label="Demo füllen"
-              className="absolute right-2 top-1/2 -translate-y-1/2 rounded p-1 text-muted-foreground hover:bg-muted"
+              className="absolute right-2 top-1/2 -translate-y-1/2 rounded-lg bg-blue-100 p-2 text-blue-600 transition-colors hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-300 dark:hover:bg-blue-800"
               onClick={async () => {
                 const demo = await generateDemoShortDescription({
                   ...(wizard ?? {}),
@@ -179,7 +236,7 @@ const Step2Component: React.FC<Step2ComponentProps> = ({
             <button
               type="button"
               aria-label="Demo füllen"
-              className="absolute right-2 top-2 rounded p-1 text-muted-foreground hover:bg-muted"
+              className="absolute right-2 top-2 rounded-lg bg-blue-100 p-2 text-blue-600 transition-colors hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-300 dark:hover:bg-blue-800"
               onClick={async () => {
                 const demo = await generateDemoDescription({
                   ...(wizard ?? {}),
@@ -269,7 +326,7 @@ const Step2Component: React.FC<Step2ComponentProps> = ({
             <button
               type="button"
               aria-label="Demo-Merkmale füllen"
-              className="absolute right-2 top-2 rounded p-1 text-muted-foreground hover:bg-muted"
+              className="absolute right-2 top-2 rounded-lg bg-purple-100 p-2 text-purple-600 transition-colors hover:bg-purple-200 dark:bg-purple-900 dark:text-purple-300 dark:hover:bg-purple-800"
               onClick={() => {
                 const demo = generateDemoFeatures({
                   ...(wizard ?? {}),

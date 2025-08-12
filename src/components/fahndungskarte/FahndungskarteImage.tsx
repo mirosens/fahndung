@@ -50,8 +50,8 @@ export default function FahndungskarteImage({
         // Für Blob-URLs prüfen wir, ob sie noch gültig sind
         try {
           // Teste ob die Blob-URL noch existiert
-          fetch(src, { method: 'HEAD' })
-            .then(response => {
+          fetch(src, { method: "HEAD" })
+            .then((response) => {
               if (response.ok) {
                 setImageSrc(src);
                 setIsLoading(true);
@@ -181,7 +181,7 @@ export default function FahndungskarteImage({
           height={0}
           sizes="100vw"
           className={cn(
-            "h-auto w-full rounded-lg object-cover transition-opacity duration-300",
+            "h-full w-full rounded-lg object-contain transition-opacity duration-300",
             isLoading ? "opacity-0" : "opacity-100",
             onClick ? "cursor-pointer hover:opacity-90" : "",
             className,

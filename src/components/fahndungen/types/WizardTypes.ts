@@ -29,9 +29,9 @@ export interface Step2Data {
 
 export interface Step3Data {
   mainImage: File | null;
-  mainImageUrl?: string | null; // URL des hochgeladenen Hauptbildes
+  mainImageUrl?: string | null; // Cloudinary URL des Hauptbildes
   additionalImages: File[];
-  additionalImageUrls?: string[]; // URLs der hochgeladenen zusätzlichen Bilder
+  additionalImageUrls?: string[]; // Cloudinary URLs der zusätzlichen Bilder
   documents: File[];
 }
 

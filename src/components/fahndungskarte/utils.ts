@@ -134,3 +134,43 @@ export const createSafeData = (
     },
   };
 };
+
+// Hilfsfunktion um den Stadtnamen aus der Dienststelle zu extrahieren
+export const getCityFromDepartment = (department: string): string => {
+  if (!department) return "Dienststelle";
+
+  // Mapping für bekannte Dienststellen
+  const departmentMapping: Record<string, string> = {
+    "LKA Baden-Württemberg - Stuttgart": "LKA",
+    "Polizeipräsidium Stuttgart - Hahnemannstraße 1": "Stuttgart",
+    "Polizeipräsidium Karlsruhe - Erbprinzenstraße 96": "Karlsruhe",
+    "Polizeipräsidium Mannheim - Collinistraße 1": "Mannheim",
+    "Polizeipräsidium Freiburg - Basler Landstraße 113": "Freiburg",
+    "Polizeipräsidium Heilbronn - Cäcilienstraße 56": "Heilbronn",
+    "Polizeipräsidium Aalen - Stuttgarter Straße 35": "Aalen",
+    "Polizeipräsidium Konstanz - Benediktinerplatz 1": "Konstanz",
+    "Polizeipräsidium Ludwigsburg - Hindenburgstraße 29": "Ludwigsburg",
+    "Polizeipräsidium Offenburg - Weingartenstraße 14": "Offenburg",
+    "Polizeipräsidium Pforzheim - Bahnhofstraße 26": "Pforzheim",
+    "Polizeipräsidium Ravensburg - Marienplatz 1": "Ravensburg",
+    "Polizeipräsidium Reutlingen - Kaiserstraße 54": "Reutlingen",
+    "Polizeipräsidium Ulm - Neue Straße 88": "Ulm",
+  };
+
+  // Prüfe ob es eine bekannte Dienststelle ist
+  if (departmentMapping[department]) {
+    return departmentMapping[department];
+  }
+
+  // Fallback: Versuche den Stadtnamen zu extrahieren
+  // Suche nach "Polizeipräsidium [Stadtname]" oder "LKA [Stadtname]"
+  const match = department.match(/(?:Polizeipräsidium|LKA)\s+([^-]+)/);
+  if (match && match[1]) {
+    return match[1].trim();
+  }
+
+  // Wenn nichts gefunden wird, verwende die ersten 15 Zeichen
+  return department.length > 15
+    ? department.substring(0, 15) + "..."
+    : department;
+};

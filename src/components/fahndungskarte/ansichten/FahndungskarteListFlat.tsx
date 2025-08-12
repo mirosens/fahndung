@@ -7,6 +7,7 @@ import { MapPin, Eye, Clock, Edit3 } from "lucide-react";
 import { type Fahndungskarte } from "~/types/fahndungskarte";
 import { CaseNumberBadge } from "~/components/ui/CaseNumberDisplay";
 import { getFahndungUrl } from "~/lib/seo";
+import { getCityFromDepartment } from "../utils";
 
 interface FahndungskarteListFlatProps {
   investigations: Fahndungskarte[];
@@ -136,7 +137,7 @@ export default function FahndungskarteListFlat({
                 {/* Titel und Badges */}
                 <div className="min-w-0 flex-1">
                   <div className="mb-1 flex items-center gap-2">
-                    <h3 className="truncate text-sm font-semibold text-muted-foreground dark:text-white lg:text-xs">
+                    <h3 className="line-clamp-2 text-sm font-semibold text-muted-foreground dark:text-white lg:text-xs">
                       {investigation.title}
                     </h3>
                     <span className="text-xs text-muted-foreground">
@@ -158,14 +159,7 @@ export default function FahndungskarteListFlat({
                       </div>
                     )}
                   </div>
-                </div>
-
-                {/* Beschreibung - nur auf mittleren Bildschirmen */}
-                <div className="hidden max-w-xs flex-1 lg:block">
-                  <p className="line-clamp-1 text-xs text-muted-foreground dark:text-muted-foreground">
-                    {investigation.short_description ||
-                      investigation.description?.substring(0, 80) + "..."}
-                  </p>
+                  {/* Kurzbeschreibung entfernt - wird nur auf der Detailseite angezeigt */}
                 </div>
 
                 {/* Tags - nur auf großen Bildschirmen */}
@@ -192,7 +186,7 @@ export default function FahndungskarteListFlat({
               <div className="ml-3 flex items-center gap-2 text-xs text-muted-foreground dark:text-muted-foreground">
                 {/* Kompakte Metadaten: Dienststelle | Datum | (optional Standort) */}
                 <span className="hidden sm:inline">
-                  {investigation.station || "Dienststelle"}
+                  {getCityFromDepartment(investigation.station || "")}
                 </span>
                 <span className="hidden sm:inline">|</span>
                 <div className="hidden items-center gap-1 sm:flex">

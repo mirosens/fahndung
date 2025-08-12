@@ -11,6 +11,7 @@ import { CATEGORY_CONFIG, PRIORITY_CONFIG, TAB_CONFIG } from "./types";
 import type { FahndungsData } from "./types";
 import styles from "~/styles/fahndungskarte.module.css";
 import FahndungskarteImage from "./FahndungskarteImage";
+import { getCityFromDepartment } from "./utils";
 
 interface ModernFahndungskarteProps {
   data?: FahndungsData;
@@ -118,6 +119,13 @@ const Fahndungskarte: React.FC<ModernFahndungskarteProps> = ({
         return category.label;
     }
   }, [safeData?.step1?.category, category.label]);
+
+  // Extrahiere den Stadtnamen aus der Dienststelle
+  const cityName = useMemo(() => {
+    const department =
+      safeData.step1.department ?? safeData.step5.department ?? "";
+    return getCityFromDepartment(department);
+  }, [safeData.step1.department, safeData.step5.department]);
 
   const priority = useMemo(() => {
     return safeData?.step2?.priority
@@ -356,7 +364,7 @@ const Fahndungskarte: React.FC<ModernFahndungskarteProps> = ({
             <FahndungskarteImage
               src={safeData.step3?.mainImage}
               alt={`Hauptfoto von ${safeData.step1.title}`}
-              className="object-cover transition-transform duration-500 group-hover:scale-105"
+              className="object-contain transition-transform duration-500 group-hover:scale-105"
               fallbackSrc="/images/placeholder-image.jpg"
               showPlaceholder={true}
               priority={imagePriority}
@@ -383,9 +391,7 @@ const Fahndungskarte: React.FC<ModernFahndungskarteProps> = ({
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <div className="truncate text-xs text-muted-foreground dark:text-muted-foreground">
-                    {safeData.step1.department ??
-                      safeData.step5.department ??
-                      "Dienststelle"}
+                    {cityName}
                     {" | "}
                     {safeData.step1.caseDate
                       ? new Date(safeData.step1.caseDate).toLocaleDateString(
@@ -402,12 +408,10 @@ const Fahndungskarte: React.FC<ModernFahndungskarteProps> = ({
                   </div>
                 </div>
 
-                <h3 className="text-lg font-bold text-muted-foreground dark:text-white">
+                <h3 className="line-clamp-2 text-lg font-bold text-muted-foreground dark:text-white">
                   {safeData.step1.title}
                 </h3>
-                <p className="line-clamp-2 text-sm leading-relaxed text-muted-foreground dark:text-muted-foreground">
-                  {safeData.step2.shortDescription}
-                </p>
+                {/* Kurzbeschreibung entfernt - wird nur auf der Rückseite angezeigt */}
               </div>
 
               <div className="mt-auto flex items-center justify-between">

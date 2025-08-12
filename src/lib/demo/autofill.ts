@@ -225,3 +225,68 @@ export function generateDemoFeatures(data: Partial<WizardData>): string {
   const text = templates[Math.floor(Math.random() * templates.length)]!;
   return resolvePlaceholders(text, ctx);
 }
+
+// Neue Master-Funktion: Fülle alle Step2-Felder auf einmal
+export async function generateAllStep2Data(
+  data: Partial<WizardData>,
+  overrides?: DemoOverrides,
+): Promise<{
+  shortDescription: string;
+  description: string;
+  features: string;
+  tags: string[];
+}> {
+  const catKey = wizardToPresetCategory(data.step1?.category ?? "");
+  const ctx = buildContext(data, overrides);
+
+  // Generiere alle Texte
+  const shortDescription = await generateDemoShortDescription(data, overrides);
+  const description = await generateDemoDescription(data, overrides);
+  const features = generateDemoFeatures(data);
+
+  // Generiere passende Tags basierend auf Kategorie und Variante
+  const tags: string[] = [];
+
+  // Basis-Tags aus Kategorie
+  if (catKey === "Vermisst") {
+    tags.push("Vermisst", "Personensuche");
+    const variant = data.step1?.variant;
+    if (variant === "Kind") tags.push("Kind", "Jugendlich");
+    else if (variant === "Senior") tags.push("Senior", "Ältere Person");
+    else if (variant === "Psychisch") tags.push("Psychisch", "Betreuung");
+  } else if (catKey === "Straftaeter") {
+    tags.push("Straftäter", "Zeugenaufruf");
+    const variant = data.step1?.variant;
+    if (variant === "Gewalt") tags.push("Gewalt", "Gefährlich");
+    else if (variant === "Diebstahl") tags.push("Diebstahl", "Eigentum");
+    else if (variant === "Betrug") tags.push("Betrug", "Finanzen");
+  } else if (catKey === "UnbekannteTote") {
+    tags.push("Unbekannter Toter", "Identifikation");
+  } else if (catKey === "Sachen") {
+    tags.push("Sachfahndung", "Diebstahl");
+    const variant = data.step1?.variant;
+    if (variant === "Fahrrad") tags.push("Fahrrad", "Zweirad");
+    else if (variant === "Auto") tags.push("Auto", "Fahrzeug");
+    else if (variant === "Elektronik") tags.push("Elektronik", "Technik");
+  }
+
+  // Stadt-Tag hinzufügen
+  if (ctx.city) {
+    tags.push(ctx.city);
+  }
+
+  // Prioritäts-Tag
+  const priority = data.step1?.priority;
+  if (priority === "high") tags.push("Hochpriorität");
+  else if (priority === "urgent") tags.push("Dringend");
+
+  // Entferne Duplikate
+  const uniqueTags = [...new Set(tags)];
+
+  return {
+    shortDescription,
+    description,
+    features,
+    tags: uniqueTags,
+  };
+}

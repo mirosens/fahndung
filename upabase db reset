@@ -1,0 +1,4 @@
+ id | email | email_confirmed_at | name | role 
+----+-------+--------------------+------+------
+(0 rows)
+

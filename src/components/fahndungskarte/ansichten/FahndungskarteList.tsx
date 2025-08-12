@@ -7,6 +7,7 @@ import { MapPin, Eye, Edit3 } from "lucide-react";
 import { type Fahndungskarte } from "~/types/fahndungskarte";
 import { CaseNumberBadge } from "~/components/ui/CaseNumberDisplay";
 import { getFahndungUrl } from "~/lib/seo";
+import { getCityFromDepartment } from "../utils";
 
 interface FahndungskarteListProps {
   investigations: Fahndungskarte[];
@@ -115,7 +116,7 @@ export default function FahndungskarteList({
                 alt={`Hauptfoto von ${investigation.title}`}
                 fill
                 sizes="96px"
-                className="object-cover"
+                className="object-contain"
                 priority={index === 0}
                 loading={index === 0 ? "eager" : "lazy"}
                 onError={() => handleImageError(investigation.id)}
@@ -135,7 +136,7 @@ export default function FahndungskarteList({
                 {/* Header mit Titel und Badges */}
                 <div className="flex items-start justify-between">
                   <div className="min-w-0 flex-1">
-                    <h3 className="truncate text-lg font-semibold text-muted-foreground dark:text-white">
+                    <h3 className="mb-1 line-clamp-2 text-sm font-semibold text-muted-foreground dark:text-white">
                       {investigation.title}
                     </h3>
                     <div className="mt-1 flex items-center gap-2 text-xs text-muted-foreground">
@@ -197,7 +198,9 @@ export default function FahndungskarteList({
               {/* Footer mit kompakten Metadaten */}
               <div className="mt-3 flex items-center justify-between text-xs text-muted-foreground dark:text-muted-foreground">
                 <div className="flex items-center gap-2">
-                  <span>{investigation.station || "Dienststelle"}</span>
+                  <span>
+                    {getCityFromDepartment(investigation.station || "")}
+                  </span>
                   <span>|</span>
                   <span>
                     {new Date(
