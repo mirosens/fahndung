@@ -14,7 +14,7 @@
     "CLOUDINARY_API_SECRET": "3owG6BleMFr6LOG2gxW5JyU6l9U",
     "NODE_ENV": "production",
     "NEXTAUTH_SECRET": "fahndung-production-secret-key-2025",
-    "NEXTAUTH_URL": "https://fahndung.vercel.app",
+    "NEXTAUTH_URL": "https://fahndung-ptls.vercel.app",
     "ADMIN_EMAIL": "ptlsweb@gmail.com",
     "MAX_FILE_SIZE": "52428800",
     "ALLOWED_FILE_TYPES": "image/jpeg,image/png,image/gif,image/webp",
