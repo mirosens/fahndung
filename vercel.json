@@ -1,30 +1,42 @@
 {
-  "buildCommand": "next build",
+  "buildCommand": "pnpm build",
   "installCommand": "pnpm install",
   "framework": "nextjs",
+  "outputDirectory": ".next",
+  "env": {
+    "NEXT_PUBLIC_SUPABASE_URL": "https://rhuhrqlucgfiqwjtqsoa.supabase.co",
+    "NEXT_PUBLIC_SUPABASE_ANON_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJodWhycWx1Y2dmaXF3anRxc29hIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ5MzkzMDMsImV4cCI6MjA3MDUxNTMwM30.G1-qrryrxhna6RO9TfEWSY2ddK2kQrm1rd9Bprp1rD4",
+    "SUPABASE_SERVICE_ROLE_KEY": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJodWhycWx1Y2dmaXF3anRxc29hIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc1NDkzOTMwMywiZXhwIjoyMDcwNTE1MzAzfQ.pDe_8QW8O0VHRIYy1fZyJreLhfKH86cISZ7A70_OCzw",
+    "NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME": "dpfpr3yxc",
+    "NEXT_PUBLIC_CLOUDINARY_API_KEY": "163413616558123",
+    "CLOUDINARY_API_SECRET": "3owG6BleMFr6LOG2gxW5JyU6l9U",
+    "NODE_ENV": "production",
+    "NEXTAUTH_SECRET": "fahndung-production-secret-key-2025",
+    "NEXTAUTH_URL": "https://fahndung.vercel.app",
+    "ADMIN_EMAIL": "ptlsweb@gmail.com",
+    "MAX_FILE_SIZE": "52428800",
+    "ALLOWED_FILE_TYPES": "image/jpeg,image/png,image/gif,image/webp"
+  },
   "functions": {
-    "app/api/trpc/[trpc]/route.ts": {
+    "app/api/**/*.ts": {
       "maxDuration": 30
     }
   },
-  "env": {
-    "NODE_ENV": "production"
-  },
   "headers": [
     {
-      "source": "/api/(.*)",
+      "source": "/(.*)",
       "headers": [
         {
-          "key": "Access-Control-Allow-Origin",
-          "value": "*"
+          "key": "X-Content-Type-Options",
+          "value": "nosniff"
         },
         {
-          "key": "Access-Control-Allow-Methods",
-          "value": "GET, POST, PUT, DELETE, OPTIONS"
+          "key": "X-Frame-Options",
+          "value": "DENY"
         },
         {
-          "key": "Access-Control-Allow-Headers",
-          "value": "Content-Type, Authorization, x-trpc-source"
+          "key": "X-XSS-Protection",
+          "value": "1; mode=block"
         }
       ]
     }
