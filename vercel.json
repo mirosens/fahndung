@@ -10,7 +10,7 @@
     "SUPABASE_JWT_SECRET": "fahndung-jwt-secret-2025",
     "DATABASE_URL": "postgresql://postgres:SNnSLMx2wYvmNbIF@db.rhuhrqlucgfiqwjtqsoa.supabase.co:5432/postgres",
     "NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME": "dpfpr3yxc",
-    "NEXT_PUBLIC_CLOUDINARY_API_KEY": "163413616558123",
+    "CLOUDINARY_API_KEY": "163413616558123",
     "CLOUDINARY_API_SECRET": "3owG6BleMFr6LOG2gxW5JyU6l9U",
     "NODE_ENV": "production",
     "NEXTAUTH_SECRET": "fahndung-production-secret-key-2025",
@@ -22,7 +22,8 @@
     "SMTP_PORT": "587",
     "SMTP_USER": "ptlsweb@gmail.com",
     "SMTP_PASS": "",
-    "SMTP_FROM": "ptlsweb@gmail.com"
+    "SMTP_FROM": "ptlsweb@gmail.com",
+    "NEXT_PUBLIC_PROTOTYPE_MODE": "true"
   },
   "functions": {
     "app/api/**/*.ts": {

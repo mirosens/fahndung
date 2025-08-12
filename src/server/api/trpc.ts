@@ -376,7 +376,7 @@ const timingMiddleware = t.middleware(async ({ path, next }) => {
  */
 const authMiddleware = t.middleware(async ({ ctx, next }) => {
   // 🚀 PROTOYP-MODUS: Automatische Admin-Session für Entwicklung
-  if (process.env.NODE_ENV === "development") {
+  if (process.env.NODE_ENV === "development" || process.env.NEXT_PUBLIC_PROTOTYPE_MODE === "true") {
     console.log(
       "🚀 Prototyp-Modus: Verwende automatische Admin-Session für tRPC",
     );
@@ -432,7 +432,7 @@ const authMiddleware = t.middleware(async ({ ctx, next }) => {
  */
 const adminMiddleware = t.middleware(async ({ ctx, next }) => {
   // 🚀 PROTOYP-MODUS: Alle sind Admins
-  if (process.env.NODE_ENV === "development") {
+  if (process.env.NODE_ENV === "development" || process.env.NEXT_PUBLIC_PROTOTYPE_MODE === "true") {
     console.log("🚀 Prototyp-Modus: Admin-Middleware umgangen");
 
     const prototypeUser = {

@@ -10,6 +10,16 @@ export default function NeueFahndungPage() {
   const router = useRouter();
 
   useEffect(() => {
+    // 🔥 PROTOYP-MODUS: Erlaube direkten Zugriff auf Wizard
+    if (
+      process.env.NODE_ENV === "development" ||
+      process.env["NEXT_PUBLIC_PROTOTYPE_MODE"] === "true"
+    ) {
+      console.log("🚀 Prototyp-Modus: Direkter Zugriff auf Wizard erlaubt");
+      router.push("/fahndungen/neu/enhanced");
+      return;
+    }
+
     if (initialized && !loading) {
       if (!isAuthenticated) {
         // Speichere die gewünschte URL für Redirect nach Login
@@ -27,13 +37,83 @@ export default function NeueFahndungPage() {
     }
   }, [isAuthenticated, loading, initialized, router]);
 
+  // 🔥 PROTOYP-MODUS: Zeige Loading-Screen für direkten Zugriff
+  if (
+    process.env.NODE_ENV === "development" ||
+    process.env["NEXT_PUBLIC_PROTOTYPE_MODE"] === "true"
+  ) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="flex h-screen items-center justify-center">
+          <div className="text-center">
+            <div className="mb-6 flex justify-center">
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
+                <Plus className="h-8 w-8 text-primary" />
+              </div>
+            </div>
+
+            <Loader2 className="mx-auto mb-4 h-8 w-8 animate-spin text-primary" />
+
+            <h1 className="mb-2 text-2xl font-bold text-foreground">
+              Neue Fahndung erstellen
+            </h1>
+
+            <p className="mb-6 text-muted-foreground">
+              Leite zum Wizard weiter...
+            </p>
+
+            <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+              <Shield className="h-4 w-4" />
+              <span>Prototyp-Modus aktiv</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Wenn nicht angemeldet, zeige Loading-Screen
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="flex h-screen items-center justify-center">
+          <div className="text-center">
+            <div className="mb-6 flex justify-center">
+              <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
+                <Plus className="h-8 w-8 text-primary" />
+              </div>
+            </div>
+
+            <Loader2 className="mx-auto mb-4 h-8 w-8 animate-spin text-primary" />
+
+            <h1 className="mb-2 text-2xl font-bold text-foreground">
+              Neue Fahndung erstellen
+            </h1>
+
+            <p className="mb-6 text-muted-foreground">
+              {!initialized || loading
+                ? "Prüfe Authentifizierung..."
+                : "Weiterleitung zur Anmeldung..."}
+            </p>
+
+            <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
+              <Shield className="h-4 w-4" />
+              <span>Nur für autorisierte Benutzer</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Wenn angemeldet, zeige Loading-Screen für Weiterleitung
   return (
     <div className="min-h-screen bg-background">
       <div className="flex h-screen items-center justify-center">
         <div className="text-center">
           <div className="mb-6 flex justify-center">
             <div className="flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
-              <Shield className="h-8 w-8 text-primary" />
+              <Plus className="h-8 w-8 text-primary" />
             </div>
           </div>
 
@@ -44,16 +124,12 @@ export default function NeueFahndungPage() {
           </h1>
 
           <p className="mb-6 text-muted-foreground">
-            {!initialized || loading
-              ? "Prüfe Authentifizierung..."
-              : !isAuthenticated
-                ? "Weiterleitung zur Anmeldung..."
-                : "Weiterleitung zum Wizard..."}
+            Leite zum Wizard weiter...
           </p>
 
           <div className="flex items-center justify-center gap-2 text-sm text-muted-foreground">
-            <Plus className="h-4 w-4" />
-            <span>Fahndung Wizard</span>
+            <Shield className="h-4 w-4" />
+            <span>Authentifiziert</span>
           </div>
         </div>
       </div>

@@ -6,7 +6,9 @@ import { useAuth } from "~/hooks/useAuth";
 import { Loader2 } from "lucide-react";
 
 // 🚀 PROTOYP-MODUS: Automatische Authentifizierung für Entwicklung
-const PROTOTYPE_MODE = process.env.NODE_ENV === "development";
+const PROTOTYPE_MODE =
+  process.env.NODE_ENV === "development" ||
+  process.env["NEXT_PUBLIC_PROTOTYPE_MODE"] === "true";
 
 interface ProtectedRouteProps {
   children: React.ReactNode;
@@ -29,6 +31,14 @@ export default function ProtectedRoute({
     if (PROTOTYPE_MODE) {
       console.log(
         "🚀 Prototyp-Modus: ProtectedRoute umgangen - alle Routen frei",
+      );
+      return;
+    }
+
+    // 🔥 SPEZIELLE BEHANDLUNG FÜR WIZARD: Erlaube Zugriff auch in Produktion
+    if (window.location.pathname.includes("/fahndungen/neu")) {
+      console.log(
+        "✅ Wizard-Route: Zugriff erlaubt (auch ohne vollständige Authentifizierung)",
       );
       return;
     }
@@ -80,14 +90,24 @@ export default function ProtectedRoute({
       });
 
       // 🔥 ERLAUBE ZUGRIFF auch ohne spezifische Rolle (nur für Wizard)
-      if (!hasRequiredRole && window.location.pathname.includes("/fahndungen/neu")) {
-        console.log("✅ ProtectedRoute: Zugriff auf Wizard erlaubt (flexible Rollenprüfung)");
+      if (
+        !hasRequiredRole &&
+        window.location.pathname.includes("/fahndungen/neu")
+      ) {
+        console.log(
+          "✅ ProtectedRoute: Zugriff auf Wizard erlaubt (flexible Rollenprüfung)",
+        );
         return;
       }
 
       // 🔥 ERLAUBE ZUGRIFF auch ohne Profil (wegen RLS-Problemen)
-      if (!session?.profile && window.location.pathname.includes("/fahndungen/neu")) {
-        console.log("✅ ProtectedRoute: Zugriff auf Wizard erlaubt (ohne Profil)");
+      if (
+        !session?.profile &&
+        window.location.pathname.includes("/fahndungen/neu")
+      ) {
+        console.log(
+          "✅ ProtectedRoute: Zugriff auf Wizard erlaubt (ohne Profil)",
+        );
         return;
       }
 
@@ -113,6 +133,14 @@ export default function ProtectedRoute({
 
   // 🚀 PROTOYP-MODUS: Zeige direkt den Inhalt
   if (PROTOTYPE_MODE) {
+    return <>{children}</>;
+  }
+
+  // 🔥 SPEZIELLE BEHANDLUNG FÜR WIZARD: Zeige direkt den Inhalt
+  if (
+    typeof window !== "undefined" &&
+    window.location.pathname.includes("/fahndungen/neu")
+  ) {
     return <>{children}</>;
   }
 
