@@ -19,6 +19,10 @@ import {
   Eye,
   FileText,
   CreditCard,
+  Menu,
+  X,
+  ChevronDown,
+  ChevronUp,
 } from "lucide-react";
 import { useResponsive } from "~/hooks/useResponsive";
 import { useRouter } from "next/navigation";
@@ -64,7 +68,7 @@ const FahndungWizardContainer = ({
   description?: string;
 }) => {
   const router = useRouter();
-  const { isMobile, isDesktop } = useResponsive();
+  const { isMobile, isTablet, isDesktop } = useResponsive();
   const [currentStep, setCurrentStep] = useState(1);
   const [showPreview, setShowPreview] = useState(false);
   const [previewMode, setPreviewMode] =
@@ -74,6 +78,8 @@ const FahndungWizardContainer = ({
   const [isInitialized, setIsInitialized] = useState(false);
   const [triedNext, setTriedNext] = useState(false);
   const [stepErrors, setStepErrors] = useState<string[]>([]);
+  const [showMobileMenu, setShowMobileMenu] = useState(false);
+  const [showProgressDetails, setShowProgressDetails] = useState(false);
   const [, startTransition] = useTransition();
 
   const [wizardData, setWizardData] = useState<Partial<WizardData>>({
@@ -184,36 +190,316 @@ const FahndungWizardContainer = ({
     },
   });
 
-  // tRPC Mutation für das Aktualisieren von Fahndungen
-  // TODO: Implementiere updateInvestigation wenn Edit-Modus benötigt wird
-  // const updateInvestigation = api.post.updateInvestigation.useMutation({
-  //   onSuccess: (data) => {
-  //     console.log("✅ Fahndung erfolgreich aktualisiert:", data);
-  //     router.push(`/fahndungen/${data.id}`);
-  //   },
-  //   onError: (error) => {
-  //     console.error("❌ Fehler beim Aktualisieren der Fahndung:", error);
-  //   },
-  // });
-
   const steps = [
-    { id: 1, label: "Grundinfo", icon: FileText },
-    { id: 2, label: "Beschreibung", icon: Eye },
-    { id: 3, label: "Medien", icon: FileText },
-    { id: 4, label: "Ort", icon: Eye },
-    { id: 5, label: "Kontakt", icon: Eye },
-    { id: 6, label: "Zusammenfassung", icon: Check },
+    { id: 1, label: "Grundinfo", icon: FileText, shortLabel: "Grundinfo" },
+    { id: 2, label: "Beschreibung", icon: Eye, shortLabel: "Beschreibung" },
+    { id: 3, label: "Medien", icon: FileText, shortLabel: "Medien" },
+    { id: 4, label: "Ort", icon: Eye, shortLabel: "Ort" },
+    { id: 5, label: "Kontakt", icon: Eye, shortLabel: "Kontakt" },
+    {
+      id: 6,
+      label: "Zusammenfassung",
+      icon: Check,
+      shortLabel: "Zusammenfassung",
+    },
   ];
 
-  // Layout Components
-  const DesktopLayout = ({ children }: { children: React.ReactNode }) => (
-    <div className="grid grid-cols-1 gap-8 xl:grid-cols-3">{children}</div>
+  // Responsive Progress Indicator
+  const ResponsiveProgressIndicator = () => {
+    if (isMobile) {
+      return (
+        <div className="mb-4">
+          {/* Mobile Progress Bar */}
+          <div className="mb-2 flex items-center justify-between">
+            <span className="text-xs font-medium text-muted-foreground">
+              Schritt {currentStep} von {steps.length}
+            </span>
+            <span className="text-xs text-muted-foreground">
+              {Math.round((currentStep / steps.length) * 100)}%
+            </span>
+          </div>
+
+          {/* Progress Bar */}
+          <div className="h-2 overflow-hidden rounded-full bg-muted">
+            <div
+              className="h-full bg-blue-500 transition-all duration-300"
+              style={{ width: `${(currentStep / steps.length) * 100}%` }}
+            />
+          </div>
+
+          {/* Expandable Step Details */}
+          <button
+            onClick={() => setShowProgressDetails(!showProgressDetails)}
+            className="mt-2 flex w-full items-center justify-between rounded-lg border border-border bg-white p-3 text-left dark:border-border dark:bg-muted"
+          >
+            <span className="text-sm font-medium">
+              {steps[currentStep - 1]?.label}
+            </span>
+            {showProgressDetails ? (
+              <ChevronUp className="h-4 w-4" />
+            ) : (
+              <ChevronDown className="h-4 w-4" />
+            )}
+          </button>
+
+          {showProgressDetails && (
+            <div className="mt-2 space-y-1">
+              {steps.map((step) => (
+                <div
+                  key={step.id}
+                  className={`flex items-center rounded-lg p-2 text-xs ${
+                    currentStep === step.id
+                      ? "bg-blue-50 text-blue-700 dark:bg-blue-900 dark:text-blue-300"
+                      : currentStep > step.id
+                        ? "bg-green-50 text-green-700 dark:bg-green-900 dark:text-green-300"
+                        : "bg-muted text-muted-foreground"
+                  }`}
+                >
+                  <div
+                    className={`mr-2 flex h-6 w-6 items-center justify-center rounded-full ${
+                      currentStep >= step.id
+                        ? "bg-blue-500 text-white"
+                        : "bg-muted text-muted-foreground"
+                    }`}
+                  >
+                    {currentStep > step.id ? (
+                      <Check className="h-3 w-3" />
+                    ) : (
+                      <step.icon className="h-3 w-3" />
+                    )}
+                  </div>
+                  <span className="font-medium">{step.label}</span>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      );
+    }
+
+    if (isTablet) {
+      return (
+        <div className="mb-6">
+          <div className="mb-4 flex items-center justify-between">
+            <span className="text-sm font-medium text-muted-foreground">
+              Fortschritt: {currentStep} von {steps.length} Schritten
+            </span>
+            <span className="text-sm text-muted-foreground">
+              {Math.round((currentStep / steps.length) * 100)}% abgeschlossen
+            </span>
+          </div>
+
+          <div className="flex items-center space-x-2">
+            {steps.map((step, index) => (
+              <div key={step.id} className="flex items-center">
+                <div
+                  className={`flex h-8 w-8 items-center justify-center rounded-full border-2 ${
+                    currentStep >= step.id
+                      ? "border-blue-500 bg-blue-500 text-white"
+                      : "border-border bg-white text-muted-foreground dark:border-border dark:bg-muted"
+                  }`}
+                >
+                  {currentStep > step.id ? (
+                    <Check className="h-4 w-4" />
+                  ) : (
+                    <step.icon className="h-4 w-4" />
+                  )}
+                </div>
+                <span
+                  className={`ml-1 text-xs font-medium ${
+                    currentStep >= step.id
+                      ? "text-blue-600 dark:text-blue-400"
+                      : "text-muted-foreground"
+                  }`}
+                >
+                  {step.shortLabel}
+                </span>
+                {index < steps.length - 1 && (
+                  <div
+                    className={`mx-2 h-1 w-8 ${
+                      currentStep > step.id
+                        ? "bg-blue-500"
+                        : "bg-muted dark:bg-muted"
+                    }`}
+                  />
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      );
+    }
+
+    // Desktop Progress Indicator
+    return (
+      <div className="mb-8">
+        <div className="mb-4 flex items-center justify-between">
+          <span className="text-sm font-medium text-muted-foreground dark:text-muted-foreground">
+            Fortschritt: {currentStep} von {steps.length} Schritten
+          </span>
+          <span className="text-sm text-muted-foreground dark:text-muted-foreground">
+            {Math.round((currentStep / steps.length) * 100)}% abgeschlossen
+          </span>
+        </div>
+
+        <div className="flex items-center space-x-4">
+          {steps.map((step, index) => (
+            <div key={step.id} className="flex items-center">
+              <div
+                className={`flex h-10 w-10 items-center justify-center rounded-full border-2 ${
+                  currentStep >= step.id
+                    ? "border-blue-500 bg-blue-500 text-white"
+                    : "border-border bg-white text-muted-foreground dark:border-border dark:bg-muted"
+                }`}
+              >
+                {currentStep > step.id ? (
+                  <Check className="h-5 w-5" />
+                ) : (
+                  <step.icon className="h-5 w-5" />
+                )}
+              </div>
+              <span
+                className={`ml-2 text-sm font-medium ${
+                  currentStep >= step.id
+                    ? "text-blue-600 dark:text-blue-400"
+                    : "text-muted-foreground"
+                }`}
+              >
+                {step.label}
+              </span>
+              {index < steps.length - 1 && (
+                <div
+                  className={`mx-4 h-1 w-16 ${
+                    currentStep > step.id
+                      ? "bg-blue-500"
+                      : "bg-muted dark:bg-muted"
+                  }`}
+                />
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+
+  // Mobile Navigation
+  const MobileNavigation = () => (
+    <div className="mobile-nav fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-white shadow-lg dark:border-border dark:bg-muted">
+      <div className="flex items-center justify-between p-3">
+        {currentStep > 1 ? (
+          <button
+            onClick={handlePrevious}
+            className="flex min-h-[48px] min-w-[48px] touch-manipulation items-center justify-center rounded-lg bg-muted px-3 py-2 text-muted-foreground hover:bg-muted dark:bg-muted dark:text-muted-foreground"
+          >
+            <ArrowLeft className="h-5 w-5" />
+          </button>
+        ) : (
+          <div className="min-w-[48px]" />
+        )}
+
+        <div className="flex-1 px-3">
+          <div className="h-2 overflow-hidden rounded-full bg-muted">
+            <div
+              className="h-full bg-blue-500 transition-all duration-300"
+              style={{ width: `${(currentStep / steps.length) * 100}%` }}
+            />
+          </div>
+          <p className="mobile-text mt-1 text-center text-xs text-muted-foreground">
+            {currentStep} von {steps.length}
+          </p>
+        </div>
+
+        <button
+          onClick={handleNext}
+          disabled={!canProceedToNextStep()}
+          className={`flex min-h-[48px] min-w-[48px] touch-manipulation items-center justify-center rounded-lg px-3 py-2 ${
+            canProceedToNextStep()
+              ? "bg-blue-600 text-white hover:bg-blue-700"
+              : "cursor-not-allowed bg-muted text-muted-foreground"
+          }`}
+        >
+          <ArrowRight className="h-5 w-5" />
+        </button>
+      </div>
+    </div>
   );
 
-  const MobileLayout = ({ children }: { children: React.ReactNode }) => (
-    <div className="flex min-h-screen flex-col">{children}</div>
+  // Tablet Navigation
+  const TabletNavigation = () => (
+    <div className="mobile-nav fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-white shadow-lg dark:border-border dark:bg-muted">
+      <div className="flex items-center justify-between p-4">
+        {currentStep > 1 ? (
+          <button
+            onClick={handlePrevious}
+            className="flex touch-manipulation items-center gap-2 rounded-lg bg-muted px-4 py-2 text-muted-foreground hover:bg-muted dark:bg-muted dark:text-muted-foreground"
+          >
+            <ArrowLeft className="h-4 w-4" />
+            <span className="text-sm">Zurück</span>
+          </button>
+        ) : (
+          <div />
+        )}
+
+        <div className="flex-1 px-4">
+          <div className="h-2 overflow-hidden rounded-full bg-muted">
+            <div
+              className="h-full bg-blue-500 transition-all duration-300"
+              style={{ width: `${(currentStep / steps.length) * 100}%` }}
+            />
+          </div>
+          <p className="mobile-text mt-1 text-center text-sm text-muted-foreground">
+            Schritt {currentStep} von {steps.length}
+          </p>
+        </div>
+
+        <button
+          onClick={handleNext}
+          disabled={!canProceedToNextStep()}
+          className={`flex touch-manipulation items-center gap-2 rounded-lg px-4 py-2 ${
+            canProceedToNextStep()
+              ? "bg-blue-600 text-white hover:bg-blue-700"
+              : "cursor-not-allowed bg-muted text-muted-foreground"
+          }`}
+        >
+          <span className="text-sm">Weiter</span>
+          <ArrowRight className="h-4 w-4" />
+        </button>
+      </div>
+    </div>
   );
 
+  // Desktop Navigation
+  const DesktopNavigation = () => (
+    <div className="mt-8 flex justify-between border-t border-border pt-6 dark:border-border">
+      {currentStep > 1 ? (
+        <button
+          onClick={handlePrevious}
+          className="flex items-center gap-2 rounded-lg bg-muted px-6 py-3 text-muted-foreground hover:bg-muted dark:bg-muted dark:text-muted-foreground dark:hover:bg-muted"
+        >
+          <ArrowLeft className="h-4 w-4" />
+          Zurück
+        </button>
+      ) : (
+        <div />
+      )}
+
+      <button
+        onClick={handleNext}
+        disabled={!canProceedToNextStep()}
+        className={`flex items-center gap-2 rounded-lg px-6 py-3 ${
+          canProceedToNextStep()
+            ? "bg-blue-600 text-white hover:bg-blue-700"
+            : "cursor-not-allowed bg-muted text-muted-foreground"
+        }`}
+      >
+        Weiter
+        <ArrowRight className="h-4 w-4" />
+      </button>
+    </div>
+  );
+
+  // Preview Tabs
   const PreviewTabs = () => (
     <div className="flex justify-around border-b border-border dark:border-border">
       {PREVIEW_MODES.map((mode) => (
@@ -233,44 +519,6 @@ const FahndungWizardContainer = ({
     </div>
   );
 
-  const BottomNavigation = () => (
-    <div className="fixed bottom-0 left-0 right-0 z-50 border-t border-border bg-white dark:border-border dark:bg-muted">
-      <div className="flex items-center justify-between p-4">
-        {currentStep > 1 ? (
-          <button
-            onClick={handlePrevious}
-            className={`flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg bg-muted px-4 py-2 text-muted-foreground hover:bg-muted dark:bg-muted dark:text-muted-foreground`}
-          >
-            <ArrowLeft className="h-5 w-5" />
-            {!isMobile && <span className="ml-2">Zurück</span>}
-          </button>
-        ) : (
-          <div />
-        )}
-
-        <div className="mx-4 flex-1">
-          <div className="h-2 overflow-hidden rounded-full bg-muted dark:bg-muted">
-            <div
-              className="h-full bg-blue-500 transition-all duration-300"
-              style={{ width: `${(currentStep / 6) * 100}%` }}
-            />
-          </div>
-          <p className="mt-1 text-center text-xs text-muted-foreground dark:text-muted-foreground">
-            Schritt {currentStep} von 6
-          </p>
-        </div>
-
-        <button
-          onClick={handleNext}
-          className={`flex min-h-[44px] min-w-[44px] items-center justify-center rounded-lg bg-blue-600 px-4 py-2 text-white hover:bg-blue-700`}
-        >
-          {!isMobile && <span className="mr-2">Weiter</span>}
-          <ArrowRight className="h-5 w-5" />
-        </button>
-      </div>
-    </div>
-  );
-
   // Hooks müssen auf Top-Level bleiben; daher hier berechnen
   const deferredWizardData = useDeferredValue(wizardData);
 
@@ -283,16 +531,10 @@ const FahndungWizardContainer = ({
     </div>
   );
 
-  // Hinweise stehen direkt an den Feldern in den Step-Komponenten.
-
   const updateStepData = useCallback(
     (step: keyof WizardData, data: WizardData[keyof WizardData]) => {
       log(`🔵 UPDATE CALLED: ${step}`, data);
 
-      // Aktualisiere den Wizard-State. Der vorherige Vergleich mittels
-      // JSON.stringify führte zu Performance-Problemen bei großen Objekten und
-      // wurde entfernt. Wir lassen React diffen, um unnötige Renders zu
-      // vermeiden.
       startTransition(() => {
         setWizardData((prev) => {
           log("🟢 UPDATING STATE");
@@ -378,34 +620,12 @@ const FahndungWizardContainer = ({
         wizardData.step5?.publishStatus === "immediate" ? "published" : "draft";
 
       if (mode === "edit") {
-        // TODO: Implementiere updateInvestigation mit der korrekten ID
-        // await updateInvestigation.mutateAsync({
-        //   id: investigationId,
-        //   title: wizardData.step1?.title ?? "",
-        //   description: wizardData.step2?.description ?? "",
-        //   status: finalStatus,
-        //   priority: wizardData.step2?.priority ?? "normal",
-        //   category: wizardData.step1?.category ?? "MISSING_PERSON",
-        //   location: wizardData.step4?.mainLocation?.address ?? "",
-        //   contact_info: {
-        //     person: wizardData.step5?.contactPerson ?? "",
-        //     phone: wizardData.step5?.contactPhone ?? "",
-        //     email: wizardData.step5?.contactEmail ?? "",
-        //   },
-        //   tags: [
-        //     wizardData.step1?.category ?? "",
-        //     wizardData.step2?.priority ?? "",
-        //     ...(wizardData.step2?.tags ?? []),
-        //   ],
-        //   mainImageUrl: wizardData.step3?.mainImageUrl ?? undefined,
-        //   additionalImageUrls: wizardData.step3?.additionalImageUrls ?? undefined,
-        // });
         log("📝 Edit mode - updateInvestigation not yet implemented");
       } else {
         await createInvestigation.mutateAsync({
           title: wizardData.step1?.title ?? "",
           description: wizardData.step2?.description ?? "",
-          short_description: wizardData.step2?.shortDescription ?? "", // Kurze Beschreibung hinzugefügt
+          short_description: wizardData.step2?.shortDescription ?? "",
           status: finalStatus,
           priority: wizardData.step1?.priority ?? "new",
           category: wizardData.step1?.category ?? "MISSING_PERSON",
@@ -420,7 +640,6 @@ const FahndungWizardContainer = ({
             wizardData.step1?.priority ?? "",
             ...(wizardData.step2?.tags ?? []),
           ],
-          // Bild-URLs hinzufügen
           mainImageUrl: wizardData.step3?.mainImageUrl ?? undefined,
           additionalImageUrls:
             wizardData.step3?.additionalImageUrls ?? undefined,
@@ -439,7 +658,6 @@ const FahndungWizardContainer = ({
       }
     } catch (error) {
       logError("Error submitting:", error);
-      // Inform the user via alert. Logging is handled via our logger.
       alert("Fehler beim Speichern der Fahndung");
     } finally {
       setIsSubmitting(false);
@@ -451,7 +669,7 @@ const FahndungWizardContainer = ({
       case 1:
         return (
           <Step1Component
-            data={wizardData.step1}
+            data={wizardData.step1!}
             onChange={(data) => updateStepData("step1", data)}
             wizard={wizardData}
             showValidation={triedNext}
@@ -460,7 +678,7 @@ const FahndungWizardContainer = ({
       case 2:
         return (
           <Step2Component
-            data={wizardData.step2}
+            data={wizardData.step2!}
             onChange={(data) => updateStepData("step2", data)}
             wizard={wizardData}
             showValidation={triedNext}
@@ -469,15 +687,14 @@ const FahndungWizardContainer = ({
       case 3:
         return (
           <Step3Component
-            data={wizardData.step3}
+            data={wizardData.step3!}
             onChange={(data) => updateStepData("step3", data)}
-            showValidation={triedNext}
           />
         );
       case 4:
         return (
           <Step4Component
-            data={wizardData.step4}
+            data={wizardData.step4!}
             onChange={(data) => updateStepData("step4", data)}
             showValidation={triedNext}
           />
@@ -485,7 +702,7 @@ const FahndungWizardContainer = ({
       case 5:
         return (
           <Step5Component
-            data={wizardData.step5}
+            data={wizardData.step5!}
             onChange={(data) => updateStepData("step5", data)}
             wizard={wizardData}
             showValidation={triedNext}
@@ -523,172 +740,142 @@ const FahndungWizardContainer = ({
 
   return (
     <div className="min-h-screen bg-muted dark:bg-muted">
-      <div className="mx-auto max-w-7xl px-4 py-8">
-        {/* Header */}
-        <div className="mb-8">
-          <div className="mb-4 flex items-center gap-4">
+      {/* Mobile Header */}
+      {isMobile && (
+        <div className="sticky top-0 z-40 border-b border-border bg-white dark:border-border dark:bg-muted">
+          <div className="flex items-center justify-between p-3">
             <button
               onClick={handleBack}
-              className="flex items-center gap-2 text-muted-foreground hover:text-muted-foreground dark:text-muted-foreground dark:hover:text-white"
+              className="flex items-center gap-2 text-muted-foreground dark:text-muted-foreground"
             >
               <ArrowLeft className="h-5 w-5" />
-              <span>Zurück zur Startseite</span>
+              <span className="text-sm">Zurück</span>
+            </button>
+
+            <div className="flex flex-col items-center">
+              <h2 className="text-sm font-semibold">
+                {steps[currentStep - 1]?.label}
+              </h2>
+              <p className="text-xs text-muted-foreground">
+                Schritt {currentStep} von {steps.length}
+              </p>
+            </div>
+
+            <button
+              onClick={() => setShowMobileMenu(!showMobileMenu)}
+              className="p-1"
+            >
+              {showMobileMenu ? (
+                <X className="h-5 w-5" />
+              ) : (
+                <Menu className="h-5 w-5" />
+              )}
             </button>
           </div>
 
-          <h1 className="text-3xl font-bold text-muted-foreground dark:text-white">
-            {title ??
-              (mode === "create"
-                ? "Neue Fahndung erstellen"
-                : "Fahndung bearbeiten")}
-          </h1>
-          <p className="mt-2 text-muted-foreground dark:text-muted-foreground">
-            {description ??
-              (mode === "create"
-                ? "Erstellen Sie eine neue Fahndung mit unserem erweiterten Wizard"
-                : "Bearbeiten Sie die bestehende Fahndung")}
-          </p>
-        </div>
-
-        {/* Progress Indicator - nur auf Desktop */}
-        {!isMobile && (
-          <div className="mb-8">
-            <div className="mb-4 flex items-center justify-between">
-              <span className="text-sm font-medium text-muted-foreground dark:text-muted-foreground">
-                Fortschritt: {currentStep} von {steps.length} Schritten
-              </span>
-              <span className="text-sm text-muted-foreground dark:text-muted-foreground">
-                {Math.round((currentStep / steps.length) * 100)}% abgeschlossen
-              </span>
-            </div>
-
-            <div className="flex items-center space-x-4">
-              {steps.map((step, index) => (
-                <div key={step.id} className="flex items-center">
-                  <div
-                    className={`flex h-10 w-10 items-center justify-center rounded-full border-2 ${
-                      currentStep >= step.id
-                        ? "border-blue-500 bg-blue-500 text-white"
-                        : "border-border bg-white text-muted-foreground dark:border-border dark:bg-muted"
+          {/* Mobile Menu */}
+          {showMobileMenu && (
+            <div className="border-t border-border bg-white p-3 dark:border-border dark:bg-muted">
+              <div className="space-y-2">
+                {steps.map((step) => (
+                  <button
+                    key={step.id}
+                    onClick={() => {
+                      setCurrentStep(step.id);
+                      setShowMobileMenu(false);
+                    }}
+                    className={`flex w-full items-center gap-3 rounded-lg p-3 text-left ${
+                      currentStep === step.id
+                        ? "bg-blue-50 text-blue-700 dark:bg-blue-900 dark:text-blue-300"
+                        : "hover:bg-muted"
                     }`}
                   >
-                    {currentStep > step.id ? (
-                      <Check className="h-5 w-5" />
-                    ) : (
-                      <step.icon className="h-5 w-5" />
-                    )}
-                  </div>
-                  <span
-                    className={`ml-2 text-sm font-medium ${
-                      currentStep >= step.id
-                        ? "text-blue-600 dark:text-blue-400"
-                        : "text-muted-foreground"
-                    }`}
-                  >
-                    {step.label}
-                  </span>
-                  {index < steps.length - 1 && (
                     <div
-                      className={`mx-4 h-1 w-16 ${
-                        currentStep > step.id
-                          ? "bg-blue-500"
-                          : "bg-muted dark:bg-muted"
+                      className={`flex h-8 w-8 items-center justify-center rounded-full ${
+                        currentStep >= step.id
+                          ? "bg-blue-500 text-white"
+                          : "bg-muted text-muted-foreground"
                       }`}
-                    />
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-
-        {/* Desktop Layout */}
-        {isDesktop && (
-          <DesktopLayout>
-            {/* Main Content */}
-            <div className="xl:col-span-2">
-              <div className="rounded-lg bg-white p-8 shadow-sm dark:bg-muted">
-                {stepErrors.length > 0 && triedNext && (
-                  <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-900 dark:text-red-200">
-                    <ul className="list-disc pl-5">
-                      {stepErrors.map((err, idx) => (
-                        <li key={idx}>{err}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
-                {renderCurrentStep()}
-
-                {/* Fallback falls renderCurrentStep nichts zurückgibt */}
-                {!renderCurrentStep() && (
-                  <div className="p-8 text-center">
-                    <p className="text-muted-foreground">
-                      Lade Schritt {currentStep}...
-                    </p>
-                  </div>
-                )}
-
-                {/* Desktop Navigation */}
-                {currentStep < 6 && (
-                  <div className="mt-8 flex justify-between border-t border-border pt-6 dark:border-border">
-                    {currentStep > 1 ? (
-                      <button
-                        onClick={handlePrevious}
-                        className={`flex items-center gap-2 rounded-lg bg-muted px-4 py-2 text-muted-foreground hover:bg-muted dark:bg-muted dark:text-muted-foreground dark:hover:bg-muted`}
-                      >
-                        <ArrowLeft className="h-4 w-4" />
-                        Zurück
-                      </button>
-                    ) : (
-                      <div />
-                    )}
-
-                    <button
-                      onClick={handleNext}
-                      className={`flex items-center gap-2 rounded-lg bg-blue-600 px-6 py-2 text-white hover:bg-blue-700`}
                     >
-                      Weiter
-                      <ArrowRight className="h-4 w-4" />
-                    </button>
-                  </div>
-                )}
+                      {currentStep > step.id ? (
+                        <Check className="h-4 w-4" />
+                      ) : (
+                        <step.icon className="h-4 w-4" />
+                      )}
+                    </div>
+                    <span className="font-medium">{step.label}</span>
+                  </button>
+                ))}
               </div>
             </div>
+          )}
+        </div>
+      )}
 
-            {/* Preview Sidebar */}
-            <div className="xl:col-span-1">
-              <div className="sticky top-8">
-                <div className="rounded-lg bg-white shadow-sm dark:bg-muted">
-                  <PreviewTabs />
-                  <div className="p-6">{renderPreviewContent()}</div>
-                </div>
-              </div>
+      {/* Tablet Header */}
+      {isTablet && (
+        <div className="sticky top-0 z-40 border-b border-border bg-white dark:border-border dark:bg-muted">
+          <div className="flex items-center justify-between p-4">
+            <button
+              onClick={handleBack}
+              className="flex items-center gap-2 text-muted-foreground dark:text-muted-foreground"
+            >
+              <ArrowLeft className="h-5 w-5" />
+              <span>Zurück</span>
+            </button>
+            <div className="flex flex-col items-center">
+              <h2 className="text-lg font-semibold">
+                {steps[currentStep - 1]?.label}
+              </h2>
+              <p className="text-sm text-muted-foreground">
+                Schritt {currentStep} von {steps.length}
+              </p>
             </div>
-          </DesktopLayout>
-        )}
+            <div className="w-20" /> {/* Spacer for centering */}
+          </div>
+        </div>
+      )}
 
-        {/* Mobile/Tablet Layout */}
-        {!isDesktop && (
-          <MobileLayout>
-            {/* Sticky Header für Mobile */}
-            <div className="sticky top-0 z-40 border-b border-border bg-white dark:border-border dark:bg-muted">
-              <div className="flex items-center justify-between p-4">
-                <button
-                  onClick={handleBack}
-                  className="flex items-center gap-2 text-muted-foreground dark:text-muted-foreground"
-                >
-                  <ArrowLeft className="h-5 w-5" />
-                  <span>Zurück</span>
-                </button>
-                <h2 className="text-lg font-semibold">
-                  Schritt {currentStep} von 6
-                </h2>
-              </div>
+      {/* Desktop Header */}
+      {isDesktop && (
+        <div className="mx-auto max-w-7xl px-4 py-8">
+          <div className="mb-8">
+            <div className="mb-4 flex items-center gap-4">
+              <button
+                onClick={handleBack}
+                className="flex items-center gap-2 text-muted-foreground hover:text-muted-foreground dark:text-muted-foreground dark:hover:text-white"
+              >
+                <ArrowLeft className="h-5 w-5" />
+                <span>Zurück zur Startseite</span>
+              </button>
             </div>
 
-            {/* Main Content */}
-            <div className="flex-1 p-4 pb-32">
-              <div className="rounded-lg bg-white p-6 shadow-sm dark:bg-muted">
+            <h1 className="text-3xl font-bold text-muted-foreground dark:text-white">
+              {title ??
+                (mode === "create"
+                  ? "Neue Fahndung erstellen"
+                  : "Fahndung bearbeiten")}
+            </h1>
+            <p className="mt-2 text-muted-foreground dark:text-muted-foreground">
+              {description ??
+                (mode === "create"
+                  ? "Erstellen Sie eine neue Fahndung mit unserem erweiterten Wizard"
+                  : "Bearbeiten Sie die bestehende Fahndung")}
+            </p>
+          </div>
+        </div>
+      )}
+
+      {/* Main Content */}
+      <div className={`${isDesktop ? "mx-auto max-w-7xl px-4" : "px-3"}`}>
+        {/* Progress Indicator */}
+        {!isMobile && <ResponsiveProgressIndicator />}
+
+        {/* Mobile Layout */}
+        {isMobile && (
+          <div className="flex min-h-screen flex-col">
+            <div className="flex-1 pb-32">
+              <div className="rounded-lg bg-white p-4 shadow-sm dark:bg-muted">
                 {stepErrors.length > 0 && triedNext && (
                   <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-900 dark:text-red-200">
                     <ul className="list-disc pl-5">
@@ -707,7 +894,7 @@ const FahndungWizardContainer = ({
                 className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg bg-muted py-3 dark:bg-muted"
               >
                 <Eye className="h-4 w-4" />
-                <span>
+                <span className="text-sm">
                   Vorschau {showMobilePreview ? "ausblenden" : "anzeigen"}
                 </span>
               </button>
@@ -720,10 +907,82 @@ const FahndungWizardContainer = ({
                 </div>
               )}
             </div>
+            <MobileNavigation />
+          </div>
+        )}
 
-            {/* Bottom Navigation */}
-            <BottomNavigation />
-          </MobileLayout>
+        {/* Tablet Layout */}
+        {isTablet && (
+          <div className="flex min-h-screen flex-col">
+            <div className="flex-1 pb-24">
+              <div className="rounded-lg bg-white p-6 shadow-sm dark:bg-muted">
+                {stepErrors.length > 0 && triedNext && (
+                  <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-900 dark:text-red-200">
+                    <ul className="list-disc pl-5">
+                      {stepErrors.map((err, idx) => (
+                        <li key={idx}>{err}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {renderCurrentStep()}
+              </div>
+
+              {/* Tablet Preview Toggle */}
+              <button
+                onClick={() => setShowMobilePreview(!showMobilePreview)}
+                className="mt-4 flex w-full items-center justify-center gap-2 rounded-lg bg-muted py-3 dark:bg-muted"
+              >
+                <Eye className="h-4 w-4" />
+                <span>
+                  Vorschau {showMobilePreview ? "ausblenden" : "anzeigen"}
+                </span>
+              </button>
+
+              {/* Tablet Preview */}
+              {showMobilePreview && (
+                <div className="mt-4 rounded-lg bg-white shadow-sm dark:bg-muted">
+                  <PreviewTabs />
+                  <div className="p-6">{renderPreviewContent()}</div>
+                </div>
+              )}
+            </div>
+            <TabletNavigation />
+          </div>
+        )}
+
+        {/* Desktop Layout */}
+        {isDesktop && (
+          <div className="grid grid-cols-1 gap-8 xl:grid-cols-3">
+            {/* Main Content */}
+            <div className="xl:col-span-2">
+              <div className="rounded-lg bg-white p-8 shadow-sm dark:bg-muted">
+                {stepErrors.length > 0 && triedNext && (
+                  <div className="mb-4 rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-800 dark:bg-red-900 dark:text-red-200">
+                    <ul className="list-disc pl-5">
+                      {stepErrors.map((err, idx) => (
+                        <li key={idx}>{err}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                {renderCurrentStep()}
+
+                {/* Desktop Navigation */}
+                {currentStep < 6 && <DesktopNavigation />}
+              </div>
+            </div>
+
+            {/* Preview Sidebar */}
+            <div className="xl:col-span-1">
+              <div className="sticky top-8">
+                <div className="rounded-lg bg-white shadow-sm dark:bg-muted">
+                  <PreviewTabs />
+                  <div className="p-6">{renderPreviewContent()}</div>
+                </div>
+              </div>
+            </div>
+          </div>
         )}
       </div>
     </div>

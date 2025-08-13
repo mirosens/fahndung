@@ -1,11 +1,12 @@
 "use client";
 
-import React, { useState, useCallback } from "react";
-import { MapPin, Search, AlertCircle, Trash2, Plus, Info } from "lucide-react";
+import React, { useState, useCallback, useEffect } from "react";
+import { MapPin, X, Plus, Search, Trash2, AlertCircle, Info } from "lucide-react";
 import dynamic from "next/dynamic";
 import { NominatimService } from "~/services/geocoding";
 
 import type { Step4Data } from "../types/WizardTypes";
+import { useResponsive } from "~/hooks/useResponsive";
 
 // Dynamic import für Leaflet (SSR-safe)
 const InteractiveMap = dynamic(

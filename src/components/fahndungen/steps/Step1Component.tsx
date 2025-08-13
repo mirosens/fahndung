@@ -7,6 +7,7 @@ import { getCategoryOptions } from "@/types/categories";
 import { generateNewCaseNumber } from "~/lib/utils/caseNumberGenerator";
 import type { Step1Data, WizardData } from "../types/WizardTypes";
 import { generateDemoTitle } from "@/lib/demo/autofill";
+import { useResponsive } from "~/hooks/useResponsive";
 
 interface Step1ComponentProps {
   data: Step1Data;
@@ -21,6 +22,8 @@ const Step1Component: React.FC<Step1ComponentProps> = ({
   wizard,
   showValidation = false,
 }) => {
+  const { isMobile, isSmallMobile, isLargeMobile } = useResponsive();
+  
   // Lokaler State für den Titel
   const [localTitle, setLocalTitle] = useState(data.title);
   const [titleTouched, setTitleTouched] = useState(false);
@@ -101,21 +104,21 @@ const Step1Component: React.FC<Step1ComponentProps> = ({
   const isPriorityInvalid = showValidation && !localPriority;
 
   return (
-    <div className="space-y-6">
+    <div className={`space-y-${isMobile ? '4' : '6'}`}>
       <div>
-        <h2 className="mb-2 text-2xl font-bold text-muted-foreground dark:text-white">
+        <h2 className={`mb-2 ${isMobile ? 'text-xl' : 'text-2xl'} font-bold text-muted-foreground dark:text-white`}>
           Schritt 1: Grundinformationen
         </h2>
-        <p className="text-muted-foreground dark:text-muted-foreground">
+        <p className={`${isMobile ? 'text-sm' : 'text-base'} text-muted-foreground dark:text-muted-foreground`}>
           Legen Sie die grundlegenden Informationen für die Fahndung fest
         </p>
       </div>
 
-      <div className="grid grid-cols-1 gap-6">
+      <div className={`grid grid-cols-1 gap-${isMobile ? '4' : '6'}`}>
         {/* 1. Kategorie */}
         <div>
           <label
-            className={`mb-1 block text-sm font-medium text-muted-foreground dark:text-muted-foreground ${
+            className={`mb-1 block ${isMobile ? 'text-sm' : 'text-sm'} font-medium text-muted-foreground dark:text-muted-foreground ${
               isCategoryInvalid ? "underline decoration-red-500" : ""
             }`}
             style={
@@ -124,7 +127,7 @@ const Step1Component: React.FC<Step1ComponentProps> = ({
           >
             1. Kategorie *
           </label>
-          <p className="mb-2 text-xs text-muted-foreground dark:text-muted-foreground">
+          <p className={`mb-2 ${isMobile ? 'text-xs' : 'text-xs'} text-muted-foreground dark:text-muted-foreground`}>
             Bitte eine passende Kategorie auswählen.
           </p>
           <select
@@ -158,7 +161,7 @@ const Step1Component: React.FC<Step1ComponentProps> = ({
 
         {/* 2. Dienststelle */}
         <div>
-          <label className="mb-1 block text-sm font-medium text-muted-foreground dark:text-muted-foreground">
+          <label className={`mb-1 block ${isMobile ? 'text-sm' : 'text-sm'} font-medium text-muted-foreground dark:text-muted-foreground`}>
             2. Dienststelle
           </label>
           <select
@@ -195,14 +198,14 @@ const Step1Component: React.FC<Step1ComponentProps> = ({
               </option>
             ))}
           </select>
-          <p className="mt-1 text-xs text-muted-foreground dark:text-muted-foreground">
+          <p className={`mt-1 ${isMobile ? 'text-xs' : 'text-xs'} text-muted-foreground dark:text-muted-foreground`}>
             Freie Eingabe später möglich (Schritt 5).
           </p>
         </div>
 
         {/* 3. Fahndungsdatum */}
         <div>
-          <label className="mb-1 block text-sm font-medium text-muted-foreground dark:text-muted-foreground">
+          <label className={`mb-1 block ${isMobile ? 'text-sm' : 'text-sm'} font-medium text-muted-foreground dark:text-muted-foreground`}>
             3. Fahndungsdatum
           </label>
           <input
@@ -218,7 +221,7 @@ const Step1Component: React.FC<Step1ComponentProps> = ({
                 : "border-border focus:border-blue-500 focus:ring-blue-500"
             }`}
           />
-          <p className="mt-1 text-xs text-muted-foreground dark:text-muted-foreground">
+          <p className={`mt-1 ${isMobile ? 'text-xs' : 'text-xs'} text-muted-foreground dark:text-muted-foreground`}>
             Vergangenheit und Zukunft erlaubt.
           </p>
           {isCaseDateInvalid && (
@@ -230,7 +233,7 @@ const Step1Component: React.FC<Step1ComponentProps> = ({
 
         {/* 4. Variante (je nach Kategorie) */}
         <div>
-          <label className="mb-1 block text-sm font-medium text-muted-foreground dark:text-muted-foreground">
+          <label className={`mb-1 block ${isMobile ? 'text-sm' : 'text-sm'} font-medium text-muted-foreground dark:text-muted-foreground`}>
             4. Variante (je nach Kategorie)
           </label>
           <select
@@ -278,7 +281,7 @@ const Step1Component: React.FC<Step1ComponentProps> = ({
               </>
             )}
           </select>
-          <p className="mt-1 text-xs text-muted-foreground dark:text-muted-foreground">
+          <p className={`mt-1 ${isMobile ? 'text-xs' : 'text-xs'} text-muted-foreground dark:text-muted-foreground`}>
             Beeinflusst die Textbausteine für den Zauberstab.
           </p>
           {isVariantInvalid && (
@@ -291,14 +294,14 @@ const Step1Component: React.FC<Step1ComponentProps> = ({
         {/* 5. Titel der Fahndung */}
         <div>
           <label
-            className={`mb-1 block text-sm font-medium text-muted-foreground dark:text-muted-foreground ${
+            className={`mb-1 block ${isMobile ? 'text-sm' : 'text-sm'} font-medium text-muted-foreground dark:text-muted-foreground ${
               isTitleInvalid ? "underline decoration-red-500" : ""
             }`}
             style={isTitleInvalid ? { textDecorationStyle: "wavy" } : undefined}
           >
             5. Titel der Fahndung *
           </label>
-          <p className="mb-2 text-xs text-muted-foreground dark:text-muted-foreground">
+          <p className={`mb-2 ${isMobile ? 'text-xs' : 'text-xs'} text-muted-foreground dark:text-muted-foreground`}>
             Bitte mindestens 5 und maximal 100 Zeichen eingeben.
           </p>
           <div className="relative">
@@ -352,7 +355,7 @@ const Step1Component: React.FC<Step1ComponentProps> = ({
         {/* 6. Priorität * */}
         <div>
           <label
-            className={`mb-1 block text-sm font-medium text-muted-foreground dark:text-muted-foreground ${
+            className={`mb-1 block ${isMobile ? 'text-sm' : 'text-sm'} font-medium text-muted-foreground dark:text-muted-foreground ${
               isPriorityInvalid ? "underline decoration-red-500" : ""
             }`}
             style={
@@ -361,14 +364,14 @@ const Step1Component: React.FC<Step1ComponentProps> = ({
           >
             6. Priorität *
           </label>
-          <p className="mb-2 text-xs text-muted-foreground dark:text-muted-foreground">
+          <p className={`mb-2 ${isMobile ? 'text-xs' : 'text-xs'} text-muted-foreground dark:text-muted-foreground`}>
             Steuert Sichtbarkeit und Markierung. &quot;Neu&quot; wird
             standardmäßig 1 Tag markiert.
           </p>
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
+          <div className={`grid grid-cols-1 gap-4 ${isMobile ? '' : 'md:grid-cols-2'}`}>
             {/* Platzhalter-Label für identische vertikale Ausrichtung */}
             <div>
-              <label className="mb-1 block text-sm font-medium opacity-0">
+              <label className={`mb-1 block ${isMobile ? 'text-sm' : 'text-sm'} font-medium opacity-0`}>
                 Priorität *
               </label>
               <select
@@ -392,7 +395,7 @@ const Step1Component: React.FC<Step1ComponentProps> = ({
 
             {/* Optional: 'Neu bis' nur sichtbar, wenn Priorität = new */}
             <div className={localPriority === "new" ? "" : "opacity-50"}>
-              <label className="mb-1 block text-sm font-medium text-muted-foreground dark:text-muted-foreground">
+              <label className={`mb-1 block ${isMobile ? 'text-sm' : 'text-sm'} font-medium text-muted-foreground dark:text-muted-foreground`}>
                 Neu bis (optional)
               </label>
               <input
@@ -405,7 +408,7 @@ const Step1Component: React.FC<Step1ComponentProps> = ({
                 className="h-11 min-h-[44px] w-full rounded-lg border px-3 py-2 leading-none focus:outline-none focus:ring-1 dark:border-border dark:bg-muted dark:text-white"
                 placeholder="yyyy-mm-dd"
               />
-              <p className="mt-1 text-xs text-muted-foreground dark:text-muted-foreground">
+              <p className={`mt-1 ${isMobile ? 'text-xs' : 'text-xs'} text-muted-foreground dark:text-muted-foreground`}>
                 Leer lassen für Standard (1 Tag). Setze ein Datum, wenn die
                 &quot;Neu&quot;-Markierung länger gelten soll.
               </p>
@@ -420,10 +423,10 @@ const Step1Component: React.FC<Step1ComponentProps> = ({
 
         {/* 6. Aktenzeichen (nur Anzeige, automatisch generiert) */}
         <div>
-          <label className="mb-1 block text-sm font-medium text-muted-foreground dark:text-muted-foreground">
+          <label className={`mb-1 block ${isMobile ? 'text-sm' : 'text-sm'} font-medium text-muted-foreground dark:text-muted-foreground`}>
             7. Aktenzeichen
           </label>
-          <p className="mb-2 text-xs text-muted-foreground dark:text-muted-foreground">
+          <p className={`mb-2 ${isMobile ? 'text-xs' : 'text-xs'} text-muted-foreground dark:text-muted-foreground`}>
             Automatisch bei Kategorienwechsel; wird unten generiert.
           </p>
           <div className="w-full rounded-lg border border-border bg-muted px-3 py-2 font-mono text-muted-foreground dark:border-border dark:bg-muted dark:text-muted-foreground">
@@ -434,14 +437,14 @@ const Step1Component: React.FC<Step1ComponentProps> = ({
         {/* Entfernt: Stadt/Region Auswahl – Ort wird in Schritt 4 gesetzt */}
 
         {/* Aktenzeichen Info */}
-        <div className="rounded-lg border border-border bg-muted p-4 dark:border-border dark:bg-muted">
+        <div className={`rounded-lg border border-border bg-muted p-${isMobile ? '3' : '4'} dark:border-border dark:bg-muted`}>
           <div className="mb-2 flex items-center space-x-2">
             <FileText className="h-4 w-4 text-muted-foreground" />
-            <span className="text-sm font-medium text-muted-foreground dark:text-muted-foreground">
+            <span className={`${isMobile ? 'text-sm' : 'text-sm'} font-medium text-muted-foreground dark:text-muted-foreground`}>
               Aktenzeichen Format:
             </span>
           </div>
-          <div className="text-xs text-muted-foreground dark:text-muted-foreground">
+          <div className={`${isMobile ? 'text-xs' : 'text-xs'} text-muted-foreground dark:text-muted-foreground`}>
             Format: [Präfix]-[Jahr]-[Monat]-[Nummer] | Wird automatisch bei
             Kategorieänderung generiert
           </div>

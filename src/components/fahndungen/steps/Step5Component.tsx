@@ -24,6 +24,7 @@ import {
   generateAllStep5Data,
 } from "@/lib/demo/autofill";
 import type { Step5Data, WizardData } from "../types/WizardTypes";
+import { useResponsive } from "~/hooks/useResponsive";
 
 interface Step5ComponentProps {
   data: Step5Data;

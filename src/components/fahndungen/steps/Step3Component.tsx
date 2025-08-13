@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import {
   X,
   Image as ImageIcon,
@@ -15,11 +15,13 @@ import {
   Loader2,
   Edit3,
   FolderOpen,
+  Eye,
 } from "lucide-react";
 import Image from "next/image";
 import ImageEditor from "../ImageEditor";
 import CloudinaryMediaLibrary from "../CloudinaryMediaLibrary";
 import type { Step3Data } from "../types/WizardTypes";
+import { useResponsive } from "~/hooks/useResponsive";
 
 interface Step3ComponentProps {
   data: Step3Data;

@@ -1,10 +1,11 @@
 "use client";
 
-import React from "react";
-import { Eye, Save } from "lucide-react";
+import React, { useState } from "react";
+import { Check, Eye, FileText, MapPin, Mail, Phone } from "lucide-react";
 import { CATEGORY_CONFIG, PRIORITY_CONFIG } from "../types/WizardTypes";
 import type { WizardData } from "../types/WizardTypes";
 import type { CategoryType } from "~/components/fahndungskarte/types";
+import { useResponsive } from "~/hooks/useResponsive";
 
 interface Step6SummaryProps {
   data: Partial<WizardData>;
@@ -30,6 +31,8 @@ const Step6Summary: React.FC<Step6SummaryProps> = ({
     value === "STOLEN_GOODS"
       ? (value as CategoryType)
       : "MISSING_PERSON";
+
+  const { isMobile } = useResponsive();
 
   return (
     <div className="space-y-6">
@@ -163,7 +166,7 @@ const Step6Summary: React.FC<Step6SummaryProps> = ({
             disabled={isSubmitting}
             className="flex items-center gap-2 rounded-lg bg-muted px-6 py-2 text-white hover:bg-muted disabled:opacity-50"
           >
-            <Save className="h-4 w-4" />
+            <Eye className="h-4 w-4" />
             {isSubmitting ? "Speichert..." : "Als Entwurf speichern"}
           </button>
 
