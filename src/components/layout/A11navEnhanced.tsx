@@ -4,15 +4,13 @@ import { Type, Contrast, Layout } from "lucide-react";
 import { SystemThemeToggle } from "~/components/ui/SystemThemeToggle";
 import { A11yButton } from "~/components/ui/A11yButton";
 
-interface A11navEnhancedProps {
-}
+interface A11navEnhancedProps {}
 
 type FontSize = "normal" | "large" | "xlarge";
 type ContrastMode = "normal" | "high";
 type HeaderVariant = "modern" | "classic";
 
-export default function A11navEnhanced({
-}: A11navEnhancedProps) {
+export default function A11navEnhanced({}: A11navEnhancedProps) {
   const [open, setOpen] = useState(false);
   const [fontSize, setFontSize] = useState<FontSize>("normal");
   const [contrast, setContrast] = useState<ContrastMode>("normal");
@@ -102,6 +100,19 @@ export default function A11navEnhanced({
     };
   }, []);
 
+  // Prevent body scroll when mobile dropdown is open
+  useEffect(() => {
+    if (!open) return;
+
+    const prev = document.body.style.overflow;
+    document.body.style.overflow = "hidden"; // lock scroll while open
+    menuRef.current?.focus();
+
+    return () => {
+      document.body.style.overflow = prev;
+    };
+  }, [open]);
+
   // Hover handlers wie bei den Menü-Reitern
   const handleMouseEnter = () => {
     if (timeoutRef.current) {
@@ -127,137 +138,300 @@ export default function A11navEnhanced({
       <A11yButton ref={btnRef} onClick={toggleOpen} isExpanded={open} />
 
       {open && (
-        <div
-          ref={menuRef}
-          role="menu"
-          aria-label="A11y & Meta Einstellungen"
-          className="absolute right-0 z-50 mt-2 w-80 rounded-xl border border-border/50 bg-popover/95 p-3 text-popover-foreground shadow-xl backdrop-blur-2xl transition-all duration-200 ease-out dark:bg-popover/90"
-        >
-          {/* Schriftgröße */}
-          <div className="mb-3">
-            <div className="mb-1.5 flex items-center gap-2 text-xs font-semibold text-muted-foreground">
-              <Type className="h-4 w-4" />
-              Schriftgröße
+        <>
+          {/* Mobile Overlay - nur für Mobile */}
+          <div
+            role="dialog"
+            aria-label="A11y & Meta Einstellungen"
+            aria-modal="true"
+            // full-viewport overlay just for mobile
+            className="fixed inset-0 z-[100] md:hidden"
+            onClick={(e) => {
+              // close when clicking the dimmed backdrop, not the panel
+              if (e.target === e.currentTarget) setOpen(false);
+            }}
+          >
+            {/* backdrop (opaque, no transparency/blur) */}
+            <div className="absolute inset-0 bg-black/0" />
+
+            {/* center container */}
+            <div className="absolute inset-x-0 top-[72px] flex justify-center">
+              <div
+                ref={menuRef}
+                role="menu"
+                className="
+                  mx-4 max-h-[calc(100vh-120px)] w-full
+                  max-w-sm overflow-auto rounded-xl border
+                  border-neutral-200 bg-white
+                  p-3 text-neutral-900
+                  shadow-xl
+                  focus:outline-none
+                  dark:border-neutral-800
+                  dark:bg-neutral-900
+                  dark:text-neutral-100
+                "
+              >
+                {/* Schriftgröße */}
+                <div className="mb-3">
+                  <div className="mb-1.5 flex items-center gap-2 text-xs font-semibold text-muted-foreground">
+                    <Type className="h-4 w-4" />
+                    Schriftgröße
+                  </div>
+                  <div className="grid grid-cols-3 gap-2">
+                    {(
+                      [
+                        { key: "normal", label: "Normal" },
+                        { key: "large", label: "Groß" },
+                        { key: "xlarge", label: "XL" },
+                      ] as const
+                    ).map((opt) => (
+                      <button
+                        key={opt.key}
+                        type="button"
+                        onClick={() => setFontSize(opt.key)}
+                        className={`rounded-md px-2 py-1.5 text-sm transition-colors ${
+                          fontSize === opt.key
+                            ? "bg-primary/10 text-primary ring-1 ring-primary/30"
+                            : "hover:bg-accent"
+                        }`}
+                        aria-pressed={fontSize === opt.key}
+                      >
+                        {opt.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Theme */}
+                <div className="mb-3">
+                  <div className="mb-1.5 flex items-center gap-2 text-xs font-semibold text-muted-foreground">
+                    Theme
+                  </div>
+                  <div className="flex justify-center">
+                    <SystemThemeToggle />
+                  </div>
+                </div>
+
+                {/* Kontrast */}
+                <div className="mb-3">
+                  <div className="mb-1.5 flex items-center gap-2 text-xs font-semibold text-muted-foreground">
+                    <Contrast className="h-4 w-4" />
+                    Kontrast
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setContrast("normal")}
+                      className={`rounded-lg px-2 py-1.5 text-sm transition-colors ${
+                        contrast === "normal"
+                          ? "bg-primary/10 text-primary ring-1 ring-primary/30"
+                          : "hover:bg-accent"
+                      }`}
+                      aria-pressed={contrast === "normal"}
+                    >
+                      Normal
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setContrast("high")}
+                      className={`rounded-lg px-2 py-1.5 text-sm transition-colors ${
+                        contrast === "high"
+                          ? "bg-primary/10 text-primary ring-1 ring-primary/30"
+                          : "hover:bg-accent"
+                      }`}
+                      aria-pressed={contrast === "high"}
+                    >
+                      Hoch
+                    </button>
+                  </div>
+                </div>
+
+                {/* Header Variante */}
+                <div className="mb-3">
+                  <div className="mb-1.5 flex items-center gap-2 text-xs font-semibold text-muted-foreground">
+                    <Layout className="h-4 w-4" />
+                    Header
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setHeaderVariant("modern")}
+                      className={`rounded-lg px-2 py-1.5 text-sm transition-colors ${
+                        headerVariant === "modern"
+                          ? "bg-primary/10 text-primary ring-1 ring-primary/30"
+                          : "hover:bg-accent"
+                      }`}
+                      aria-pressed={headerVariant === "modern"}
+                    >
+                      Modern
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setHeaderVariant("classic")}
+                      className={`rounded-lg px-2 py-1.5 text-sm transition-colors ${
+                        headerVariant === "classic"
+                          ? "bg-primary/10 text-primary ring-1 ring-primary/30"
+                          : "hover:bg-accent"
+                      }`}
+                      aria-pressed={headerVariant === "classic"}
+                    >
+                      Klassisch
+                    </button>
+                  </div>
+                </div>
+
+                {/* Links */}
+                <div className="mt-2 grid grid-cols-2 gap-2">
+                  <a
+                    href="/leichte-sprache"
+                    className="rounded-lg border border-input/50 bg-background/50 px-3 py-2 text-center text-sm transition-colors hover:bg-accent"
+                  >
+                    Leichte Sprache
+                  </a>
+                  <a
+                    href="/gebaerdensprache"
+                    className="rounded-lg border border-input/50 bg-background/50 px-3 py-2 text-center text-sm transition-colors hover:bg-accent"
+                  >
+                    Gebärdensprache
+                  </a>
+                </div>
+              </div>
             </div>
-            <div className="grid grid-cols-3 gap-2">
-              {(
-                [
-                  { key: "normal", label: "Normal" },
-                  { key: "large", label: "Groß" },
-                  { key: "xlarge", label: "XL" },
-                ] as const
-              ).map((opt) => (
+          </div>
+
+          {/* Desktop Dropdown - nur für Desktop */}
+          <div
+            ref={menuRef}
+            role="menu"
+            aria-label="A11y & Meta Einstellungen"
+            className="absolute right-0 z-50 mt-2 hidden w-80 rounded-xl border border-border/50 bg-popover/95 p-3 text-popover-foreground shadow-xl backdrop-blur-2xl transition-all duration-200 ease-out dark:bg-popover/90 md:block"
+          >
+            {/* Schriftgröße */}
+            <div className="mb-3">
+              <div className="mb-1.5 flex items-center gap-2 text-xs font-semibold text-muted-foreground">
+                <Type className="h-4 w-4" />
+                Schriftgröße
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                {(
+                  [
+                    { key: "normal", label: "Normal" },
+                    { key: "large", label: "Groß" },
+                    { key: "xlarge", label: "XL" },
+                  ] as const
+                ).map((opt) => (
+                  <button
+                    key={opt.key}
+                    type="button"
+                    onClick={() => setFontSize(opt.key)}
+                    className={`rounded-md px-2 py-1.5 text-sm transition-colors ${
+                      fontSize === opt.key
+                        ? "bg-primary/10 text-primary ring-1 ring-primary/30"
+                        : "hover:bg-accent"
+                    }`}
+                    aria-pressed={fontSize === opt.key}
+                  >
+                    {opt.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Theme */}
+            <div className="mb-3">
+              <div className="mb-1.5 flex items-center gap-2 text-xs font-semibold text-muted-foreground">
+                Theme
+              </div>
+              <div className="flex justify-center">
+                <SystemThemeToggle />
+              </div>
+            </div>
+
+            {/* Kontrast */}
+            <div className="mb-3">
+              <div className="mb-1.5 flex items-center gap-2 text-xs font-semibold text-muted-foreground">
+                <Contrast className="h-4 w-4" />
+                Kontrast
+              </div>
+              <div className="grid grid-cols-2 gap-2">
                 <button
-                  key={opt.key}
                   type="button"
-                  onClick={() => setFontSize(opt.key)}
-                  className={`rounded-md px-2 py-1.5 text-sm transition-colors ${
-                    fontSize === opt.key
+                  onClick={() => setContrast("normal")}
+                  className={`rounded-lg px-2 py-1.5 text-sm transition-colors ${
+                    contrast === "normal"
                       ? "bg-primary/10 text-primary ring-1 ring-primary/30"
                       : "hover:bg-accent"
                   }`}
-                  aria-pressed={fontSize === opt.key}
+                  aria-pressed={contrast === "normal"}
                 >
-                  {opt.label}
+                  Normal
                 </button>
-              ))}
+                <button
+                  type="button"
+                  onClick={() => setContrast("high")}
+                  className={`rounded-lg px-2 py-1.5 text-sm transition-colors ${
+                    contrast === "high"
+                      ? "bg-primary/10 text-primary ring-1 ring-primary/30"
+                      : "hover:bg-accent"
+                  }`}
+                  aria-pressed={contrast === "high"}
+                >
+                  Hoch
+                </button>
+              </div>
             </div>
-          </div>
 
-          {/* Theme */}
-          <div className="mb-3">
-            <div className="mb-1.5 flex items-center gap-2 text-xs font-semibold text-muted-foreground">
-              Theme
+            {/* Header Variante */}
+            <div className="mb-3">
+              <div className="mb-1.5 flex items-center gap-2 text-xs font-semibold text-muted-foreground">
+                <Layout className="h-4 w-4" />
+                Header
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => setHeaderVariant("modern")}
+                  className={`rounded-lg px-2 py-1.5 text-sm transition-colors ${
+                    headerVariant === "modern"
+                      ? "bg-primary/10 text-primary ring-1 ring-primary/30"
+                      : "hover:bg-accent"
+                  }`}
+                  aria-pressed={headerVariant === "modern"}
+                >
+                  Modern
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setHeaderVariant("classic")}
+                  className={`rounded-lg px-2 py-1.5 text-sm transition-colors ${
+                    headerVariant === "classic"
+                      ? "bg-primary/10 text-primary ring-1 ring-primary/30"
+                      : "hover:bg-accent"
+                  }`}
+                  aria-pressed={headerVariant === "classic"}
+                >
+                  Klassisch
+                </button>
+              </div>
             </div>
-            <div className="flex justify-center">
-              <SystemThemeToggle />
-            </div>
-          </div>
 
-          {/* Kontrast */}
-          <div className="mb-3">
-            <div className="mb-1.5 flex items-center gap-2 text-xs font-semibold text-muted-foreground">
-              <Contrast className="h-4 w-4" />
-              Kontrast
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={() => setContrast("normal")}
-                className={`rounded-lg px-2 py-1.5 text-sm transition-colors ${
-                  contrast === "normal"
-                    ? "bg-primary/10 text-primary ring-1 ring-primary/30"
-                    : "hover:bg-accent"
-                }`}
-                aria-pressed={contrast === "normal"}
+            {/* Links */}
+            <div className="mt-2 grid grid-cols-2 gap-2">
+              <a
+                href="/leichte-sprache"
+                className="rounded-lg border border-input/50 bg-background/50 px-3 py-2 text-center text-sm transition-colors hover:bg-accent"
               >
-                Normal
-              </button>
-              <button
-                type="button"
-                onClick={() => setContrast("high")}
-                className={`rounded-lg px-2 py-1.5 text-sm transition-colors ${
-                  contrast === "high"
-                    ? "bg-primary/10 text-primary ring-1 ring-primary/30"
-                    : "hover:bg-accent"
-                }`}
-                aria-pressed={contrast === "high"}
+                Leichte Sprache
+              </a>
+              <a
+                href="/gebaerdensprache"
+                className="rounded-lg border border-input/50 bg-background/50 px-3 py-2 text-center text-sm transition-colors hover:bg-accent"
               >
-                Hoch
-              </button>
+                Gebärdensprache
+              </a>
             </div>
           </div>
-
-          {/* Header Variante */}
-          <div className="mb-3">
-            <div className="mb-1.5 flex items-center gap-2 text-xs font-semibold text-muted-foreground">
-              <Layout className="h-4 w-4" />
-              Header
-            </div>
-            <div className="grid grid-cols-2 gap-2">
-              <button
-                type="button"
-                onClick={() => setHeaderVariant("modern")}
-                className={`rounded-lg px-2 py-1.5 text-sm transition-colors ${
-                  headerVariant === "modern"
-                    ? "bg-primary/10 text-primary ring-1 ring-primary/30"
-                    : "hover:bg-accent"
-                }`}
-                aria-pressed={headerVariant === "modern"}
-              >
-                Modern
-              </button>
-              <button
-                type="button"
-                onClick={() => setHeaderVariant("classic")}
-                className={`rounded-lg px-2 py-1.5 text-sm transition-colors ${
-                  headerVariant === "classic"
-                    ? "bg-primary/10 text-primary ring-1 ring-primary/30"
-                    : "hover:bg-accent"
-                }`}
-                aria-pressed={headerVariant === "classic"}
-              >
-                Klassisch
-              </button>
-            </div>
-          </div>
-
-          {/* Links */}
-          <div className="mt-2 grid grid-cols-2 gap-2">
-            <a
-              href="/leichte-sprache"
-              className="rounded-lg border border-input/50 bg-background/50 px-3 py-2 text-center text-sm transition-colors hover:bg-accent"
-            >
-              Leichte Sprache
-            </a>
-            <a
-              href="/gebaerdensprache"
-              className="rounded-lg border border-input/50 bg-background/50 px-3 py-2 text-center text-sm transition-colors hover:bg-accent"
-            >
-              Gebärdensprache
-            </a>
-          </div>
-        </div>
+        </>
       )}
     </div>
   );
