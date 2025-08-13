@@ -14,7 +14,7 @@ export function Logo({ className = "", showLink = true }: LogoProps) {
         width={32}
         height={32}
         viewBox="0 0 188.92 189.16"
-        className="h-6 w-6 flex-shrink-0 sm:h-7 sm:w-7 md:h-8 md:w-8 lg:h-10 lg:w-10"
+        className="h-8 w-8 flex-shrink-0 sm:h-9 sm:w-9 md:h-10 md:w-10"
       >
         <defs>
           <style>
@@ -143,11 +143,11 @@ export function Logo({ className = "", showLink = true }: LogoProps) {
         </g>
       </svg>
 
-      <div className="flex min-w-[120px] flex-col items-stretch justify-center sm:min-w-[140px] md:min-w-[160px]">
-        <span className="font-arial text-[10px] font-normal leading-tight tracking-[2px] text-black subpixel-antialiased [font-family:'Arial-Regular',Helvetica] dark:text-white sm:text-xs sm:tracking-[3px] md:text-sm md:tracking-[4px] lg:text-base">
+      <div className="flex min-w-[140px] flex-col items-stretch justify-center sm:min-w-[150px] md:min-w-[160px]">
+        <span className="font-arial text-sm font-normal leading-tight tracking-[3px] text-black subpixel-antialiased [font-family:'Arial-Regular',Helvetica] dark:text-white sm:text-base sm:tracking-[3px] md:text-base md:tracking-[4px]">
           POLIZEI BW
         </span>
-        <span className="-mt-0.5 text-sm font-black leading-tight tracking-[0.3px] text-[#373a41] subpixel-antialiased [font-family:'Inter-Black',Helvetica] dark:text-muted-foreground sm:-mt-1 sm:text-base sm:tracking-[0.4px] md:text-lg md:tracking-[0.5px] lg:text-xl">
+        <span className="-mt-1 text-base font-black leading-tight tracking-[0.4px] text-[#373a41] subpixel-antialiased [font-family:'Inter-Black',Helvetica] dark:text-muted-foreground sm:-mt-1 sm:text-lg sm:tracking-[0.4px] md:text-xl md:tracking-[0.5px]">
           FAHNDUNG
         </span>
       </div>

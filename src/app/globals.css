@@ -99,6 +99,45 @@
     padding: 12px 16px;
   }
 
+  /* Hamburger-Menü-Balken ohne Rundung - Sehr starke Regeln */
+  .menu-icon-square,
+  .menu-icon-square *,
+  .menu-icon-square path,
+  .menu-icon-square line,
+  .menu-icon-square rect,
+  .menu-icon-square circle,
+  .menu-icon-square polyline,
+  .menu-icon-square polygon {
+    stroke-linecap: butt !important;
+    stroke-linejoin: miter !important;
+  }
+
+  /* Spezifisch für Lucide Menu Icons */
+  .lucide-menu.menu-icon-square,
+  .lucide-menu.menu-icon-square *,
+  .lucide-menu.menu-icon-square path,
+  .lucide-menu.menu-icon-square line,
+  .lucide-menu.menu-icon-square rect,
+  .lucide-menu.menu-icon-square circle,
+  .lucide-menu.menu-icon-square polyline,
+  .lucide-menu.menu-icon-square polygon {
+    stroke-linecap: butt !important;
+    stroke-linejoin: miter !important;
+  }
+
+  /* Höchste Spezifität für Menu Icons */
+  button .menu-icon-square,
+  button .menu-icon-square *,
+  button .menu-icon-square path,
+  button .menu-icon-square line,
+  button .menu-icon-square rect,
+  button .menu-icon-square circle,
+  button .menu-icon-square polyline,
+  button .menu-icon-square polygon {
+    stroke-linecap: butt !important;
+    stroke-linejoin: miter !important;
+  }
+
   /* Mobile-optimierte Cards */
   .mobile-card {
     border-radius: 12px;

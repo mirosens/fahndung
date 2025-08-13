@@ -1,7 +1,8 @@
 import React, { useState, useRef, useEffect } from "react";
-import { ChevronDown, Search, Menu, X, User, LogOut } from "lucide-react";
+import { ChevronDown, Search, X, User, LogOut } from "lucide-react";
 import dynamic from "next/dynamic";
 import Link from "next/link";
+import { SquareMenuIcon } from "../ui/SquareMenuIcon";
 import { Logo } from "../ui/Logo";
 import { ModernMobileMenu } from "./MobileMenu";
 import { useScrollDetection } from "~/hooks/useScrollDetection";
@@ -359,14 +360,14 @@ export default function ModernHeader() {
                 {/* Mobile Menu Button */}
                 <button
                   onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-                  className="rounded-lg p-2 text-foreground hover:bg-accent focus:outline-none focus:ring-2 focus:ring-primary/50 lg:hidden"
+                  className="p-2 text-foreground hover:bg-accent focus:outline-none focus:ring-2 focus:ring-primary/50 lg:hidden"
                   aria-label="Mobilmenü öffnen"
                   aria-expanded={isMobileMenuOpen}
                 >
                   {isMobileMenuOpen ? (
-                    <X className="h-6 w-6" />
+                    <X className="h-11 w-11" />
                   ) : (
-                    <Menu className="h-6 w-6" />
+                    <SquareMenuIcon className="h-11 w-11" />
                   )}
                 </button>
               </div>

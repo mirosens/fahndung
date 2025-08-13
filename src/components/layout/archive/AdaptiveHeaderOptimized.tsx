@@ -228,12 +228,12 @@ const AdaptiveDesktopHeader = ({
           {/* Hamburger Menu Button - auch für angemeldete Benutzer */}
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="inline-flex items-center gap-x-2 rounded-lg border border-border bg-white px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 dark:border-border dark:bg-muted dark:text-muted-foreground dark:hover:bg-muted"
+            className="inline-flex items-center gap-x-2 border border-border bg-white px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted focus:outline-none focus:ring-2 focus:ring-gray-500 focus:ring-offset-2 dark:border-border dark:bg-muted dark:text-muted-foreground dark:hover:bg-muted"
             aria-haspopup="dialog"
             aria-expanded={isMenuOpen}
             aria-controls="desktop-offcanvas-menu"
           >
-            <Menu className="h-4 w-4" />
+            <Menu className="menu-icon-square h-3.5 w-3.5" />
             <span>Menü</span>
           </button>
         </div>
@@ -243,12 +243,12 @@ const AdaptiveDesktopHeader = ({
         <div className="flex h-9 items-center gap-3">
           <button
             onClick={() => setIsMenuOpen(!isMenuOpen)}
-            className="inline-flex items-center gap-x-2 rounded-lg border border-border bg-white px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:border-border dark:bg-muted dark:text-muted-foreground dark:hover:bg-muted"
+            className="inline-flex items-center gap-x-2 border border-border bg-white px-3 py-2 text-sm font-medium text-muted-foreground hover:bg-muted focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 dark:border-border dark:bg-muted dark:text-muted-foreground dark:hover:bg-muted"
             aria-haspopup="dialog"
             aria-expanded={isMenuOpen}
             aria-controls="desktop-offcanvas-menu"
           >
-            <Menu className="h-4 w-4" />
+            <Menu className="menu-icon-square h-3.5 w-3.5" />
             <span>Menü</span>
           </button>
         </div>
@@ -311,7 +311,7 @@ const AdaptiveDesktopHeader = ({
           }}
         >
           <div
-            className={`${styles['headerContainer']} ${isScrolled ? styles['headerContainerScrolled'] : styles['headerContainerNotScrolled']}`}
+            className={`${styles["headerContainer"]} ${isScrolled ? styles["headerContainerScrolled"] : styles["headerContainerNotScrolled"]}`}
           >
             {/* Logo - adaptiert Größe */}
             <div className="flex-shrink-0">
@@ -469,10 +469,10 @@ const ResponsiveMobileHeader = ({
           {/* Hamburger Menu Button */}
           <button
             onClick={onMenuToggle}
-            className="relative touch-manipulation select-none rounded-lg border border-border bg-muted/90 p-1.5 shadow-sm backdrop-blur-sm transition-all duration-200 hover:border-border hover:bg-muted hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-400/50 dark:border-slate-600 dark:bg-slate-800/90 dark:hover:border-slate-500 dark:hover:bg-slate-800"
+            className="relative touch-manipulation select-none border border-border bg-muted/90 p-1.5 shadow-sm backdrop-blur-sm transition-all duration-200 hover:border-border hover:bg-muted hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-gray-400/50 dark:border-slate-600 dark:bg-slate-800/90 dark:hover:border-slate-500 dark:hover:bg-slate-800"
             aria-label="Menü öffnen"
           >
-            <Menu className="h-5 w-5" />
+            <Menu className="menu-icon-square h-4.5 w-4.5" />
           </button>
         </div>
       </div>
