@@ -8,6 +8,9 @@
 /* Header Scroll-Animationen */
 @import "../styles/header-animations.css";
 
+/* Touch-Optimierungen für Mobile Geräte */
+@import "../styles/touch-optimizations.css";
+
 /* Mobile-optimierte Touch-Interaktionen */
 @supports (-webkit-touch-callout: none) {
   /* iOS-spezifische Verbesserungen */

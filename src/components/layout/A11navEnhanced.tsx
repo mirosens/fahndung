@@ -1,16 +1,19 @@
 "use client";
 import React, { useEffect, useRef, useState } from "react";
-import { Type, Contrast, Layout } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
 import { SystemThemeToggle } from "~/components/ui/SystemThemeToggle";
 import { A11yButton } from "~/components/ui/A11yButton";
-
-interface A11navEnhancedProps {}
+import { A11yQuickLinks } from "~/components/ui/A11yQuickLinks";
+import { A11yFontSizeControl } from "~/components/ui/A11yFontSizeControl";
+import { A11yContrastControl } from "~/components/ui/A11yContrastControl";
+import { A11yHeaderControl } from "~/components/ui/A11yHeaderControl";
+import { useSwipeToDismiss } from "~/hooks/useTouchGestures";
 
 type FontSize = "normal" | "large" | "xlarge";
-type ContrastMode = "normal" | "high";
+type ContrastMode = "normal" | "high" | "inverted";
 type HeaderVariant = "modern" | "classic";
 
-export default function A11navEnhanced({}: A11navEnhancedProps) {
+export default function A11navEnhanced() {
   const [open, setOpen] = useState(false);
   const [fontSize, setFontSize] = useState<FontSize>("normal");
   const [contrast, setContrast] = useState<ContrastMode>("normal");
@@ -18,7 +21,10 @@ export default function A11navEnhanced({}: A11navEnhancedProps) {
 
   const btnRef = useRef<HTMLButtonElement>(null);
   const menuRef = useRef<HTMLDivElement>(null);
-  const timeoutRef = useRef<NodeJS.Timeout | null>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  // Touch-Gesten für Swipe-to-Dismiss
+  const swipeToDismissHandlers = useSwipeToDismiss(() => setOpen(false), 80);
 
   // Init from localStorage
   useEffect(() => {
@@ -52,8 +58,16 @@ export default function A11navEnhanced({}: A11navEnhancedProps) {
   // Apply contrast
   useEffect(() => {
     const root = document.documentElement;
-    root.classList.remove("high-contrast");
-    if (contrast === "high") root.classList.add("high-contrast");
+    root.classList.remove("high-contrast", "invert");
+    if (contrast === "high") {
+      root.classList.add("high-contrast");
+      root.style.filter = "contrast(1.2)";
+    } else if (contrast === "inverted") {
+      root.classList.add("invert");
+      root.style.filter = "invert(1) hue-rotate(180deg)";
+    } else {
+      root.style.filter = "";
+    }
     root.setAttribute("data-contrast", contrast);
     localStorage.setItem("contrast", contrast);
   }, [contrast]);
@@ -61,7 +75,6 @@ export default function A11navEnhanced({}: A11navEnhancedProps) {
   // Apply header variant
   useEffect(() => {
     localStorage.setItem("header-variant", headerVariant);
-    // Dispatch auf window, damit globale Listener es zuverlässig empfangen
     if (typeof window !== "undefined") {
       window.dispatchEvent(
         new CustomEvent<HeaderVariant>("header-variant-change", {
@@ -71,368 +84,232 @@ export default function A11navEnhanced({}: A11navEnhancedProps) {
     }
   }, [headerVariant]);
 
-  // Close on outside click and escape key
+  // Close on outside click/touch, escape key, and scroll
   useEffect(() => {
-    const onDown = (ev: MouseEvent) => {
-      const target = ev.target as Node;
-      if (
-        menuRef.current &&
-        !menuRef.current.contains(target) &&
-        btnRef.current &&
-        !btnRef.current.contains(target)
-      ) {
-        setOpen(false);
-      }
-    };
-
     const handleEscape = (event: KeyboardEvent) => {
       if (event.key === "Escape") {
         setOpen(false);
+        btnRef.current?.focus();
       }
     };
 
-    document.addEventListener("mousedown", onDown);
-    document.addEventListener("keydown", handleEscape);
-
-    return () => {
-      document.removeEventListener("mousedown", onDown);
-      document.removeEventListener("keydown", handleEscape);
+    const handleScroll = () => {
+      setOpen(false);
     };
-  }, []);
 
-  // Prevent body scroll when mobile dropdown is open
-  useEffect(() => {
-    if (!open) return;
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as Node;
+      if (containerRef.current && !containerRef.current.contains(target)) {
+        setOpen(false);
+      }
+    };
 
-    const prev = document.body.style.overflow;
-    document.body.style.overflow = "hidden"; // lock scroll while open
-    menuRef.current?.focus();
+    if (open) {
+      document.addEventListener("keydown", handleEscape);
+      document.addEventListener("scroll", handleScroll, { passive: true });
+      document.addEventListener("mousedown", handleClickOutside);
+    }
 
     return () => {
-      document.body.style.overflow = prev;
+      document.removeEventListener("keydown", handleEscape);
+      document.removeEventListener("scroll", handleScroll);
+      document.removeEventListener("mousedown", handleClickOutside);
     };
   }, [open]);
 
-  // Hover handlers wie bei den Menü-Reitern
-  const handleMouseEnter = () => {
-    if (timeoutRef.current) {
-      clearTimeout(timeoutRef.current);
+  const toggleOpen = () => {
+    console.log("Toggle clicked, current open:", open);
+    setOpen(!open);
+  };
+
+  const handleFontSizeChange = (size: FontSize) => {
+    console.log("Font size changed to:", size);
+    setFontSize(size);
+  };
+
+  const handleContrastChange = (mode: ContrastMode) => {
+    console.log("Contrast changed to:", mode);
+    setContrast(mode);
+  };
+
+  const handleHeaderChange = (variant: HeaderVariant) => {
+    console.log("Header changed to:", variant);
+    setHeaderVariant(variant);
+  };
+
+  // Moderne Pointer Events API für Touch/Mouse-Unified Handling
+  const handleBackdropInteraction = (e: React.PointerEvent) => {
+    if (e.target === e.currentTarget) {
+      setOpen(false);
     }
-    setOpen(true);
+  };
+
+  const handlePanelInteraction = (e: React.PointerEvent) => {
+    // Verhindert Schließen beim Panel-Klick
+    e.stopPropagation();
+  };
+
+  // Hover-Handler für Desktop mit Verzögerung
+  const handleMouseEnter = () => {
+    if (window.innerWidth >= 768) {
+      // Nur auf Desktop
+      setOpen(true);
+    }
   };
 
   const handleMouseLeave = () => {
-    timeoutRef.current = setTimeout(() => {
+    if (window.innerWidth >= 768) {
+      // Nur auf Desktop
+      // Sofort schließen ohne Verzögerung
       setOpen(false);
-    }, 150);
+    }
   };
-
-  const toggleOpen = () => setOpen((v) => !v);
 
   return (
     <div
+      ref={containerRef}
       className="relative"
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
       <A11yButton ref={btnRef} onClick={toggleOpen} isExpanded={open} />
 
-      {open && (
-        <>
-          {/* Mobile Overlay - nur für Mobile */}
-          <div
-            role="dialog"
-            aria-label="A11y & Meta Einstellungen"
-            aria-modal="true"
-            // full-viewport overlay just for mobile
-            className="fixed inset-0 z-[100] md:hidden"
-            onClick={(e) => {
-              // close when clicking the dimmed backdrop, not the panel
-              if (e.target === e.currentTarget) setOpen(false);
-            }}
-          >
-            {/* backdrop (opaque, no transparency/blur) */}
-            <div className="absolute inset-0 bg-black/0" />
+      <AnimatePresence>
+        {open && (
+          <>
+            {/* Mobile Overlay - optimiert mit Pointer Events und Framer Motion */}
+            <motion.div
+              className="fixed inset-0 z-[100] md:hidden"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: 0.2 }}
+            >
+              {/* Backdrop mit moderner Touch-Optimierung */}
+              <motion.div
+                className="absolute inset-0 touch-none select-none bg-black/20"
+                onPointerDown={handleBackdropInteraction}
+                data-backdrop="true"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.15 }}
+              />
 
-            {/* center container */}
-            <div className="absolute inset-x-0 top-[72px] flex justify-center">
-              <div
-                ref={menuRef}
-                role="menu"
-                className="
-                  mx-4 max-h-[calc(100vh-120px)] w-full
-                  max-w-sm overflow-auto rounded-xl border
-                  border-neutral-200 bg-white
-                  p-3 text-neutral-900
-                  shadow-xl
-                  focus:outline-none
-                  dark:border-neutral-800
-                  dark:bg-neutral-900
-                  dark:text-neutral-100
-                "
-              >
-                {/* Schriftgröße */}
-                <div className="mb-3">
-                  <div className="mb-1.5 flex items-center gap-2 text-xs font-semibold text-muted-foreground">
-                    <Type className="h-4 w-4" />
-                    Schriftgröße
-                  </div>
-                  <div className="grid grid-cols-3 gap-2">
-                    {(
-                      [
-                        { key: "normal", label: "Normal" },
-                        { key: "large", label: "Groß" },
-                        { key: "xlarge", label: "XL" },
-                      ] as const
-                    ).map((opt) => (
-                      <button
-                        key={opt.key}
-                        type="button"
-                        onClick={() => setFontSize(opt.key)}
-                        className={`rounded-md px-2 py-1.5 text-sm transition-colors ${
-                          fontSize === opt.key
-                            ? "bg-primary/10 text-primary ring-1 ring-primary/30"
-                            : "hover:bg-accent"
-                        }`}
-                        aria-pressed={fontSize === opt.key}
-                      >
-                        {opt.label}
-                      </button>
-                    ))}
-                  </div>
-                </div>
+              {/* Panel mit Framer Motion Gesten */}
+              <div className="absolute inset-x-2 top-[80px] flex justify-center sm:inset-x-4">
+                <motion.div
+                  ref={menuRef}
+                  className="w-full max-w-[320px] touch-auto overscroll-contain rounded-lg border border-neutral-200 bg-white p-3 text-neutral-900 shadow-sm dark:border-neutral-800 dark:bg-neutral-900 dark:text-neutral-100 sm:p-4"
+                  data-panel="true"
+                  {...swipeToDismissHandlers}
+                  initial={{ opacity: 0, scale: 0.95, y: -8 }}
+                  animate={{ opacity: 1, scale: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95, y: -8 }}
+                  transition={{
+                    duration: 0.15,
+                    ease: "easeOut",
+                  }}
+                  drag="y"
+                  dragConstraints={{ top: 0, bottom: 0 }}
+                  dragElastic={0.1}
+                  onDragEnd={(_, { offset, velocity }) => {
+                    // Schließen bei schnellem Swipe nach unten
+                    if (offset.y > 50 && velocity.y > 0.5) {
+                      setOpen(false);
+                    }
+                  }}
+                >
+                  <div className="space-y-3 sm:space-y-4">
+                    {/* Quick Links */}
+                    <A11yQuickLinks variant="mobile" />
 
-                {/* Theme */}
-                <div className="mb-3">
-                  <div className="mb-1.5 flex items-center gap-2 text-xs font-semibold text-muted-foreground">
-                    Theme
+                    {/* Einstellungen */}
+                    <div className="space-y-3 sm:space-y-4">
+                      {/* Theme */}
+                      <div className="flex justify-center">
+                        <SystemThemeToggle />
+                      </div>
+
+                      {/* Schriftgröße */}
+                      <A11yFontSizeControl
+                        fontSize={fontSize}
+                        onFontSizeChange={handleFontSizeChange}
+                        variant="mobile"
+                      />
+
+                      {/* Kontrast */}
+                      <A11yContrastControl
+                        contrast={contrast}
+                        onContrastChange={handleContrastChange}
+                        variant="mobile"
+                      />
+
+                      {/* Header */}
+                      <A11yHeaderControl
+                        headerVariant={headerVariant}
+                        onHeaderChange={handleHeaderChange}
+                        variant="mobile"
+                      />
+                    </div>
                   </div>
+                </motion.div>
+              </div>
+            </motion.div>
+
+            {/* Desktop Dropdown - konsistent mit anderen Dropdowns */}
+            <motion.div
+              ref={menuRef}
+              className="absolute right-0 z-50 mt-2 hidden w-72 overflow-hidden rounded-lg border bg-popover p-3 text-popover-foreground shadow-sm md:block"
+              data-panel="true"
+              onPointerDown={handlePanelInteraction}
+              onMouseEnter={handleMouseEnter}
+              onMouseLeave={handleMouseLeave}
+              initial={{ opacity: 0, scale: 0.95, y: -8 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: -8 }}
+              transition={{
+                duration: 0.15,
+                ease: "easeOut",
+              }}
+            >
+              <div className="space-y-3">
+                {/* Quick Links */}
+                <A11yQuickLinks variant="desktop" />
+
+                {/* Einstellungen */}
+                <div className="space-y-3">
+                  {/* Theme */}
                   <div className="flex justify-center">
                     <SystemThemeToggle />
                   </div>
-                </div>
 
-                {/* Kontrast */}
-                <div className="mb-3">
-                  <div className="mb-1.5 flex items-center gap-2 text-xs font-semibold text-muted-foreground">
-                    <Contrast className="h-4 w-4" />
-                    Kontrast
-                  </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setContrast("normal")}
-                      className={`rounded-lg px-2 py-1.5 text-sm transition-colors ${
-                        contrast === "normal"
-                          ? "bg-primary/10 text-primary ring-1 ring-primary/30"
-                          : "hover:bg-accent"
-                      }`}
-                      aria-pressed={contrast === "normal"}
-                    >
-                      Normal
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setContrast("high")}
-                      className={`rounded-lg px-2 py-1.5 text-sm transition-colors ${
-                        contrast === "high"
-                          ? "bg-primary/10 text-primary ring-1 ring-primary/30"
-                          : "hover:bg-accent"
-                      }`}
-                      aria-pressed={contrast === "high"}
-                    >
-                      Hoch
-                    </button>
-                  </div>
-                </div>
+                  {/* Schriftgröße */}
+                  <A11yFontSizeControl
+                    fontSize={fontSize}
+                    onFontSizeChange={handleFontSizeChange}
+                    variant="desktop"
+                  />
 
-                {/* Header Variante */}
-                <div className="mb-3">
-                  <div className="mb-1.5 flex items-center gap-2 text-xs font-semibold text-muted-foreground">
-                    <Layout className="h-4 w-4" />
-                    Header
-                  </div>
-                  <div className="grid grid-cols-2 gap-2">
-                    <button
-                      type="button"
-                      onClick={() => setHeaderVariant("modern")}
-                      className={`rounded-lg px-2 py-1.5 text-sm transition-colors ${
-                        headerVariant === "modern"
-                          ? "bg-primary/10 text-primary ring-1 ring-primary/30"
-                          : "hover:bg-accent"
-                      }`}
-                      aria-pressed={headerVariant === "modern"}
-                    >
-                      Modern
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => setHeaderVariant("classic")}
-                      className={`rounded-lg px-2 py-1.5 text-sm transition-colors ${
-                        headerVariant === "classic"
-                          ? "bg-primary/10 text-primary ring-1 ring-primary/30"
-                          : "hover:bg-accent"
-                      }`}
-                      aria-pressed={headerVariant === "classic"}
-                    >
-                      Klassisch
-                    </button>
-                  </div>
-                </div>
+                  {/* Kontrast */}
+                  <A11yContrastControl
+                    contrast={contrast}
+                    onContrastChange={handleContrastChange}
+                    variant="desktop"
+                  />
 
-                {/* Links */}
-                <div className="mt-2 grid grid-cols-2 gap-2">
-                  <a
-                    href="/leichte-sprache"
-                    className="rounded-lg border border-input/50 bg-background/50 px-3 py-2 text-center text-sm transition-colors hover:bg-accent"
-                  >
-                    Leichte Sprache
-                  </a>
-                  <a
-                    href="/gebaerdensprache"
-                    className="rounded-lg border border-input/50 bg-background/50 px-3 py-2 text-center text-sm transition-colors hover:bg-accent"
-                  >
-                    Gebärdensprache
-                  </a>
+                  {/* Header */}
+                  <A11yHeaderControl
+                    headerVariant={headerVariant}
+                    onHeaderChange={handleHeaderChange}
+                    variant="desktop"
+                  />
                 </div>
               </div>
-            </div>
-          </div>
-
-          {/* Desktop Dropdown - nur für Desktop */}
-          <div
-            ref={menuRef}
-            role="menu"
-            aria-label="A11y & Meta Einstellungen"
-            className="absolute right-0 z-50 mt-2 hidden w-80 rounded-xl border border-border/50 bg-popover/95 p-3 text-popover-foreground shadow-xl backdrop-blur-2xl transition-all duration-200 ease-out dark:bg-popover/90 md:block"
-          >
-            {/* Schriftgröße */}
-            <div className="mb-3">
-              <div className="mb-1.5 flex items-center gap-2 text-xs font-semibold text-muted-foreground">
-                <Type className="h-4 w-4" />
-                Schriftgröße
-              </div>
-              <div className="grid grid-cols-3 gap-2">
-                {(
-                  [
-                    { key: "normal", label: "Normal" },
-                    { key: "large", label: "Groß" },
-                    { key: "xlarge", label: "XL" },
-                  ] as const
-                ).map((opt) => (
-                  <button
-                    key={opt.key}
-                    type="button"
-                    onClick={() => setFontSize(opt.key)}
-                    className={`rounded-md px-2 py-1.5 text-sm transition-colors ${
-                      fontSize === opt.key
-                        ? "bg-primary/10 text-primary ring-1 ring-primary/30"
-                        : "hover:bg-accent"
-                    }`}
-                    aria-pressed={fontSize === opt.key}
-                  >
-                    {opt.label}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Theme */}
-            <div className="mb-3">
-              <div className="mb-1.5 flex items-center gap-2 text-xs font-semibold text-muted-foreground">
-                Theme
-              </div>
-              <div className="flex justify-center">
-                <SystemThemeToggle />
-              </div>
-            </div>
-
-            {/* Kontrast */}
-            <div className="mb-3">
-              <div className="mb-1.5 flex items-center gap-2 text-xs font-semibold text-muted-foreground">
-                <Contrast className="h-4 w-4" />
-                Kontrast
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={() => setContrast("normal")}
-                  className={`rounded-lg px-2 py-1.5 text-sm transition-colors ${
-                    contrast === "normal"
-                      ? "bg-primary/10 text-primary ring-1 ring-primary/30"
-                      : "hover:bg-accent"
-                  }`}
-                  aria-pressed={contrast === "normal"}
-                >
-                  Normal
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setContrast("high")}
-                  className={`rounded-lg px-2 py-1.5 text-sm transition-colors ${
-                    contrast === "high"
-                      ? "bg-primary/10 text-primary ring-1 ring-primary/30"
-                      : "hover:bg-accent"
-                  }`}
-                  aria-pressed={contrast === "high"}
-                >
-                  Hoch
-                </button>
-              </div>
-            </div>
-
-            {/* Header Variante */}
-            <div className="mb-3">
-              <div className="mb-1.5 flex items-center gap-2 text-xs font-semibold text-muted-foreground">
-                <Layout className="h-4 w-4" />
-                Header
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                <button
-                  type="button"
-                  onClick={() => setHeaderVariant("modern")}
-                  className={`rounded-lg px-2 py-1.5 text-sm transition-colors ${
-                    headerVariant === "modern"
-                      ? "bg-primary/10 text-primary ring-1 ring-primary/30"
-                      : "hover:bg-accent"
-                  }`}
-                  aria-pressed={headerVariant === "modern"}
-                >
-                  Modern
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setHeaderVariant("classic")}
-                  className={`rounded-lg px-2 py-1.5 text-sm transition-colors ${
-                    headerVariant === "classic"
-                      ? "bg-primary/10 text-primary ring-1 ring-primary/30"
-                      : "hover:bg-accent"
-                  }`}
-                  aria-pressed={headerVariant === "classic"}
-                >
-                  Klassisch
-                </button>
-              </div>
-            </div>
-
-            {/* Links */}
-            <div className="mt-2 grid grid-cols-2 gap-2">
-              <a
-                href="/leichte-sprache"
-                className="rounded-lg border border-input/50 bg-background/50 px-3 py-2 text-center text-sm transition-colors hover:bg-accent"
-              >
-                Leichte Sprache
-              </a>
-              <a
-                href="/gebaerdensprache"
-                className="rounded-lg border border-input/50 bg-background/50 px-3 py-2 text-center text-sm transition-colors hover:bg-accent"
-              >
-                Gebärdensprache
-              </a>
-            </div>
-          </div>
-        </>
-      )}
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

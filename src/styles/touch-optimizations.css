@@ -1,0 +1,111 @@
+/* Touch-Optimierungen für Mobile Geräte */
+
+/* Native Touch-Gesten ermöglichen */
+.touch-auto {
+  touch-action: auto;
+}
+
+/* Touch-Gesten auf Backdrop deaktivieren */
+.touch-none {
+  touch-action: none;
+}
+
+/* Overscroll-Verhalten für Panels */
+.overscroll-contain {
+  overscroll-behavior: contain;
+}
+
+/* Smooth Scrolling für bessere Performance */
+.smooth-scroll {
+  scroll-behavior: smooth;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Touch-Target-Größen für Accessibility */
+.touch-target {
+  min-height: 44px;
+  min-width: 44px;
+}
+
+/* Touch-Feedback für Buttons */
+.touch-feedback {
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.1s ease-out;
+}
+
+.touch-feedback:active {
+  transform: scale(0.98);
+}
+
+/* Mobile-spezifische Optimierungen */
+@media (max-width: 768px) {
+  /* Verhindert Zoom bei Doppel-Tap */
+  .no-zoom {
+    touch-action: manipulation;
+  }
+
+  /* Optimiert für Touch-Scrolling */
+  .touch-scroll {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+  }
+
+  /* Touch-Targets für mobile Navigation */
+  .mobile-nav-item {
+    min-height: 48px;
+    min-width: 48px;
+    padding: 12px;
+  }
+}
+
+/* High-DPI Display Optimierungen */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  .touch-target {
+    min-height: 48px;
+    min-width: 48px;
+  }
+}
+
+/* Reduzierte Motion für Accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .touch-feedback {
+    transition: none;
+  }
+
+  .touch-feedback:active {
+    transform: none;
+  }
+}
+
+/* Dark Mode Touch-Optimierungen */
+@media (prefers-color-scheme: dark) {
+  .touch-feedback:active {
+    background-color: rgba(255, 255, 255, 0.1);
+  }
+}
+
+/* Focus-Indikatoren für Touch-Geräte */
+.touch-focus {
+  outline: 2px solid transparent;
+  outline-offset: 2px;
+}
+
+.touch-focus:focus-visible {
+  outline: 2px solid currentColor;
+  outline-offset: 2px;
+}
+
+/* Touch-Gesten für Swipe-Aktionen */
+.swipe-container {
+  touch-action: pan-y;
+  user-select: none;
+}
+
+.swipe-handle {
+  touch-action: pan-y;
+  cursor: grab;
+}
+
+.swipe-handle:active {
+  cursor: grabbing;
+}
